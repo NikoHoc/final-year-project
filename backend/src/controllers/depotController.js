@@ -29,47 +29,22 @@ exports.createDepot = async (req, res) => {
   }
 };
 
-exports.setupPayment = async (req, res) => {
+exports.updateDepot = async (req, res) => {
   const { id } = req.params;
-  const { merchant_id, midtrans_client_key, midtrans_server_key } = req.body;
-
-  if (!merchant_id || !midtrans_client_key || !midtrans_server_key) {
-    return res
-      .status(400)
-      .json({ message: "Semua data kredensial Midtrans wajib diisi!" });
-  }
+  const { name, address, phone_number } = req.body;
 
   try {
-    const { data: depot } = await supabase
-      .from("depots")
-      .select("id")
-      .eq("id", id)
-      .single();
-    if (!depot)
-      return res.status(404).json({ message: "Depot tidak ditemukan" });
-
-    // UPSERT -> bawaan supabase, combine UPDATE dan INSERT
     const { data, error } = await supabase
-      .from("payment_configs")
-      .upsert(
-        {
-          depot_id: id,
-          merchant_id,
-          midtrans_client_key,
-          midtrans_server_key,
-        },
-        { onConflict: "depot_id" },
-      )
+      .from("depots")
+      .update({ name, address, phone_number })
+      .eq("id", id)
       .select()
       .single();
 
     if (error) throw error;
-
-    return res.status(200).json({
-      status: true,
-      message: "Konfigurasi Pembayaran Midtrans Berhasil Disimpan!",
-      data,
-    });
+    return res
+      .status(200)
+      .json({ status: true, message: "Data depot diperbarui", data });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
   }
@@ -121,6 +96,52 @@ exports.getDepotDetail = async (req, res) => {
   }
 };
 
+exports.setupPayment = async (req, res) => {
+  const { id } = req.params;
+  const { merchant_id, midtrans_client_key, midtrans_server_key } = req.body;
+
+  if (!merchant_id || !midtrans_client_key || !midtrans_server_key) {
+    return res
+      .status(400)
+      .json({ message: "Semua data kredensial Midtrans wajib diisi!" });
+  }
+
+  try {
+    const { data: depot } = await supabase
+      .from("depots")
+      .select("id")
+      .eq("id", id)
+      .single();
+    if (!depot)
+      return res.status(404).json({ message: "Depot tidak ditemukan" });
+
+    // UPSERT -> bawaan supabase, combine UPDATE dan INSERT
+    const { data, error } = await supabase
+      .from("payment_configs")
+      .upsert(
+        {
+          depot_id: id,
+          merchant_id,
+          midtrans_client_key,
+          midtrans_server_key,
+        },
+        { onConflict: "depot_id" },
+      )
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      status: true,
+      message: "Konfigurasi Pembayaran Midtrans Berhasil Disimpan!",
+      data,
+    });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
 exports.getPaymentConfig = async (req, res) => {
   const { id } = req.params;
 
@@ -139,31 +160,10 @@ exports.getPaymentConfig = async (req, res) => {
   }
 };
 
-exports.updateDepot = async (req, res) => {
-  const { id } = req.params;
-  const { name, address, phone_number } = req.body;
-
-  try {
-    const { data, error } = await supabase
-      .from("depots")
-      .update({ name, address, phone_number })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return res
-      .status(200)
-      .json({ status: true, message: "Data depot diperbarui", data });
-  } catch (err) {
-    return res.status(500).json({ status: false, message: err.message });
-  }
-};
-
 exports.toggleStatus = async (req, res) => {
   const { id } = req.params;
   const { is_open } = req.body;
-  
+
   // jika kasir, pastikan kasir pada depot tersebut
   if (req.user.role === "kasir") {
     if (req.user.depot_id != id) {

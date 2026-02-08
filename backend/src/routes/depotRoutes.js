@@ -8,12 +8,11 @@ const roleMiddleware = require("../middlewares/roleMiddleware");
 router.use(authMiddleware);
 
 router.post("/", roleMiddleware(["admin"]), depotController.createDepot);
-router.post("/:id/payment", roleMiddleware(["admin"]), depotController.setupPayment);
 router.put("/:id", roleMiddleware(["admin"]), depotController.updateDepot);
-router.get("/:id/payment", roleMiddleware(["admin"]), depotController.getPaymentConfig);
-
 router.get("/", depotController.getDepots);
 router.get("/:id", depotController.getDepotDetail);
+router.post("/:id/payment", roleMiddleware(["admin"]), depotController.setupPayment);
+router.get("/:id/payment", roleMiddleware(["admin"]), depotController.getPaymentConfig);
 
 router.put("/:id/status", roleMiddleware(["admin", "kasir"]), depotController.toggleStatus);
 
