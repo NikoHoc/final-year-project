@@ -1,10 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 
-// routes
-const authRoutes = require('./routes/authRoutes');
-
 const app = express();
+
+const router = require('./routes/index');
 
 // middleware
 app.use(cors());
@@ -21,7 +20,7 @@ app.get("/", (req, res) => {
 });
 
 // routes
-app.use('/api/v1/auth', authRoutes);
+app.use("/api/v1", router);
 
 app.use((req, res) => {
   res.status(404).json({
