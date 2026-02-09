@@ -1,0 +1,278 @@
+const supabase = require("../config/supabase");
+
+exports.createCategory = async (req, res) => {
+  const { name, depot_id } = req.body;
+
+  if (!name || !depot_id) {
+    return res.status(400).json({
+        status: false,
+        message: "Nama Kategori dan Depot ID wajib diisi",
+      });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("categories")
+      .insert([{ name, depot_id }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return res.status(201).json({ 
+      status: true, 
+      message: "Kategori berhasil dibuat", 
+      data 
+    });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.updateCategory = async (req, res) => {
+  const { id } = req.params;
+  const { name } = req.body;
+
+  try {
+    const { data, error } = await supabase
+      .from("categories")
+      .update({ name })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      status: true,
+      message: "Kategori berhasil diperbarui",
+      data,
+    });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.deleteCategory = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const { error } = await supabase
+      .from("categories")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      status: true,
+      message: "Kategori berhasil dihapus",
+    });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.getCategories = async (req, res) => {
+  const { depot_id } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("depot_id", depot_id)
+      .order("id", { ascending: true });
+
+    if (error) throw error;
+    return res.status(200).json({ status: true, data });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.createMenu = async (req, res) => {
+  try {
+    const { name, price, half_price, category_id, depot_id, description } = req.body;
+    const file = req.file;
+
+    if (!name || !price || !category_id || !depot_id) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "Data wajib tidak lengkap (Nama, Harga, Kategori, Depot ID)!" 
+      });
+    }
+
+    let image_url = null;
+
+    if (file) {
+      const fileExt = file.originalname.split(".").pop();
+      const fileName = `${Date.now()}_${name.replace(/\s/g, "")}.${fileExt}`;
+      const filePath = `menus/${fileName}`; 
+
+      const { error: uploadError } = await supabase.storage
+        .from("ta01-bucket")
+        .upload(filePath, file.buffer, {
+          contentType: file.mimetype,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("ta01-bucket")
+        .getPublicUrl(filePath);
+
+      image_url = publicUrlData.publicUrl;
+    }
+
+    const { data, error } = await supabase
+      .from("menus")
+      .insert([
+        {
+          name,
+          price, 
+          half_price: half_price || null,
+          category_id,
+          depot_id,
+          description: description || null,
+          image_url,
+          is_available: true,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return res.status(201).json({
+      status: true,
+      message: "Menu berhasil ditambahkan!",
+      data,
+    });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.updateMenu = async (req, res) => {
+  const { id } = req.params;
+  const { name, price, half_price, category_id, description, is_available } = req.body;
+  const file = req.file;
+
+  try {
+    let updateData = {
+      name,
+      price,
+      half_price: half_price || null,
+      category_id,
+      description: description || null,
+      is_available
+    };
+
+    if (file) {
+      const fileExt = file.originalname.split(".").pop();
+      const fileName = `${Date.now()}_${name.replace(/\s/g, "")}.${fileExt}`;
+      const filePath = `menus/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("ta01-bucket")
+        .upload(filePath, file.buffer, {
+          contentType: file.mimetype,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("ta01-bucket")
+        .getPublicUrl(filePath);
+
+      updateData.image_url = publicUrlData.publicUrl;
+    }
+
+    const { data, error } = await supabase
+      .from("menus")
+      .update(updateData)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      status: true,
+      message: "Menu berhasil diperbarui!",
+      data,
+    });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.deleteMenu = async (req, res) => {
+  const { id } = req.params;
+
+  try { 
+    const { data: menu, error: findError } = await supabase
+      .from("menus")
+      .select("image_url")
+      .eq("id", id)
+      .single();
+
+    if (findError) {
+      return res.status(404).json({ status: false, message: "Menu tidak ditemukan" });
+    }
+
+    if (menu.image_url) {      
+      const bucketName = "ta01-bucket";
+
+      const urlParts = menu.image_url.split(`${bucketName}/`);
+      
+      if (urlParts.length > 1) {
+        const filePath = urlParts[1];
+
+        const { error: storageError } = await supabase.storage
+          .from(bucketName)
+          .remove([filePath]);
+
+        if (storageError) {
+          console.error("Gagal menghapus file di storage:", storageError.message);
+        }
+      }
+    }
+
+    const { error } = await supabase
+      .from("menus")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      status: true,
+      message: "Menu berhasil dihapus permanen",
+    });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.getMenus = async (req, res) => {
+  const { depot_id } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from("menus")
+      .select(
+        `
+        *,
+        categories ( name )
+      `,
+      )
+      .eq("depot_id", depot_id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return res.status(200).json({ status: true, data });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
