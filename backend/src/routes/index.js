@@ -5,10 +5,12 @@ const authRoutes = require('./authRoutes');
 const depotRoutes = require('./depotRoutes');
 const categoryRoutes = require('./categoryRoutes');
 const menuRoutes = require('./menuRoutes');
+const tableRoutes = require('./tableRoutes');
 
 router.use('/auth', authRoutes);
 router.use('/depots', depotRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/menus', menuRoutes);
+router.use('/tables', tableRoutes);
 
 module.exports = router;
