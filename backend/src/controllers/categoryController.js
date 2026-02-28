@@ -1,4 +1,3 @@
-// src/controllers/categoryController.js
 const supabase = require("../config/supabase");
 
 exports.getCategories = async (req, res) => {
