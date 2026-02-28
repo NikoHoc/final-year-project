@@ -17,7 +17,7 @@ router.use('/categories', categoryRoutes);
 router.use('/menus', menuRoutes);
 router.use('/tables', tableRoutes);
 router.use('/users', userRoutes);
-router.use('/expense', expenseRoutes);
+router.use('/expenses', expenseRoutes);
 router.use('/stocks', stockRoutes);
 router.use('/transactions', transactionRoutes);
 
