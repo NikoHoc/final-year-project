@@ -20,4 +20,6 @@ router.put("/:id/status", roleMiddleware(["admin", "kasir", "pelayan"]), transac
 router.get("/depot/:depot_id", transactionController.getTransactions);
 router.get("/:id", transactionController.getTransactionDetail);
 
+router.put("/:id/print-items", roleMiddleware(["kasir", "pelayan"]), transactionController.updateItemsPrintStatus);
+
 module.exports = router;
