@@ -126,6 +126,7 @@ exports.addTransactionItems = async (req, res) => {
         price_at_time: priceToUse,
         is_half_portion: item.is_half_portion || false,
         note: item.note,
+        is_printed: false,
       });
     }
 
@@ -337,6 +338,7 @@ exports.getTransactions = async (req, res) => {
         *,
         transaction_items (
           quantity,
+          price_at_time,
           note,
           menus ( name, image_url )
         )
@@ -371,7 +373,7 @@ exports.getTransactionDetail = async (req, res) => {
         `
         *,
         transaction_items (
-          id, quantity, price, note,
+          id, quantity, price_at_time, is_half_portion, note, is_printed,
           menus ( name, image_url )
         )
       `,
@@ -407,6 +409,29 @@ exports.updateTransactionStatus = async (req, res) => {
     return res
       .status(200)
       .json({ status: true, message: "Status diperbarui", data });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.updateItemsPrintStatus = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from("transaction_items")
+      .update({ is_printed: true })
+      .eq("transaction_id", id)
+      .eq("is_printed", false)
+      .select(); 
+
+    if (error) throw error;
+
+    return res.status(200).json({ 
+      status: true, 
+      message: "Status print item berhasil diperbarui",
+      updated_items: data 
+    });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
   }
