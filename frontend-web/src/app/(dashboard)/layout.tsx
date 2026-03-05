@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Cookies from "js-cookie";
+import toast from "react-hot-toast";
 
 export default function DashboardLayout({
   children,
@@ -13,10 +15,11 @@ export default function DashboardLayout({
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
+    const token = Cookies.get("token");
+    const storedUser = Cookies.get("user");
 
     if (!token || !storedUser) {
+      toast.error("Akses ditolak: silahkan login terlebih dahulu!");
       router.replace("/login");
       return;
     }
@@ -25,10 +28,13 @@ export default function DashboardLayout({
     const role = user.role;
 
     if (pathname.startsWith("/admin") && role !== "admin") {
+      toast.error("Akses Ditolak: Mencoba mengakses halaman admin!");
       router.replace(`/${role}`);
     } else if (pathname.startsWith("/kasir") && role !== "kasir") {
+      toast.error("Akses Ditolak: Mencoba mengakses halaman kasir!");
       router.replace(`/${role}`);
     } else if (pathname.startsWith("/pelayan") && role !== "pelayan") {
+      toast.error("Akses Ditolak: Mencoba mengakses halaman pelayan!");
       router.replace(`/${role}`);
     } else {
       // eslint-disable-next-line react-hooks/set-state-in-effect

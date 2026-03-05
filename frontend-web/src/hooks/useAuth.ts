@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "../services/authService";
 import { isAxiosError } from "axios";
+import Cookies from "js-cookie";
+import toast from "react-hot-toast";
 
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -15,9 +17,10 @@ export const useAuth = () => {
       const res = await authService.login(email, password);
 
       if (res.status && res.data) {
-        localStorage.setItem("token", res.data.token);
+        Cookies.set("token", res.data.token, { expires: 1 });
+        Cookies.set("user", JSON.stringify(res.data.user), { expires: 1 });
 
-        localStorage.setItem("user", JSON.stringify(res.data.user));
+        toast.success("Login berhasil! CUAN!");
 
         const role = res.data.user.role;
 
@@ -34,14 +37,14 @@ export const useAuth = () => {
       }
     } catch (err) {
       if (isAxiosError(err)) {
-        // error dari backend
-        setError(
-          err.response?.data?.message ||
-            "Terjadi kesalahan saat menghubungi server.",
-        );
+        const errorMsg = err.response?.data?.message || "Terjadi kesalahan saat menghubungi server.";
+        setError(errorMsg);
+        
+        toast.error(errorMsg);
       } else {
         // error network
         setError("Terjadi kesalahan yang tidak terduga.");
+        toast.error("Terjadi kesalahan network. Silakan coba lagi.");
       }
     } finally {
       setIsLoading(false);
@@ -55,10 +58,12 @@ export const useAuth = () => {
     } catch (err) {
       console.error("Gagal logout dari server", err);
     } finally {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      Cookies.remove("token");
+      Cookies.remove("user");
       setIsLoading(false);
 
+      toast.success("Logout berhasil!");
+      
       router.push("/login");
     }
   };

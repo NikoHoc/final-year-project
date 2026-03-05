@@ -3,12 +3,13 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { User, Role } from "@/types";
+import Cookies from "js-cookie";
 
 export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = Cookies.get("user");
 
     if (!storedUser) {
       router.replace("/login");
