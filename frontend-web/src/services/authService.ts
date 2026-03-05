@@ -4,8 +4,10 @@ import { User } from "../types";
 interface LoginResponse {
   status: boolean;
   message: string;
-  token?: string; 
-  user?: User;
+  data?: {
+    token: string; 
+    user: User;
+  };
 }
 
 export const authService = {

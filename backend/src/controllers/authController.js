@@ -32,14 +32,16 @@ exports.login = async (req, res) => {
     return res.status(200).json({
       status: true,
       message: "Login Berhasil!",
-      token: data.session.access_token,
-      user: {
-        id: user.id,
-        email: user.email,
-        full_name: profile?.full_name,
-        username: profile?.username,
-        role: profile?.role || "pelanggan",
-        depot_id: profile?.depot_id,
+      data: {
+        token: data.session.access_token,
+        user: {
+          id: user.id,
+          email: user.email,
+          full_name: profile?.full_name,
+          username: profile?.username,
+          role: profile?.role || "pelanggan",
+          depot_id: profile?.depot_id,
+        },
       },
     });
   } catch (err) {
