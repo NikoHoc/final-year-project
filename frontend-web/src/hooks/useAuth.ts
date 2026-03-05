@@ -8,18 +8,18 @@ export const useAuth = () => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await authService.login(username, password);
+      const res = await authService.login(email, password);
 
-      if (res.status && res.data) {
-        localStorage.setItem("token", res.data.token);
+      if (res.status && res.token && res.user) {
+        localStorage.setItem("token", res.token);
 
-        localStorage.setItem("user", JSON.stringify(res.data.user));
+        localStorage.setItem("user", JSON.stringify(res.user));
 
-        const role = res.data.user.role;
+        const role = res.user.role;
 
         if (role === "admin") {
           router.push("/admin");

@@ -4,15 +4,13 @@ import { User } from "../types";
 interface LoginResponse {
   status: boolean;
   message: string;
-  data?: {
-    user: User;
-    token: string;
-  };
+  token?: string; 
+  user?: User;
 }
 
 export const authService = {
-  login: async (username: string, password: string): Promise<LoginResponse> => {
-    const response = await api.post("/auth/login", { username, password });
+  login: async (email: string, password: string): Promise<LoginResponse> => {
+    const response = await api.post("/auth/login", { email, password });
     return response.data;
   },
 
