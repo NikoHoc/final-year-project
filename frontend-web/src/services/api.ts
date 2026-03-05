@@ -33,9 +33,10 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response && error.response.status === 401) {
-      if (typeof window !== "undefined") {
-        Cookies.remove("token");
-        Cookies.remove("user");
+      Cookies.remove("token");
+      Cookies.remove("user");
+
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
     }
