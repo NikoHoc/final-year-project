@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import Cookies from "js-cookie";
 import toast from "react-hot-toast";
+import Sidebar from "@/components/layout/Sidebar";
+import Navbar from "@/components/layout/Navbar";
+import { getToken, getUserData } from "@/utils/auth";
 
 export default function DashboardLayout({
   children,
@@ -13,18 +15,18 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
-    const token = Cookies.get("token");
-    const storedUser = Cookies.get("user");
+    const token = getToken();
+    const user = getUserData();
 
-    if (!token || !storedUser) {
+    if (!token || !user) {
       toast.error("Akses ditolak: silahkan login terlebih dahulu!");
       router.replace("/login");
       return;
     }
 
-    const user = JSON.parse(storedUser);
     const role = user.role;
 
     if (pathname.startsWith("/admin") && role !== "admin") {
@@ -52,5 +54,22 @@ export default function DashboardLayout({
     );
   }
   
-  return <div className="min-h-screen bg-gray-50">{children}</div>;
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <Sidebar 
+        isCollapsed={isSidebarCollapsed} 
+        setIsCollapsed={setIsSidebarCollapsed} 
+      />
+      <div 
+        className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${
+          isSidebarCollapsed ? "ml-20" : "ml-64"
+        }`}
+      >
+        <Navbar />
+        <main className="flex-1 overflow-y-auto">
+          {children}
+        </main>
+      </div>
+    </div>
+  )
 }

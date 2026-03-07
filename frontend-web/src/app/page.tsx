@@ -2,21 +2,20 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import type { User, Role } from "@/types";
-import Cookies from "js-cookie";
+import type { Role } from "@/types";
+import { getUserData } from "@/utils/auth"; 
 
 export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    const storedUser = Cookies.get("user");
+    const user = getUserData();
 
-    if (!storedUser) {
+    if (!user) {
       router.replace("/login");
       return;
     }
 
-    const user: User = JSON.parse(storedUser);
     const roleRoutes: Record<Role, string> = {
       admin: "/admin",
       kasir: "/kasir",

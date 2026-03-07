@@ -19,7 +19,7 @@ export default function PelayanPage() {
 
   return (
     <div className="p-8 font-poppins min-h-screen bg-gray-100">
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
+      <div className="mx-auto bg-white rounded-lg shadow p-6">
         <h1 className="text-3xl font-bold font-montserrat text-blue-600 mb-6">
           Halaman Pelayan
         </h1>
