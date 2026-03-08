@@ -1,14 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSearchParams, useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const { login, isLoading, error } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
+  useEffect(() => {
+    const errorParam = searchParams.get("error");
+
+    if (errorParam === "must_login") {
+      toast.error("Akses ditolak: Silakan login terlebih dahulu!");
+      router.replace("/login");
+    } else if (errorParam === "session_expired") {
+      toast.error("Sesi Anda berakhir atau rusak. Silakan login ulang!");
+      router.replace("/login");
+    }
+  }, [searchParams, router]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;

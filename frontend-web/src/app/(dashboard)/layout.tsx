@@ -1,59 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
-import { getToken, getUserData } from "@/utils/auth";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [isAuthorized, setIsAuthorized] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
-    const token = getToken();
-    const user = getUserData();
-
-    if (!token || !user) {
-      toast.error("Akses ditolak: silahkan login terlebih dahulu!");
-      router.replace("/login");
-      return;
+    if (searchParams.get("error") === "unauthorized") {
+      toast.error("Akses ditolak: Anda tidak memiliki izin ke halaman tersebut!");
+      router.replace(window.location.pathname); 
     }
+  }, [searchParams, router]);
 
-    const role = user.role;
-
-    if (pathname.startsWith("/admin") && role !== "admin") {
-      toast.error("Akses Ditolak: Mencoba mengakses halaman admin!");
-      router.replace(`/${role}`);
-    } else if (pathname.startsWith("/kasir") && role !== "kasir") {
-      toast.error("Akses Ditolak: Mencoba mengakses halaman kasir!");
-      router.replace(`/${role}`);
-    } else if (pathname.startsWith("/pelayan") && role !== "pelayan") {
-      toast.error("Akses Ditolak: Mencoba mengakses halaman pelayan!");
-      router.replace(`/${role}`);
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsAuthorized(true);
-    }
-  }, [pathname, router]);
-
-  if (!isAuthorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-blue-600 font-poppins animate-pulse">
-          Memverifikasi akses...
-        </p>
-      </div>
-    );
-  }
-  
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar 
