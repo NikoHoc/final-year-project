@@ -70,7 +70,10 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         )}
 
         {items.map((item) => {
-          const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`);
+          const isRootPath = item.path === `/${role}`;
+          const isActive = isRootPath 
+            ? pathname === item.path
+            : pathname === item.path || pathname.startsWith(`${item.path}/`);
           const Icon = item.icon;
 
           return (

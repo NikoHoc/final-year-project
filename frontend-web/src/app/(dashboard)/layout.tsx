@@ -34,7 +34,7 @@ export default function DashboardLayout({
         }`}
       >
         <Navbar />
-        <main className="flex-1 overflow-y-auto">
+        <main className="p-6 flex-1 overflow-y-auto">
           {children}
         </main>
       </div>

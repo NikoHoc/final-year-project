@@ -4,6 +4,7 @@ import { authService } from "../services/authService";
 import { isAxiosError } from "axios";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
+import { clearAuthSession } from "@/utils/auth";
 
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -58,12 +59,9 @@ export const useAuth = () => {
     } catch (err) {
       console.error("Gagal logout dari server", err);
     } finally {
-      Cookies.remove("token");
-      Cookies.remove("user");
+      clearAuthSession();
       setIsLoading(false);
-
       toast.success("Logout berhasil!");
-      
       router.push("/login");
     }
   };

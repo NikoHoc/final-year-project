@@ -16,4 +16,6 @@ router.get("/:id/payment", roleMiddleware(["admin"]), depotController.getPayment
 
 router.put("/:id/status", roleMiddleware(["admin", "kasir"]), depotController.toggleStatus);
 
+router.delete('/:id', authMiddleware, roleMiddleware(['admin']), depotController.deleteDepot);
+
 module.exports = router;

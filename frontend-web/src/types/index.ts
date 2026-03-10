@@ -20,8 +20,17 @@ export interface Depot {
   name: string;
   address: string;
   phone_number: string;
-  is_open: boolean;
+  is_open?: boolean;
+  payment_configs?: PaymentConfig | null;
   created_at?: string;
+}
+
+export interface PaymentConfig {
+  id: number;
+  depot_id: number;
+  merchant_id: string;
+  midtrans_server_key: string;
+  midtrans_client_key: string;
 }
 
 export interface Category {

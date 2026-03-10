@@ -54,12 +54,16 @@ exports.getDepots = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("depots")
-      .select("*")
+      .select("*, payment_configs(*)")
       .order("id", { ascending: true });
 
     if (error) throw error;
 
-    return res.status(200).json({ status: true, data });
+    return res.status(200).json({
+      status: true,
+      message: "Berhasil mengambil daftar depot",
+      data: data,
+    });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
   }
@@ -187,6 +191,27 @@ exports.toggleStatus = async (req, res) => {
       status: true,
       message: `Depot sekarang ${is_open ? "BUKA" : "TUTUP"}`,
       data,
+    });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+
+exports.deleteDepot = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from("depots")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+
+    return res.status(200).json({ 
+      status: true, 
+      message: "Data depot berhasil dihapus!" 
     });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });

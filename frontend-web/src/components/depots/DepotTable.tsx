@@ -1,0 +1,196 @@
+"use client";
+
+import { useState } from "react";
+import { Depot } from "@/types";
+import { Pencil, Trash2, CreditCard, AlertCircle, CheckCircle2, ArrowUpDown, Power } from "lucide-react";
+import toast from "react-hot-toast";
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
+
+interface DepotTableProps {
+  data: Depot[];
+  isLoading: boolean;
+  onToggleClick: (depot: Depot) => void;
+  onDeleteClick: (depot: Depot) => void;
+  onEditClick: (depot: Depot) => void; 
+}
+
+export default function DepotTable({ data, isLoading, onToggleClick, onDeleteClick, onEditClick }: DepotTableProps) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  const columnHelper = createColumnHelper<Depot>();
+
+  const columns = [
+    columnHelper.display({
+      id: "no",
+      header: "No",
+      cell: (info) => <span className="text-gray-500">{info.row.index + 1}</span>,
+    }),
+    columnHelper.accessor("name", {
+      header: ({ column }) => (
+        <button 
+          className="flex items-center gap-2 hover:text-blue-600 transition-colors font-semibold outline-none"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Nama Cabang <ArrowUpDown size={14} />
+        </button>
+      ),
+      cell: (info) => <span className="font-medium text-gray-800">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor("address", {
+      header: () => <span className="font-semibold">Alamat</span>,
+      cell: (info) => <span className="text-gray-600">{info.getValue() || "-"}</span>,
+    }),
+    columnHelper.accessor("phone_number", {
+      header: () => <span className="font-semibold">Nomor WA</span>,
+      cell: (info) => <span className="line-clamp-1 text-gray-600">{info.getValue() || "-"}</span>,
+    }),
+    columnHelper.accessor("is_open", {
+      header: () => <div className="text-center font-semibold">Operasional</div>,
+      cell: (info) => {
+        const isOpen = info.getValue(); 
+        return (
+          <div className="flex justify-center">
+            {isOpen ? (
+              <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-medium border border-blue-200">
+                Buka
+              </span>
+            ) : (
+              <span className="px-3 py-1 rounded-full bg-red-400 text-white text-xs font-medium border border-gray-200">
+                Tutup
+              </span>
+            )}
+          </div>
+        );
+      },
+    }),
+    columnHelper.accessor("payment_configs", {
+      header: () => <div className="text-center font-semibold">Status Midtrans</div>,
+      cell: (info) => {
+        const isRegistered = info.getValue(); 
+        return (
+          <div className="flex justify-center">
+            {isRegistered ? (
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-medium border border-emerald-200">
+                <CheckCircle2 size={14} /> Terdaftar
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-xs font-medium border border-amber-200">
+                <AlertCircle size={14} /> Belum Daftar
+              </span>
+            )}
+          </div>
+        );
+      },
+    }),
+    columnHelper.display({
+      id: "actions",
+      header: () => <div className="text-center font-semibold">Aksi</div>,
+      cell: (info) => {
+        const depot = info.row.original;
+        const isRegistered = depot.payment_configs;
+        const isOpen = depot.is_open;
+
+        return (
+          <div className="flex items-center justify-center gap-2">
+            <button 
+              title={isOpen ? "Tutup Depot" : "Buka Depot"} 
+              className={`p-2 rounded-lg transition-colors border border-transparent ${
+                isOpen ? "text-gray-400 hover:bg-gray-100" : "text-blue-600 hover:bg-blue-100"
+              }`}
+              onClick={() => onToggleClick(depot)} 
+            >
+              <Power size={18} />
+            </button>
+            {!isRegistered && (
+              <button 
+                title="Daftar Kredensial Midtrans" 
+                className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors border border-transparent hover:border-amber-200"
+                onClick={() => toast("Fitur Daftar Midtrans Segera Hadir!", { icon: "💳" })}
+              >
+                <CreditCard size={18} />
+              </button>
+            )}
+            <button 
+              title="Edit Depot" 
+              className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+              onClick={() => onEditClick(depot)} // <--- 3. TAMBAHKAN ONCLICK INI
+            >
+              <Pencil size={18} />
+            </button>
+            <button 
+              title="Hapus Depot" 
+              className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+              onClick={() => onDeleteClick(depot)}
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+        );
+      },
+    }),
+  ];
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id} className="bg-gray-50/50 border-b border-gray-100 text-sm text-gray-500 uppercase tracking-wider">
+                {headerGroup.headers.map((header) => (
+                  <th key={header.id} className="px-6 py-4">
+                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody className="divide-y divide-gray-100 text-sm">
+            {isLoading ? (
+              <tr>
+                <td colSpan={columns.length} className="px-6 py-12 text-center text-gray-400">
+                  <div className="flex justify-center mb-2">
+                    <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                  Memuat data...
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="px-6 py-12 text-center text-gray-400">
+                  Belum ada data depot cabang.
+                </td>
+              </tr>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <tr key={row.id} className="hover:bg-gray-50/50 transition-colors">
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="px-6 py-4">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
