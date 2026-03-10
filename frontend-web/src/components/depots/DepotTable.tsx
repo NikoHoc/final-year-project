@@ -16,12 +16,13 @@ import {
 interface DepotTableProps {
   data: Depot[];
   isLoading: boolean;
-  onToggleClick: (depot: Depot) => void;
+  onOperasionalClick: (depot: Depot) => void;
   onDeleteClick: (depot: Depot) => void;
-  onEditClick: (depot: Depot) => void; 
+  onEditClick: (depot: Depot) => void;
+  onSetupPaymentClick: (depot: Depot) => void;
 }
 
-export default function DepotTable({ data, isLoading, onToggleClick, onDeleteClick, onEditClick }: DepotTableProps) {
+export default function DepotTable({ data, isLoading, onOperasionalClick, onDeleteClick, onEditClick, onSetupPaymentClick }: DepotTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columnHelper = createColumnHelper<Depot>();
@@ -104,23 +105,25 @@ export default function DepotTable({ data, isLoading, onToggleClick, onDeleteCli
               className={`p-2 rounded-lg transition-colors border border-transparent ${
                 isOpen ? "text-gray-400 hover:bg-gray-100" : "text-blue-600 hover:bg-blue-100"
               }`}
-              onClick={() => onToggleClick(depot)} 
+              onClick={() => onOperasionalClick(depot)} 
             >
               <Power size={18} />
             </button>
-            {!isRegistered && (
-              <button 
-                title="Daftar Kredensial Midtrans" 
-                className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors border border-transparent hover:border-amber-200"
-                onClick={() => toast("Fitur Daftar Midtrans Segera Hadir!", { icon: "💳" })}
-              >
-                <CreditCard size={18} />
-              </button>
-            )}
+            <button 
+              title={isRegistered ? "Edit Kredensial Midtrans" : "Daftar Kredensial Midtrans"} 
+              className={`p-2 rounded-lg transition-colors border border-transparent ${
+                isRegistered 
+                  ? "text-emerald-600 hover:bg-emerald-100 hover:border-emerald-200"
+                  : "text-amber-600 hover:bg-amber-100 hover:border-amber-200"
+              }`}
+              onClick={() => onSetupPaymentClick(depot)}
+            >
+              <CreditCard size={18} />
+            </button>
             <button 
               title="Edit Depot" 
               className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-              onClick={() => onEditClick(depot)} // <--- 3. TAMBAHKAN ONCLICK INI
+              onClick={() => onEditClick(depot)}
             >
               <Pencil size={18} />
             </button>

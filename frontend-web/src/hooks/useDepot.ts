@@ -103,8 +103,21 @@ export const useDepots = () => {
     }
   };
 
+  const setupPaymentConfig = async (id: number, data: { merchant_id: string; midtrans_client_key: string; midtrans_server_key: string }) => {
+    try {
+      await depotService.setupPayment(id, data);
+      toast.success("Kredensial Midtrans berhasil disimpan!");
+      fetchDepots();
+      return true;
+    } catch (error) {
+      console.error("Gagal setup payment:", error);
+      toast.error("Gagal menyimpan konfigurasi Midtrans");
+      return false;
+    }
+  };
+
   return { 
     depots, isLoading, refetch: fetchDepots,
-    toggleDepotStatus, deleteDepot, createDepot, updateDepot
+    toggleDepotStatus, deleteDepot, createDepot, updateDepot, setupPaymentConfig
    }; 
 };

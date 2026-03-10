@@ -30,5 +30,10 @@ export const depotService = {
   update: async (id: number, data: { name: string; address: string; phone_number: string }) => {
     const response = await api.put(`/depots/${id}`, data);
     return response.data;
+  },
+
+  setupPayment: async (id: number, data: { merchant_id: string; midtrans_client_key: string; midtrans_server_key: string }) => {
+    const response = await api.post(`/depots/${id}/payment-config`, data);
+    return response.data;
   }
 };

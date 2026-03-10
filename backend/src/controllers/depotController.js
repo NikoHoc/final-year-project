@@ -1,4 +1,5 @@
 const supabase = require("../config/supabase");
+const { encrypt } = require("../utils/crypto");
 
 exports.createDepot = async (req, res) => {
   const { name, address, phone_number } = req.body;
@@ -105,9 +106,7 @@ exports.setupPayment = async (req, res) => {
   const { merchant_id, midtrans_client_key, midtrans_server_key } = req.body;
 
   if (!merchant_id || !midtrans_client_key || !midtrans_server_key) {
-    return res
-      .status(400)
-      .json({ message: "Semua data kredensial Midtrans wajib diisi!" });
+    return res.status(400).json({ message: "Semua data kredensial Midtrans wajib diisi!" });
   }
 
   try {
@@ -116,18 +115,21 @@ exports.setupPayment = async (req, res) => {
       .select("id")
       .eq("id", id)
       .single();
-    if (!depot)
-      return res.status(404).json({ message: "Depot tidak ditemukan" });
+      
+    if (!depot) return res.status(404).json({ message: "Depot tidak ditemukan" });
 
-    // UPSERT -> bawaan supabase, combine UPDATE dan INSERT
+    const encryptedMerchantId = encrypt(merchant_id);
+    const encryptedClientKey = encrypt(midtrans_client_key);
+    const encryptedServerKey = encrypt(midtrans_server_key);
+
     const { data, error } = await supabase
       .from("payment_configs")
       .upsert(
         {
           depot_id: id,
-          merchant_id,
-          midtrans_client_key,
-          midtrans_server_key,
+          merchant_id: encryptedMerchantId,
+          midtrans_client_key: encryptedClientKey,
+          midtrans_server_key: encryptedServerKey,
         },
         { onConflict: "depot_id" },
       )
@@ -138,27 +140,8 @@ exports.setupPayment = async (req, res) => {
 
     return res.status(200).json({
       status: true,
-      message: "Konfigurasi Pembayaran Midtrans Berhasil Disimpan!",
-      data,
+      message: "Konfigurasi Pembayaran Midtrans Berhasil Disimpan Secara Aman!",
     });
-  } catch (err) {
-    return res.status(500).json({ status: false, message: err.message });
-  }
-};
-
-exports.getPaymentConfig = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const { data, error } = await supabase
-      .from("payment_configs")
-      .select("*")
-      .eq("depot_id", id)
-      .single();
-
-    if (error) return res.status(404).json({ message: "Konfigurasi belum diset" });
-
-    return res.status(200).json({ status: true, data });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
   }

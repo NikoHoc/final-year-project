@@ -7,19 +7,20 @@ import { Depot } from "@/types";
 import DepotTable from "@/components/depots/DepotTable";
 import DepotFormModal from "@/components/depots/DepotFormModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import PaymentConfigModal from "@/components/depots/PaymentConfigModal";
 
 export default function DepotsPage() {
-  const { depots, isLoading, toggleDepotStatus, deleteDepot, createDepot, updateDepot } = useDepots();
+  const { depots, isLoading, toggleDepotStatus, deleteDepot, createDepot, updateDepot, setupPaymentConfig } = useDepots();
 
   const [selectedDepot, setSelectedDepot] = useState<Depot | null>(null);
-  const [confirmType, setConfirmType] = useState<"toggle" | "delete" | null>(null);
 
+  const [confirmType, setConfirmType] = useState<"operasional" | "delete" | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [depotToEdit, setDepotToEdit] = useState<Depot | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const handleConfirmAction = async () => {
     if (!selectedDepot) return;
-    if (confirmType === "toggle") {
+    if (confirmType === "operasional") {
       await toggleDepotStatus(selectedDepot.id, !!selectedDepot.is_open);
     } else if (confirmType === "delete") {
       await deleteDepot(selectedDepot.id);
@@ -29,16 +30,21 @@ export default function DepotsPage() {
   };
 
   const handleFormSubmit = async (data: { name: string; address: string; phone_number: string }) => {
-    if (depotToEdit) {
-      return await updateDepot(depotToEdit.id, data); 
+    if (selectedDepot) {
+      return await updateDepot(selectedDepot.id, data); 
     } else {
       return await createDepot(data);
     }
   };
 
   const handleEditClick = (depot: Depot) => {
-    setDepotToEdit(depot);
+    setSelectedDepot(depot);
     setIsFormOpen(true);
+  };
+
+  const handlePaymentSubmit = async (data: { merchant_id: string; midtrans_client_key: string; midtrans_server_key: string }) => {
+    if (!selectedDepot) return false;
+    return await setupPaymentConfig(selectedDepot.id, data);
   };
 
   return (
@@ -50,7 +56,7 @@ export default function DepotsPage() {
         </div>
         
         <button 
-          onClick={() => { setDepotToEdit(null); setIsFormOpen(true); }}
+          onClick={() => { setSelectedDepot(null); setIsFormOpen(true); }}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm"
         >
           <Plus size={20} />
@@ -61,15 +67,16 @@ export default function DepotsPage() {
       <DepotTable 
         data={depots} 
         isLoading={isLoading} 
-        onToggleClick={(depot) => { setSelectedDepot(depot); setConfirmType("toggle"); }}
+        onOperasionalClick={(depot) => { setSelectedDepot(depot); setConfirmType("operasional"); }}
         onDeleteClick={(depot) => { setSelectedDepot(depot); setConfirmType("delete"); }}
         onEditClick={handleEditClick}
+        onSetupPaymentClick={(depot) => { setSelectedDepot(depot); setIsPaymentModalOpen(true); }}
       />
 
       <DepotFormModal
         isOpen={isFormOpen}
-        onClose={() => { setIsFormOpen(false); setDepotToEdit(null); }}
-        initialData={depotToEdit}
+        onClose={() => { setIsFormOpen(false); setSelectedDepot(null); }}
+        initialData={selectedDepot}
         onSubmit={handleFormSubmit}
       />
 
@@ -84,6 +91,13 @@ export default function DepotsPage() {
             : `Apakah Anda yakin ingin ${selectedDepot?.is_open ? "MENUTUP" : "MEMBUKA"} operasional untuk cabang "${selectedDepot?.name}"?`
         }
         type={confirmType === "delete" ? "danger" : "warning"}
+      />
+
+      <PaymentConfigModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => { setIsPaymentModalOpen(false); setSelectedDepot(null); }}
+        depot={selectedDepot}
+        onSubmit={handlePaymentSubmit}
       />
     </div>
   );
