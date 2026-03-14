@@ -15,6 +15,19 @@ export interface User {
   created_at?: string;
 }
 
+export interface Employee {
+  id: string;
+  full_name: string;
+  username: string;
+  phone_number: string;
+  role: "admin" | "kasir" | "pelayan" | "pelanggan";
+  depot_id: number | null;
+  created_at: string;
+  depots?: {
+    name: string;
+  } | null;
+}
+
 export interface Depot {
   id: number;
   name: string;

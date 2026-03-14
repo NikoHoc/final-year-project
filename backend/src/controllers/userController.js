@@ -92,19 +92,51 @@ exports.createEmployee = async (req, res) => {
 };
 
 exports.getEmployees = async (req, res) => {
-  const { depot_id } = req.params;
+  const { depot_id, role } = req.query;
 
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("profiles")
-      .select("*")
-      .eq("depot_id", depot_id)
-      .in("role", ["kasir", "pelayan"])
-      .order("role", { ascending: true });
+      .select("*, depots(name)")
+      .order("created_at", { ascending: false });
+
+    if (depot_id && depot_id !== "all") {
+      query = query.eq("depot_id", depot_id);
+    }
+
+    if (role && role !== "all") {  
+      query = query.eq("role", role);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
 
     return res.status(200).json({ status: true, data });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.updateEmployee = async (req, res) => {
+  const { id } = req.params;
+  const { full_name, username, phone_number, role, depot_id } = req.body;
+
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ full_name, username, phone_number, role, depot_id })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      status: true,
+      message: "Data pegawai berhasil diperbarui!",
+      data,
+    });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
   }

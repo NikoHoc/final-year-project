@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Depot } from "@/types";
 import { Pencil, Trash2, CreditCard, AlertCircle, CheckCircle2, ArrowUpDown, Power } from "lucide-react";
-import toast from "react-hot-toast";
 import {
   createColumnHelper,
   flexRender,

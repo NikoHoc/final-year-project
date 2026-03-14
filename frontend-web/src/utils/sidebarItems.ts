@@ -18,7 +18,7 @@ export const SIDEBAR_ITEMS: Record<Role, SidebarItem[]> = {
   admin: [
     { title: "Dashboard", path: "/admin", icon: LayoutDashboard },
     { title: "Manajemen Depot", path: "/admin/depots", icon: Store },
-    { title: "Manajemen Pegawai", path: "/admin/users", icon: Users },
+    { title: "Manajemen Users", path: "/admin/users", icon: Users },
     { title: "Manajemen Menu", path: "/admin/menus", icon: UtensilsCrossed },
   ],
   kasir: [

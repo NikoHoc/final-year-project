@@ -11,7 +11,8 @@ router.get('/profile', userController.getMyProfile);
 router.put('/profile', userController.updateMyProfile);
 
 router.post('/employees', roleMiddleware(['admin']), userController.createEmployee);
-router.get('/employees/:depot_id', roleMiddleware(['admin']), userController.getEmployees);
+router.get('/employees', roleMiddleware(['admin']), userController.getEmployees);
+router.put('/employees/:id', roleMiddleware(['admin']), userController.updateEmployee);
 router.delete('/employees/:id', roleMiddleware(['admin']), userController.deleteEmployee);
 
 module.exports = router;

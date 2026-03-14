@@ -13,6 +13,6 @@ router.get("/", depotController.getDepots);
 router.get("/:id", depotController.getDepotDetail);
 router.post("/:id/payment-config", roleMiddleware(["admin"]), depotController.setupPayment);
 router.put("/:id/status", roleMiddleware(["admin", "kasir"]), depotController.toggleStatus);
-router.delete('/:id', authMiddleware, roleMiddleware(['admin']), depotController.deleteDepot);
+router.delete('/:id', roleMiddleware(['admin']), depotController.deleteDepot);
 
 module.exports = router;
