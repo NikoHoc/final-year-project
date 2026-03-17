@@ -166,19 +166,24 @@ exports.deleteMenu = async (req, res) => {
 };
 
 exports.getMenus = async (req, res) => {
-  const { depot_id } = req.params;
+  const { depot_id, category_id } = req.query;
+
+  if (!depot_id) {
+    return res.status(400).json({ status: false, message: "depot_id diperlukan" });
+  }
 
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("menus")
-      .select(
-        `
-        *,
-        categories ( name )
-      `,
-      )
+      .select("*, categories ( name )")
       .eq("depot_id", depot_id)
       .order("created_at", { ascending: false });
+
+    if (category_id) {
+      query = query.eq("category_id", category_id);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return res.status(200).json({ status: true, data });

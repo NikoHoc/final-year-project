@@ -1,14 +1,18 @@
 const supabase = require("../config/supabase");
 
 exports.getCategories = async (req, res) => {
-  const { depot_id } = req.params;
+  const { depot_id } = req.query;
+
+  if (!depot_id) {
+    return res.status(400).json({ status: false, message: "Depot ID diperlukan" });
+  }
 
   try {
     const { data, error } = await supabase
       .from("categories")
       .select("*")
       .eq("depot_id", depot_id)
-      .order("id", { ascending: true });
+      .order("created_at", { ascending: true });
 
     if (error) throw error;
     return res.status(200).json({ status: true, data });
@@ -50,6 +54,10 @@ exports.updateCategory = async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
 
+  if (!name) {
+    return res.status(400).json({ status: false, message: "Nama kategori tidak boleh kosong" });
+  }
+  
   try {
     const { data, error } = await supabase
       .from("categories")

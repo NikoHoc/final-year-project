@@ -67,7 +67,7 @@ export default function UserTable({ data, isLoading, onEditClick, onDeleteClick 
       cell: (info) => {
         const user = info.row.original;
         if (user.role === "admin") return <span className="text-gray-500 font-medium italic">Global (Pusat)</span>;
-        if (user.role === "pelanggan") return <span className="text-gray-400 italic">-</span>; // Pelanggan tidak ada cabang
+        if (user.role === "pelanggan") return <span className="text-gray-400 italic">-</span>;
         return <span className="font-medium text-gray-800">{user.depots?.name || "-"}</span>;
       },
     }),

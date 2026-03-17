@@ -176,7 +176,6 @@ export default function UserFormModal({
             </select>
           </div>
 
-          {/* HANYA TAMPIL JIKA BUKAN PELANGGAN */}
           {role !== "pelanggan" && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -219,7 +218,7 @@ export default function UserFormModal({
               ? "Menyimpan..."
               : isEditMode
                 ? "Perbarui Data"
-                : "Daftarkan Pegawai"}
+                : "Daftarkan User"}
           </button>
         </div>
       </form>

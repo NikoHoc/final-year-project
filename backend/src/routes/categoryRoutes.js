@@ -7,9 +7,9 @@ const roleMiddleware = require("../middlewares/roleMiddleware");
 
 router.use(authMiddleware);
 
+router.get('/', categoryController.getCategories);
 router.post("/", roleMiddleware(["admin"]), categoryController.createCategory);
 router.put("/:id", roleMiddleware(["admin"]), categoryController.updateCategory);
 router.delete("/:id", roleMiddleware(["admin"]), categoryController.deleteCategory);
-router.get("/:depot_id", categoryController.getCategories);
 
 module.exports = router;

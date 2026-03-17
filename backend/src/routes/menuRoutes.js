@@ -14,6 +14,6 @@ router.use(authMiddleware);
 router.post("/", roleMiddleware(["admin"]), upload.single("image"), menuController.createMenu);
 router.put("/:id", roleMiddleware(["admin", "owner"]), upload.single("image"), menuController.updateMenu);
 router.delete("/:id", roleMiddleware(["admin", "owner"]), menuController.deleteMenu);
-router.get("/:depot_id", menuController.getMenus);
+router.get("/", menuController.getMenus);
 
 module.exports = router;
