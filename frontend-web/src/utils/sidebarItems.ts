@@ -4,6 +4,7 @@ import {
   Users, 
   UtensilsCrossed, 
   Receipt, 
+  ClockAlert,
   ClipboardList
 } from "lucide-react";
 import { Role } from "@/types";
@@ -20,6 +21,9 @@ export const SIDEBAR_ITEMS: Record<Role, SidebarItem[]> = {
     { title: "Manajemen Depot", path: "/admin/depots", icon: Store },
     { title: "Manajemen Users", path: "/admin/users", icon: Users },
     { title: "Manajemen Menu", path: "/admin/menus", icon: UtensilsCrossed },
+    { title: "Monitoring Transaksi", path: "/admin/transactions", icon: ClockAlert },
+    { title: "Monitoring Stok", path: "/admin/stocks", icon: ClockAlert },
+    { title: "Monitoring Mutasi", path: "/admin/mutations", icon: ClockAlert },
   ],
   kasir: [
     { title: "Dashboard Kasir", path: "/kasir", icon: LayoutDashboard },
