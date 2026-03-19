@@ -70,7 +70,8 @@ export interface Table {
   id: number;
   depot_id: number;
   table_number: string;
-  status: string; 
+  status: "Available" | "Occupied" | "Reserved";
+  created_at?: string;
 }
 
 export interface TransactionItem {

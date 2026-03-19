@@ -5,7 +5,8 @@ import {
   UtensilsCrossed, 
   Receipt, 
   ClockAlert,
-  ClipboardList
+  ClipboardList,
+  TableCellsMerge,
 } from "lucide-react";
 import { Role } from "@/types";
 
@@ -27,6 +28,8 @@ export const SIDEBAR_ITEMS: Record<Role, SidebarItem[]> = {
   ],
   kasir: [
     { title: "Dashboard Kasir", path: "/kasir", icon: LayoutDashboard },
+    { title: "Manajemen Meja", path: "/kasir/tables", icon: TableCellsMerge},
+    { title: "Manajemen Menu", path: "/kasir/menus", icon: UtensilsCrossed},
     { title: "Transaksi Online", path: "/kasir/online", icon: Receipt },
   ],
   pelayan: [

@@ -47,7 +47,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/", // Halaman utama (root)
+    "/",
     "/admin/:path*",
     "/kasir/:path*",
     "/pelayan/:path*",

@@ -183,26 +183,26 @@ export default function MenusPage() {
                 </div>
               ) : (
                 <ul className="space-y-1">
-                  {categories.map((cat) => (
+                  {categories.map((category) => (
                     <li
-                      key={cat.id}
-                      onClick={() => setActiveCategoryId(cat.id)}
+                      key={category.id}
+                      onClick={() => setActiveCategoryId(category.id)}
                       className={`flex items-center justify-between p-3 rounded-lg group transition-colors cursor-pointer border ${
-                        activeCategoryId === cat.id
+                        activeCategoryId === category.id
                           ? "bg-blue-50 border-blue-200"
                           : "hover:bg-gray-50 border-transparent"
                       }`}
                     >
                       <span
-                        className={`text-sm font-medium ${activeCategoryId === cat.id ? "text-blue-700" : "text-gray-700"}`}
+                        className={`text-sm font-medium ${activeCategoryId === category.id ? "text-blue-700" : "text-gray-700"}`}
                       >
-                        {cat.name}
+                        {category.name}
                       </span>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedCategory(cat);
+                            setSelectedCategory(category);
                             setIsCategoryModalOpen(true);
                           }}
                           className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-md"
@@ -212,7 +212,7 @@ export default function MenusPage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setCategoryToDelete(cat);
+                            setCategoryToDelete(category);
                           }}
                           className="p-1.5 text-red-600 hover:bg-red-100 rounded-md"
                         >

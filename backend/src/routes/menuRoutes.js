@@ -12,8 +12,8 @@ const roleMiddleware = require("../middlewares/roleMiddleware");
 router.use(authMiddleware);
 
 router.post("/", roleMiddleware(["admin"]), upload.single("image"), menuController.createMenu);
-router.put("/:id", roleMiddleware(["admin", "owner"]), upload.single("image"), menuController.updateMenu);
-router.delete("/:id", roleMiddleware(["admin", "owner"]), menuController.deleteMenu);
+router.put("/:id", roleMiddleware(["admin", "kasir"]), upload.single("image"), menuController.updateMenu);
+router.delete("/:id", roleMiddleware(["admin"]), menuController.deleteMenu);
 router.get("/", menuController.getMenus);
 
 module.exports = router;
