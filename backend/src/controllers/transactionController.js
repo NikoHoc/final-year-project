@@ -2,7 +2,7 @@ const supabase = require("../config/supabase");
 const { snap } = require("../config/midtrans");
 
 exports.createTransaction = async (req, res) => {
-  const { depot_id, type, table_id, customer_id, pickup_method, use_tax, items } = req.body;
+  const { depot_id, user_id, type, table_id, customer_id, pickup_method, use_tax, items } = req.body;
 
   if (!depot_id || !items || items.length === 0) {
     return res
@@ -46,13 +46,14 @@ exports.createTransaction = async (req, res) => {
     const tax_amount = useTax ? subtotal * 0.1 : 0;
     const grand_total = subtotal + tax_amount;
 
-    let initialStatus = type === "online" ? "waiting_confirmation" : "process";
+    let initialStatus = type === "online" ? "waiting_confirmation" : "pending";
 
     const { data: transaction, error: transactionError } = await supabase
       .from("transactions")
       .insert([
         {
           depot_id,
+          user_id,
           type,
           table_id: table_id || null,
           customer_id: customer_id || null,
@@ -337,9 +338,7 @@ exports.getTransactions = async (req, res) => {
         `
         *,
         transaction_items (
-          quantity,
-          price_at_time,
-          note,
+          id, menu_id, quantity, price_at_time, note, is_printed,
           menus ( name, image_url )
         )
       `,
@@ -373,7 +372,7 @@ exports.getTransactionDetail = async (req, res) => {
         `
         *,
         transaction_items (
-          id, quantity, price_at_time, is_half_portion, note, is_printed,
+          id, menu_id, quantity, price_at_time, is_half_portion, note, is_printed,
           menus ( name, image_url )
         )
       `,

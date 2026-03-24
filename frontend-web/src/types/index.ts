@@ -1,5 +1,5 @@
 export type Role = 'admin' | 'kasir' | 'pelayan' | 'pelanggan';
-export type TransactionType = 'onsite' | 'online';
+export type TransactionType = 'onsite' | 'online' | 'takeaway';
 export type OrderStatus = 'pending' | 'confirmed' | 'cooking' | 'ready' | 'completed' | 'cancelled';
 export type PaymentStatus = 'unpaid' | 'paid' | 'failed';
 export type PickupMethod = 'dine_in' | 'pickup_self' | 'driver';
@@ -83,7 +83,8 @@ export interface TransactionItem {
   is_half_portion: boolean;
   note?: string;
   is_printed: boolean;
-  menus?: { 
+  menus: { 
+    id?: number;
     name: string;
     image_url: string;
   };
@@ -110,4 +111,22 @@ export interface Transaction {
   rejection_reason?: string;
   created_at: string;
   transaction_items?: TransactionItem[]; 
+}
+
+export interface CartItemPayload {
+  menu_id: number;
+  quantity: number;
+  is_half_portion: boolean;
+  note?: string;
+}
+
+export interface CreateTransactionPayload {
+  depot_id: number;
+  user_id?: string | null;
+  type: "onsite" | "online" | "takeaway";
+  table_id?: number | null;
+  customer_id?: string | null;
+  pickup_method?: "dine_in" | "pickup_self" | "driver" | null;
+  use_tax?: boolean;
+  items: CartItemPayload[];
 }
