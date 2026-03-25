@@ -84,6 +84,7 @@ export default function PosPage() {
             quantity: item.quantity,
             is_half_portion: item.is_half_portion,
             note: item.note || "",
+            is_saved: true,
             menu: { 
               ...item.menus, 
               id: item.menu_id,
@@ -146,7 +147,7 @@ export default function PosPage() {
         toast.success("Pesanan berhasil dikirim ke dapur!");
         router.push("/kasir");
       } else {
-        const newItemsOnly = cartItems.filter(item => item.unique_id.length > 10);
+        const newItemsOnly = cartItems.filter(item => item.is_saved !== true);
         if (newItemsOnly.length > 0) {
           const newPayload = newItemsOnly.map((item) => ({
             menu_id: item.menu_id,
@@ -291,18 +292,22 @@ export default function PosPage() {
                     <Edit3 size={14} className="text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Tambah catatan..."
+                      placeholder={item.is_saved ? "Catatan terkunci" : "Tambah catatan..."}
                       value={item.note || ""}
-                      onChange={(e) =>
-                        updateNote(item.unique_id, e.target.value)
-                      }
-                      className="flex-1 text-xs border-b border-gray-200 focus:border-blue-500 outline-none pb-1 bg-transparent"
+                      onChange={(e) => updateNote(item.unique_id, e.target.value)}
+                      disabled={item.is_saved}
+                      className={`flex-1 text-xs border-b outline-none pb-1 bg-transparent ${
+                        item.is_saved 
+                          ? "border-transparent text-gray-400 cursor-not-allowed" 
+                          : "border-gray-200 focus:border-blue-500"
+                      }`}
                     />
                   </div>
 
                   {item.menu.half_price && (
                     <button
                       onClick={() => toggleHalfPortion(item.unique_id)}
+                      disabled={item.is_saved}
                       className="mt-2 flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-blue-600"
                     >
                       {item.is_half_portion ? (
@@ -318,7 +323,10 @@ export default function PosPage() {
                 <div className="flex flex-col items-end justify-between">
                   <button
                     onClick={() => removeItem(item.unique_id)}
-                    className="text-red-400 hover:text-red-600 p-1"
+                    disabled={item.is_saved}
+                    className={`p-1 ${
+                      item.is_saved ? "text-gray-200 cursor-not-allowed" : "text-red-400 hover:text-red-600"
+                    }`}
                   >
                     <Trash2 size={16} />
                   </button>
@@ -326,16 +334,28 @@ export default function PosPage() {
                   <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-1">
                     <button
                       onClick={() => updateQuantity(item.unique_id, -1)}
-                      className="w-6 h-6 flex items-center justify-center rounded bg-white shadow-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                      disabled={item.is_saved} // <--- KUNCI MINUS
+                      className={`w-6 h-6 flex items-center justify-center rounded shadow-sm ${
+                        item.is_saved 
+                          ? "bg-gray-100 text-gray-300 cursor-not-allowed" 
+                          : "bg-white text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                      }`}
                     >
                       <Minus size={14} />
                     </button>
-                    <span className="w-6 text-center text-sm font-bold">
+                    
+                    <span className={`w-6 text-center text-sm font-bold ${item.is_saved ? "text-gray-400" : "text-gray-800"}`}>
                       {item.quantity}
                     </span>
+                    
                     <button
                       onClick={() => updateQuantity(item.unique_id, 1)}
-                      className="w-6 h-6 flex items-center justify-center rounded bg-white shadow-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                      disabled={item.is_saved} 
+                      className={`w-6 h-6 flex items-center justify-center rounded shadow-sm ${
+                        item.is_saved 
+                          ? "bg-gray-100 text-gray-300 cursor-not-allowed" 
+                          : "bg-white text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                      }`}
                     >
                       <Plus size={14} />
                     </button>

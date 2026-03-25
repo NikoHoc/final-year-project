@@ -4,6 +4,7 @@ import { Menu, CartItemPayload } from "@/types";
 export interface CartItem extends CartItemPayload {
   unique_id: string;
   menu: Menu;
+  is_saved?: boolean;
 }
 
 export const useCart = () => {
@@ -13,7 +14,7 @@ export const useCart = () => {
   const addItem = (menu: Menu, isHalfPortion: boolean = false) => {
     setCartItems((prev) => {
       const existingItemIndex = prev.findIndex(
-        (item) => item.menu_id === menu.id && item.is_half_portion === isHalfPortion && !item.note
+        (item) => item.menu_id === menu.id && item.is_half_portion === isHalfPortion && !item.note && !item.is_saved
       );
 
       if (existingItemIndex >= 0) {
@@ -33,6 +34,7 @@ export const useCart = () => {
           quantity: 1,
           is_half_portion: isHalfPortion,
           menu: menu,
+          is_saved: false,
         },
       ];
     });
