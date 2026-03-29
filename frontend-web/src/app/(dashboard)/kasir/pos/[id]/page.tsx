@@ -78,21 +78,22 @@ export default function PosPage() {
 
           if (transaction.table_id) setTableId(transaction.table_id.toString());
 
-          const loadedCart = transaction.transaction_items?.map((item: TransactionItem) => ({
-            unique_id: item.id.toString(), 
-            menu_id: item.menu_id,
-            quantity: item.quantity,
-            is_half_portion: item.is_half_portion,
-            note: item.note || "",
-            is_saved: true,
-            menu: { 
-              ...item.menus, 
-              id: item.menu_id,
-              price: item.price_at_time, 
-              half_price: item.price_at_time 
-            } as Menu
-          })) || [];
-          
+          const loadedCart =
+            transaction.transaction_items?.map((item: TransactionItem) => ({
+              unique_id: item.id.toString(),
+              menu_id: item.menu_id,
+              quantity: item.quantity,
+              is_half_portion: item.is_half_portion,
+              note: item.note || "",
+              is_saved: true,
+              menu: {
+                ...item.menus,
+                id: item.menu_id,
+                price: item.price_at_time,
+                half_price: item.price_at_time,
+              } as Menu,
+            })) || [];
+
           setCartItems(loadedCart);
         } catch (error) {
           console.error("Error mengambil data transaksi lama:", error);
@@ -128,15 +129,15 @@ export default function PosPage() {
     setIsProcessing(true);
 
     try {
-      const itemsPayload = cartItems.map((item) => ({
-        menu_id: item.menu_id,
-        quantity: item.quantity,
-        is_half_portion: item.is_half_portion,
-        note: item.note,
-      }));
-
       if (transactionId === "new") {
-        await transactionService.create({
+        const itemsPayload = cartItems.map((item) => ({
+          menu_id: item.menu_id,
+          quantity: item.quantity,
+          is_half_portion: item.is_half_portion,
+          note: item.note,
+        }));
+
+        const response = await transactionService.create({
           user_id: userId,
           depot_id: depotId,
           type: orderType as "onsite" | "online" | "takeaway",
@@ -144,10 +145,19 @@ export default function PosPage() {
           use_tax: useTax,
           items: itemsPayload,
         });
+
         toast.success("Pesanan berhasil dikirim ke dapur!");
-        router.push("/kasir");
+
+        const newTxId = response?.data?.transaction?.id;
+
+        if (newTxId) {
+          router.push(`/kasir/pos/${newTxId}`);
+        } else {
+          router.push("/kasir");
+        }
       } else {
-        const newItemsOnly = cartItems.filter(item => item.is_saved !== true);
+        const newItemsOnly = cartItems.filter((item) => item.is_saved !== true);
+
         if (newItemsOnly.length > 0) {
           const newPayload = newItemsOnly.map((item) => ({
             menu_id: item.menu_id,
@@ -155,15 +165,16 @@ export default function PosPage() {
             is_half_portion: item.is_half_portion,
             note: item.note,
           }));
+
           await transactionService.addItems(transactionId, newPayload);
           toast.success("Pesanan tambahan dikirim!");
-        } else {
-          toast.success("Tidak ada menu baru yang ditambahkan.");
+
+          window.location.reload();
         }
       }
     } catch (error) {
       toast.error("Gagal memproses pesanan");
-      console.error("Gagal memproses pesanan: ", error)
+      console.error("Gagal memproses pesanan: ", error);
     } finally {
       setIsProcessing(false);
     }
@@ -292,13 +303,17 @@ export default function PosPage() {
                     <Edit3 size={14} className="text-gray-400" />
                     <input
                       type="text"
-                      placeholder={item.is_saved ? "Catatan terkunci" : "Tambah catatan..."}
+                      placeholder={
+                        item.is_saved ? "Catatan terkunci" : "Tambah catatan..."
+                      }
                       value={item.note || ""}
-                      onChange={(e) => updateNote(item.unique_id, e.target.value)}
+                      onChange={(e) =>
+                        updateNote(item.unique_id, e.target.value)
+                      }
                       disabled={item.is_saved}
                       className={`flex-1 text-xs border-b outline-none pb-1 bg-transparent ${
-                        item.is_saved 
-                          ? "border-transparent text-gray-400 cursor-not-allowed" 
+                        item.is_saved
+                          ? "border-transparent text-gray-400 cursor-not-allowed"
                           : "border-gray-200 focus:border-blue-500"
                       }`}
                     />
@@ -325,7 +340,9 @@ export default function PosPage() {
                     onClick={() => removeItem(item.unique_id)}
                     disabled={item.is_saved}
                     className={`p-1 ${
-                      item.is_saved ? "text-gray-200 cursor-not-allowed" : "text-red-400 hover:text-red-600"
+                      item.is_saved
+                        ? "text-gray-200 cursor-not-allowed"
+                        : "text-red-400 hover:text-red-600"
                     }`}
                   >
                     <Trash2 size={16} />
@@ -334,26 +351,28 @@ export default function PosPage() {
                   <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-1">
                     <button
                       onClick={() => updateQuantity(item.unique_id, -1)}
-                      disabled={item.is_saved} // <--- KUNCI MINUS
+                      disabled={item.is_saved}
                       className={`w-6 h-6 flex items-center justify-center rounded shadow-sm ${
-                        item.is_saved 
-                          ? "bg-gray-100 text-gray-300 cursor-not-allowed" 
+                        item.is_saved
+                          ? "bg-gray-100 text-gray-300 cursor-not-allowed"
                           : "bg-white text-gray-600 hover:text-blue-600 hover:bg-blue-50"
                       }`}
                     >
                       <Minus size={14} />
                     </button>
-                    
-                    <span className={`w-6 text-center text-sm font-bold ${item.is_saved ? "text-gray-400" : "text-gray-800"}`}>
+
+                    <span
+                      className={`w-6 text-center text-sm font-bold ${item.is_saved ? "text-gray-400" : "text-gray-800"}`}
+                    >
                       {item.quantity}
                     </span>
-                    
+
                     <button
                       onClick={() => updateQuantity(item.unique_id, 1)}
-                      disabled={item.is_saved} 
+                      disabled={item.is_saved}
                       className={`w-6 h-6 flex items-center justify-center rounded shadow-sm ${
-                        item.is_saved 
-                          ? "bg-gray-100 text-gray-300 cursor-not-allowed" 
+                        item.is_saved
+                          ? "bg-gray-100 text-gray-300 cursor-not-allowed"
                           : "bg-white text-gray-600 hover:text-blue-600 hover:bg-blue-50"
                       }`}
                     >
