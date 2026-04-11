@@ -1,241 +1,127 @@
-"use client";
-
-import { useState, useEffect, useRef } from "react";
-import Modal from "@/components/ui/Modal";
-import { Menu } from "@/types";
-import { Upload, X, ImageIcon } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import Modal from "../ui/Modal";
+import { Category, Menu } from "@/types";
 import Image from "next/image";
 
 interface MenuFormModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSubmit: (data: FormData) => Promise<boolean>; 
+  categories: Category[];
   initialData?: Menu | null;
-  onSubmit: (formData: FormData) => Promise<boolean>;
 }
 
 export default function MenuFormModal({
-  isOpen,
-  onClose,
-  initialData,
-  onSubmit,
+  isOpen, onClose, onSubmit, categories, initialData,
 }: MenuFormModalProps) {
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState<number | "">("");
-  const [halfPrice, setHalfPrice] = useState<number | "">("");
-  const [description, setDescription] = useState("");
-  const [isAvailable, setIsAvailable] = useState(true);
-
+  const [formData, setFormData] = useState({
+    name: "", price: "", half_price: "", category_id: "", description: "", is_available: true,
+  });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const isEditMode = !!initialData;
 
   useEffect(() => {
     if (isOpen) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setName(initialData?.name || "");
-      setPrice(initialData?.price || "");
-      setHalfPrice(initialData?.half_price || "");
-      setDescription(initialData?.description || "");
-      setIsAvailable(initialData?.is_available ?? true);
+      setFormData({
+        name: initialData?.name || "",
+        price: initialData?.price?.toString() || "",
+        half_price: initialData?.half_price?.toString() || "",
+        category_id: initialData?.category_id?.toString() || (categories.length > 0 ? categories[0].id.toString() : ""),
+        description: initialData?.description || "",
+        is_available: initialData?.is_available ?? true,
+      });
       setImageFile(null);
       setImagePreview(initialData?.image_url || null);
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, categories]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImageFile(null);
+      setImagePreview(initialData?.image_url || null);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !price) return;
-
     setIsSubmitting(true);
 
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("price", price.toString());
-    formData.append("is_available", String(isAvailable));
+    const submitData = new FormData();
+    submitData.append("category_id", formData.category_id);
+    submitData.append("name", formData.name);
+    submitData.append("price", formData.price);
+    submitData.append("is_available", String(formData.is_available));
+    if (formData.half_price) submitData.append("half_price", formData.half_price);
+    if (formData.description) submitData.append("description", formData.description);
+    if (imageFile) submitData.append("image", imageFile);
 
-    if (halfPrice) formData.append("half_price", halfPrice.toString());
-    if (description) formData.append("description", description);
-
-    if (imageFile) {
-      formData.append("image", imageFile); 
-    }
-
-    const success = await onSubmit(formData);
-
+    const success = await onSubmit(submitData);
     setIsSubmitting(false);
     if (success) onClose();
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={isEditMode ? "Edit Menu Makanan" : "Tambah Menu Baru"}
-      maxWidth="2xl"
-    >
-      <form onSubmit={handleSubmit} className="space-y-5 pt-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nama Menu <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Contoh: Mie Bakso"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-black"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Harga (Rp) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="0"
-                  value={price}
-                  onChange={(e) => setPrice(Number(e.target.value))}
-                  placeholder="0"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-black"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Harga 1/2
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={halfPrice}
-                  onChange={(e) =>
-                    setHalfPrice(e.target.value ? Number(e.target.value) : "")
-                  }
-                  placeholder="0"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-black"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Deskripsi
-              </label>
-              <textarea
-                rows={3}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Contoh: Mie rasa asin gurih dengan bakso 5 biji..."
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-black resize-none"
-              />
-            </div>
+    <Modal title={initialData ? "Edit Master Menu" : "Tambah Master Menu"} isOpen={isOpen} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Nama Menu</label>
+            <input type="text" required className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
           </div>
-
-          <div className="flex flex-col">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Foto Makanan
-            </label>
-
-            <div
-              className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-xl overflow-hidden relative transition-colors ${imagePreview ? "border-blue-300 bg-blue-50/50" : "border-gray-300 bg-gray-50 hover:bg-gray-100"}`}
-            >
-              {imagePreview ? (
-                <>
-                  <Image
-                    src={imagePreview}
-                    alt="Preview"
-                    fill
-                    unoptimized
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="px-4 py-2 bg-white text-gray-800 text-sm font-medium rounded-lg shadow-lg hover:bg-gray-100 flex items-center gap-2"
-                    >
-                      <Upload size={16} /> Ganti Foto
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div
-                  className="text-center p-6 cursor-pointer"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <div className="w-12 h-12 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <ImageIcon size={24} />
-                  </div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Klik untuk unggah foto
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    PNG, JPG up to 2MB
-                  </p>
-                </div>
-              )}
-
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-            </div>
-
-            {imagePreview && (
-              <button
-                type="button"
-                onClick={() => {
-                  setImageFile(null);
-                  setImagePreview(null);
-                }}
-                className="mt-2 text-sm text-red-500 hover:text-red-600 font-medium flex items-center justify-center gap-1"
-              >
-                <X size={14} />
-              </button>
-            )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Kategori</label>
+            <select required className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>{category.name}</option>
+              ))}
+            </select>
           </div>
         </div>
-
-        <div className="flex gap-3 pt-5 border-t border-gray-100 mt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting || !name || !price}
-            className={`flex-1 px-4 py-2.5 text-white rounded-lg font-medium transition-colors ${isSubmitting || !name || !price ? "bg-blue-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
-          >
-            {isSubmitting
-              ? "Menyimpan..."
-              : isEditMode
-                ? "Simpan Perubahan"
-                : "Tambah Menu"}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Harga (Rp)</label>
+            <input type="number" required className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Harga 1/2 Porsi (Opsional)</label>
+            <input type="number" className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" value={formData.half_price} onChange={(e) => setFormData({ ...formData, half_price: e.target.value })} />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Deskripsi (Opsional)</label>
+          <textarea className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" rows={2} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Foto Menu</label>
+          <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+          {imagePreview && (
+            <div className="mt-3 relative w-full h-32 rounded-lg overflow-hidden border border-gray-200">
+              <Image 
+                src={imagePreview} 
+                alt="Preview" 
+                fill 
+                className="object-cover" 
+              />
+            </div>
+          )}
+        </div>
+        {initialData && (
+          <div className="flex items-center">
+            <input type="checkbox" id="is_available" checked={formData.is_available} onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
+            <label htmlFor="is_available" className="ml-2 block text-sm text-gray-900">Menu Tersedia</label>
+          </div>
+        )}
+        <div className="flex justify-end gap-2 mt-6">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md">Batal</button>
+          <button type="submit" disabled={isSubmitting} className="px-4 py-2 text-white bg-blue-600 rounded-md">
+            {isSubmitting ? "Menyimpan..." : "Simpan"}
           </button>
         </div>
       </form>

@@ -15,4 +15,7 @@ router.post("/:id/payment-config", roleMiddleware(["admin"]), depotController.se
 router.put("/:id/status", roleMiddleware(["admin", "kasir"]), depotController.toggleStatus);
 router.delete('/:id', roleMiddleware(['admin']), depotController.deleteDepot);
 
+router.post("/:id/menus", authMiddleware, roleMiddleware(["admin"]), depotController.assignMenus);
+router.get("/:id/menus", authMiddleware, depotController.getDepotMenus);
+
 module.exports = router;

@@ -2,13 +2,13 @@ import api from "./api";
 import { Category } from "@/types";
 
 export const categoryService = {
-  getAll: async (depotId: number) => {
-    const response = await api.get(`/categories?depot_id=${depotId}`);
+  getAll: async () => {
+    const response = await api.get(`/categories`);
     return response.data.data as Category[];
   },
 
-  create: async (depot_id: number, name: string) => {
-    const response = await api.post("/categories", { depot_id, name });
+  create: async (name: string) => {
+    const response = await api.post("/categories", { name });
     return response.data;
   },
 

@@ -7,11 +7,10 @@ export const useCategories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchCategories = useCallback(async (depotId: number) => {
-    if (!depotId) return;
+  const fetchCategories = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await categoryService.getAll(depotId);
+      const data = await categoryService.getAll();
       setCategories(data);
     } catch (error) {
       console.error("Gagal mengambil kategori:", error);
@@ -21,11 +20,11 @@ export const useCategories = () => {
     }
   }, []);
 
-  const createCategory = async (depotId: number, name: string) => {
+  const createCategory = async (name: string) => {
     try {
-      await categoryService.create(depotId, name);
+      await categoryService.create(name);
       toast.success("Kategori berhasil ditambahkan!");
-      await fetchCategories(depotId);
+      await fetchCategories();
       return true;
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -34,11 +33,11 @@ export const useCategories = () => {
     }
   };
 
-  const updateCategory = async (id: number, depotId: number, name: string) => {
+  const updateCategory = async (id: number, name: string) => {
     try {
       await categoryService.update(id, name);
       toast.success("Kategori berhasil diperbarui!");
-      await fetchCategories(depotId);
+      await fetchCategories();
       return true;
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -47,11 +46,11 @@ export const useCategories = () => {
     }
   };
 
-  const deleteCategory = async (id: number, depotId: number) => {
+  const deleteCategory = async (id: number) => {
     try {
       await categoryService.delete(id);
       toast.success("Kategori berhasil dihapus!");
-      await fetchCategories(depotId);
+      await fetchCategories();
       return true;
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };

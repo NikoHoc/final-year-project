@@ -48,7 +48,6 @@ export interface PaymentConfig {
 
 export interface Category {
   id: number;
-  depot_id: number;
   name: string;
   created_at?: string;
   updated_at?: string;
@@ -56,14 +55,14 @@ export interface Category {
 
 export interface Menu {
   id: number;
-  depot_id: number;
   category_id: number;
   name: string;
   price: number;
   half_price?: number;
-  is_available: boolean;
   image_url?: string;
+  is_available: boolean;
   description?: string;
+  categories?: { name: string };
 }
 
 export interface Table {

@@ -2,13 +2,13 @@ const supabase = require("../config/supabase");
 
 exports.createMenu = async (req, res) => {
   try {
-    const { name, price, half_price, category_id, depot_id, description } = req.body;
+    const { name, price, half_price, category_id, description } = req.body;
     const file = req.file;
 
-    if (!name || !price || !category_id || !depot_id) {
+    if (!name || !price || !category_id) {
       return res.status(400).json({ 
         status: false, 
-        message: "Data wajib tidak lengkap (Nama, Harga, Kategori, Depot ID)!" 
+        message: "Data tidak lengkap (Nama, Harga, Kategori)!" 
       });
     }
 
@@ -42,7 +42,6 @@ exports.createMenu = async (req, res) => {
           price, 
           half_price: half_price || null,
           category_id,
-          depot_id,
           description: description || null,
           image_url,
           is_available: true,
@@ -166,17 +165,12 @@ exports.deleteMenu = async (req, res) => {
 };
 
 exports.getMenus = async (req, res) => {
-  const { depot_id, category_id } = req.query;
-
-  if (!depot_id) {
-    return res.status(400).json({ status: false, message: "depot_id diperlukan" });
-  }
+  const { category_id } = req.query;
 
   try {
     let query = supabase
       .from("menus")
       .select("*, categories ( name )")
-      .eq("depot_id", depot_id)
       .order("created_at", { ascending: false });
 
     if (category_id) {

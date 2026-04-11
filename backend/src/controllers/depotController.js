@@ -200,3 +200,53 @@ exports.deleteDepot = async (req, res) => {
     return res.status(500).json({ status: false, message: err.message });
   }
 };
+
+exports.assignMenus = async (req, res) => {
+  const { id } = req.params; 
+  const { menu_ids } = req.body; 
+
+  try {
+    await supabase.from("depot_menus").delete().eq("depot_id", id);
+
+    if (menu_ids && menu_ids.length > 0) {
+      const inserts = menu_ids.map(menuId => ({
+        depot_id: id,
+        menu_id: menuId,
+        is_available: true
+      }));
+      const { error } = await supabase.from("depot_menus").insert(inserts);
+      if (error) throw error;
+    }
+
+    return res.status(200).json({ status: true, message: "Menu depot berhasil diperbarui!" });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.getDepotMenus = async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const { data, error } = await supabase
+      .from("depot_menus")
+      .select(`
+        id,
+        is_available,
+        menus ( id, name, price, half_price, image_url, description, categories ( id, name ) )
+      `)
+      .eq("depot_id", id);
+
+    if (error) throw error;
+
+    const formattedData = data.map(item => ({
+      ...item.menus,
+      depot_menu_id: item.id,
+      is_available: item.is_available
+    }));
+
+    return res.status(200).json({ status: true, data: formattedData });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};

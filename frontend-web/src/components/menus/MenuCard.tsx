@@ -1,17 +1,18 @@
-import Image from "next/image";
-import { ImageIcon, CheckCircle2, XCircle } from "lucide-react";
 import { Menu } from "@/types";
+import { Edit2, Trash2, ImageIcon } from "lucide-react";
 import { formatRupiah } from "@/utils/format";
+import Image from "next/image";
 
 interface MenuCardProps {
   menu: Menu;
-  actionButtons?: React.ReactNode; 
+  onEdit?: (menu: Menu) => void;
+  onDelete?: (menu: Menu) => void;
 }
 
-export default function MenuCard({ menu, actionButtons }: MenuCardProps) {
+export default function MenuCard({ menu, onEdit, onDelete }: MenuCardProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group flex flex-col">
-      <div className="h-40 bg-gray-100 relative overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+      <div className="relative h-40 w-full bg-gray-100">
         {menu.image_url ? (
           <Image 
             src={menu.image_url} 
@@ -25,32 +26,51 @@ export default function MenuCard({ menu, actionButtons }: MenuCardProps) {
             <ImageIcon size={40} />
           </div>
         )}
-        <div className="absolute top-3 right-3 z-10">
-          {menu.is_available ? (
-            <span className="flex items-center gap-1 bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-semibold shadow-sm border border-green-200">
-              <CheckCircle2 size={12} /> Tersedia
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-semibold shadow-sm border border-red-200">
-              <XCircle size={12} /> Habis
-            </span>
-          )}
-        </div>
       </div>
-
-      <div className="p-4 flex flex-col flex-1">
-        <h3 className="font-bold text-gray-800 truncate mb-1" title={menu.name}>{menu.name}</h3>
-        <div className="flex items-end gap-2 mb-3">
-          <span className="text-blue-600 font-bold">{formatRupiah(menu.price)}</span>
-          {menu.half_price && (
-            <span className="text-xs text-gray-500 line-through mb-0.5">{formatRupiah(menu.half_price)} (1/2)</span>
-          )}
+      <div className="p-4 flex-1 flex flex-col">
+        <div className="flex justify-between items-start mb-2 gap-2">
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-gray-800">{menu.name}</h3>
+            {menu.categories?.name && (
+              <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md mt-1">
+                {menu.categories.name}
+              </span>
+            )}
+          </div>
+          <div className="text-right">
+            <p className="font-bold text-blue-600">{formatRupiah(menu.price)}</p>
+            {menu.half_price ? (
+              <p className="text-xs text-gray-500 mt-1 font-medium">
+                1/2 Porsi: {formatRupiah(menu.half_price)}
+              </p>
+            ) : null}
+          </div>
         </div>
-        {menu.description && <p className="text-xs text-gray-500 line-clamp-2 mb-4 flex-1">{menu.description}</p>}
         
-        {actionButtons && (
-          <div className="flex gap-2 mt-auto pt-4 border-t border-gray-100">
-            {actionButtons}
+        {menu.description && (
+          <p className="text-sm text-gray-600 line-clamp-2 mt-1 flex-1">{menu.description}</p>
+        )}
+
+        {(onEdit || onDelete) && (
+          <div className="mt-4 flex gap-2 justify-end pt-3 border-t border-gray-100">
+            {onEdit && (
+              <button 
+                onClick={() => onEdit(menu)}
+                className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                title="Edit Menu"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+            )}
+            {onDelete && (
+              <button 
+                onClick={() => onDelete(menu)}
+                className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                title="Hapus Menu"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
         )}
       </div>

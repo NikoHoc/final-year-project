@@ -2,10 +2,9 @@ import api from "./api";
 import { Menu } from "@/types";
 
 export const menuService = {
-  getAll: async (depotId: number, categoryId?: number) => {
+  getAll: async (categoryId?: number) => {
     const response = await api.get("/menus", {
       params: {
-        depot_id: depotId,
         category_id: categoryId || undefined,
       },
     });
