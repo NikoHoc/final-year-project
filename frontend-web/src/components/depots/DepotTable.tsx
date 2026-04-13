@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Depot } from "@/types";
-import { Pencil, Trash2, CreditCard, AlertCircle, CheckCircle2, ArrowUpDown, Power } from "lucide-react";
+import { Pencil, Trash2, CreditCard, AlertCircle, CheckCircle2, ArrowUpDown, Power, List } from "lucide-react";
 import {
   createColumnHelper,
   flexRender,
@@ -19,9 +19,10 @@ interface DepotTableProps {
   onDeleteClick: (depot: Depot) => void;
   onEditClick: (depot: Depot) => void;
   onSetupPaymentClick: (depot: Depot) => void;
+  onAssignMenu: (depot: Depot) => void;
 }
 
-export default function DepotTable({ data, isLoading, onOperasionalClick, onDeleteClick, onEditClick, onSetupPaymentClick }: DepotTableProps) {
+export default function DepotTable({ data, isLoading, onOperasionalClick, onDeleteClick, onEditClick, onSetupPaymentClick, onAssignMenu }: DepotTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columnHelper = createColumnHelper<Depot>();
@@ -118,6 +119,13 @@ export default function DepotTable({ data, isLoading, onOperasionalClick, onDele
               onClick={() => onSetupPaymentClick(depot)}
             >
               <CreditCard size={18} />
+            </button>
+            <button
+              onClick={() => onAssignMenu(depot)}
+              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+              title="Atur Menu Depot"
+            >
+              <List className="h-4 w-4" />
             </button>
             <button 
               title="Edit Depot" 

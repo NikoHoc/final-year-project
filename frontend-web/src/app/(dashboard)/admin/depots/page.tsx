@@ -1,22 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useDepots } from "@/hooks/useDepot"; 
-import { Depot } from "@/types";
+import { useMenus } from "@/hooks/useMenus";
+import { useCategories } from "@/hooks/useCategories";
+import { Depot, Menu } from "@/types";
 import DepotTable from "@/components/depots/DepotTable";
 import DepotFormModal from "@/components/depots/DepotFormModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import PaymentConfigModal from "@/components/depots/PaymentConfigModal";
+import AssignMenuModal from "@/components/depots/AssignMenuModal";
+
 
 export default function DepotsPage() {
-  const { depots, isLoading, toggleDepotStatus, deleteDepot, createDepot, updateDepot, setupPaymentConfig } = useDepots();
+  const { depots, isLoading, fetchDepots, toggleDepotStatus, deleteDepot, createDepot, updateDepot, setupPaymentConfig, getDepotMenus, assignDepotMenus } = useDepots();
+  const { menus, fetchMenus } = useMenus();
+  const { categories, fetchCategories } = useCategories();
 
   const [selectedDepot, setSelectedDepot] = useState<Depot | null>(null);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [initialMenuIds, setInitialMenuIds] = useState<number[]>([]);
 
   const [confirmType, setConfirmType] = useState<"operasional" | "delete" | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  
+  useEffect(() => {
+    fetchDepots();
+    fetchMenus(); 
+    fetchCategories(); 
+  }, [fetchDepots, fetchMenus, fetchCategories]);
+
+  const handleOpenAssignMenu = async (depot: Depot) => {
+    setSelectedDepot(depot);
+    const currentMenus = await getDepotMenus(depot.id);
+    setInitialMenuIds(currentMenus.map((m: Menu) => m.id));
+    setIsAssignModalOpen(true);
+  };
 
   const handleConfirmAction = async () => {
     if (!selectedDepot) return;
@@ -71,6 +92,7 @@ export default function DepotsPage() {
         onDeleteClick={(depot) => { setSelectedDepot(depot); setConfirmType("delete"); }}
         onEditClick={handleEditClick}
         onSetupPaymentClick={(depot) => { setSelectedDepot(depot); setIsPaymentModalOpen(true); }}
+        onAssignMenu={handleOpenAssignMenu}
       />
 
       <DepotFormModal
@@ -99,6 +121,19 @@ export default function DepotsPage() {
         depot={selectedDepot}
         onSubmit={handlePaymentSubmit}
       />
+      
+      {selectedDepot && (
+        <AssignMenuModal
+          isOpen={isAssignModalOpen}
+          onClose={() => setIsAssignModalOpen(false)}
+          depotName={selectedDepot.name}
+          allMenus={menus}
+          allCategories={categories}
+          initialMenuIds={initialMenuIds}
+          onSave={(ids) => assignDepotMenus(selectedDepot.id, ids)}
+          maxWidth="xl"
+        />
+      )}
     </div>
   );
 }

@@ -35,5 +35,15 @@ export const depotService = {
   setupPayment: async (id: number, data: { merchant_id: string; midtrans_client_key: string; midtrans_server_key: string }) => {
     const response = await api.post(`/depots/${id}/payment-config`, data);
     return response.data;
+  },
+
+  getMenus: async (id: number) => {
+    const response = await api.get(`/depots/${id}/menus`);
+    return response.data.data;
+  },
+
+  assignMenus: async (id: number, menu_ids: number[]) => {
+    const response = await api.post(`/depots/${id}/menus`, { menu_ids });
+    return response.data;
   }
 };

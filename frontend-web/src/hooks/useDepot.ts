@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { depotService } from "@/services/depotService";
 import { Depot } from "@/types";
 import toast from "react-hot-toast";
@@ -36,22 +36,24 @@ export const useDepots = () => {
   const [depots, setDepots] = useState<Depot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchDepots = async () => {
+  const fetchDepots = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await depotService.getAll();
-      setDepots(data);
+      const response = await depotService.getAll();
+      if (response) {
+        setDepots(response);
+      }
     } catch (error) {
-      console.error("Gagal mengambil data depot:", error);
-      toast.error("Gagal memuat daftar depot");
+      console.error("Gagal mengambil daftar depot:", error);
+      toast.error("Gagal memuat daftar cabang");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDepots();
-  }, []);
+  }, [fetchDepots]);
 
   const toggleDepotStatus = async (id: number, currentStatus: boolean) => {
     try {
@@ -116,8 +118,34 @@ export const useDepots = () => {
     }
   };
 
+  const getDepotMenus = async (id: number) => {
+    try {
+      return await depotService.getMenus(id);
+    } catch (error) {
+      console.error("Gagal mengambil menu depot:", error);
+      toast.error("Gagal mengambil menu");
+      return [];
+    }
+  };
+
+  const assignDepotMenus = async (id: number, menuIds: number[]) => {
+    setIsLoading(true);
+    try {
+      await depotService.assignMenus(id, menuIds);
+      toast.success("Menu depot berhasil diperbarui!");
+      return true;
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err.response?.data?.message || "Gagal mengatur menu depot");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return { 
-    depots, isLoading, refetch: fetchDepots,
-    toggleDepotStatus, deleteDepot, createDepot, updateDepot, setupPaymentConfig
+    depots, isLoading, fetchDepots,
+    toggleDepotStatus, deleteDepot, createDepot, updateDepot, setupPaymentConfig,
+    getDepotMenus, assignDepotMenus
    }; 
 };
