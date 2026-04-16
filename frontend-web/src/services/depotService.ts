@@ -45,5 +45,12 @@ export const depotService = {
   assignMenus: async (id: number, menu_ids: number[]) => {
     const response = await api.post(`/depots/${id}/menus`, { menu_ids });
     return response.data;
-  }
+  },
+  
+  updateMenuStatus: async (depotId: number, menuId: number, isAvailable: boolean) => {
+    const response = await api.put(`/depots/${depotId}/menus/${menuId}/status`, {
+      is_available: isAvailable
+    });
+    return response.data;
+  },
 };

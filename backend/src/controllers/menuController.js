@@ -44,7 +44,6 @@ exports.createMenu = async (req, res) => {
           category_id,
           description: description || null,
           image_url,
-          is_available: true,
         },
       ])
       .select()
@@ -64,7 +63,7 @@ exports.createMenu = async (req, res) => {
 
 exports.updateMenu = async (req, res) => {
   const { id } = req.params;
-  const { name, price, half_price, category_id, description, is_available } = req.body;
+  const { name, price, half_price, category_id, description } = req.body;
   const file = req.file;
 
   try {
@@ -74,7 +73,6 @@ exports.updateMenu = async (req, res) => {
       half_price: half_price || null,
       category_id,
       description: description || null,
-      is_available
     };
 
     if (file) {

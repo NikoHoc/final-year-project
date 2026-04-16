@@ -60,7 +60,6 @@ export interface Menu {
   price: number;
   half_price?: number;
   image_url?: string;
-  is_available: boolean;
   description?: string;
   categories?: { name: string };
 }

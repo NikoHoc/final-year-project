@@ -15,7 +15,7 @@ export default function MenuFormModal({
   isOpen, onClose, onSubmit, categories, initialData,
 }: MenuFormModalProps) {
   const [formData, setFormData] = useState({
-    name: "", price: "", half_price: "", category_id: "", description: "", is_available: true,
+    name: "", price: "", half_price: "", category_id: "", description: ""
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -31,7 +31,6 @@ export default function MenuFormModal({
         half_price: initialData?.half_price?.toString() || "",
         category_id: initialData?.category_id?.toString() || (categories.length > 0 ? categories[0].id.toString() : ""),
         description: initialData?.description || "",
-        is_available: initialData?.is_available ?? true,
       });
       setImageFile(null);
       setImagePreview(initialData?.image_url || null);
@@ -57,7 +56,6 @@ export default function MenuFormModal({
     submitData.append("category_id", formData.category_id);
     submitData.append("name", formData.name);
     submitData.append("price", formData.price);
-    submitData.append("is_available", String(formData.is_available));
     if (formData.half_price) submitData.append("half_price", formData.half_price);
     if (formData.description) submitData.append("description", formData.description);
     if (imageFile) submitData.append("image", imageFile);
@@ -112,12 +110,6 @@ export default function MenuFormModal({
             </div>
           )}
         </div>
-        {initialData && (
-          <div className="flex items-center">
-            <input type="checkbox" id="is_available" checked={formData.is_available} onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
-            <label htmlFor="is_available" className="ml-2 block text-sm text-gray-900">Menu Tersedia</label>
-          </div>
-        )}
         <div className="flex justify-end gap-2 mt-6">
           <button type="button" onClick={onClose} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md">Batal</button>
           <button type="submit" disabled={isSubmitting} className="px-4 py-2 text-white bg-blue-600 rounded-md">

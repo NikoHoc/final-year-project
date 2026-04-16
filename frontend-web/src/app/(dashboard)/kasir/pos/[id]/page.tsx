@@ -88,13 +88,9 @@ export default function PosPage() {
 
         setLocalCategories(uniqueCats);
 
-        setActiveCategoryId((prev) => {
-          if (prev === null && uniqueCats.length > 0) {
-            return uniqueCats[0].id;
-          }
-          return prev;
-        });
+        setActiveCategoryId((prev) => (prev === null && uniqueCats.length > 0 ? uniqueCats[0].id : prev));
       } catch (error) {
+        toast.error("Gagal memuat daftar menu");
         console.error("Gagal memuat menu:", error);
       }
     };

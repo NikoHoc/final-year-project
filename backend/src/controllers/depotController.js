@@ -233,7 +233,7 @@ exports.getDepotMenus = async (req, res) => {
       .select(`
         id,
         is_available,
-        menus ( id, name, price, half_price, image_url, description, is_available, categories ( id, name ) )
+        menus ( id, name, price, half_price, image_url, description, categories ( id, name ) )
       `)
       .eq("depot_id", id);
 
@@ -246,6 +246,33 @@ exports.getDepotMenus = async (req, res) => {
     }));
 
     return res.status(200).json({ status: true, data: formattedData });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.updateMenuStatus = async (req, res) => {
+  const { id, menuId } = req.params;
+  const { is_available } = req.body;
+
+  try {
+    if (typeof is_available !== 'boolean') {
+      return res.status(400).json({ status: false, message: "is_available harus berupa boolean" });
+    }
+
+    // Update langsung ke tabel pivot (depot_menus)
+    const { error } = await supabase
+      .from("depot_menus")
+      .update({ is_available: is_available })
+      .eq("depot_id", id)
+      .eq("menu_id", menuId);
+
+    if (error) throw error;
+
+    return res.status(200).json({ 
+      status: true, 
+      message: "Status ketersediaan menu berhasil diperbarui!" 
+    });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
   }

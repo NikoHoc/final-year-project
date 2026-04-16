@@ -17,5 +17,6 @@ router.delete('/:id', roleMiddleware(['admin']), depotController.deleteDepot);
 
 router.post("/:id/menus", authMiddleware, roleMiddleware(["admin"]), depotController.assignMenus);
 router.get("/:id/menus", authMiddleware, depotController.getDepotMenus);
+router.put("/:id/menus/:menuId/status", authMiddleware, roleMiddleware(["kasir"]), depotController.updateMenuStatus);
 
 module.exports = router;

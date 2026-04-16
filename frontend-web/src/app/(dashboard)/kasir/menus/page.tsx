@@ -1,194 +1,219 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Cookies from "js-cookie";
-import { AlertCircle, Image as ImageIcon, Power, SearchX } from "lucide-react";
+import { Search, CheckCircle2, XCircle, Info } from "lucide-react";
+import toast from "react-hot-toast";
 
-import { useCategories } from "@/hooks/useCategories";
-import { useMenus } from "@/hooks/useMenus";
-import { User, Menu } from "@/types";
+import { useDepots } from "@/hooks/useDepot";
+import { User, DepotMenuResponse, Category } from "@/types";
 import { formatRupiah } from "@/utils/format";
 
-export default function KasirMenuAvailabilityPage() {
-  const { categories, isLoading: isCategoryLoading, fetchCategories } = useCategories();
-  const { menus, isLoading: isMenuLoading, fetchMenus, updateMenu } = useMenus();
-
+export default function KasirMenusPage() {
   const [depotId, setDepotId] = useState<number | null>(null);
-  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
+  const { getDepotMenus, updateMenuStatus } = useDepots();
 
-  const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [localMenus, setLocalMenus] = useState<DepotMenuResponse[]>([]);
+  const [localCategories, setLocalCategories] = useState<Category[]>([]);
+  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const userCookie = Cookies.get("user");
     if (userCookie) {
-      try {
-        const user: User = JSON.parse(userCookie);
-        if (user.depot_id) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setDepotId(user.depot_id);
-          fetchCategories(user.depot_id);
-        }
-      } catch (error) {
-        console.error("Gagal membaca cookie user", error);
-      }
-    }
-  }, [fetchCategories]);
-
-  useEffect(() => {
-    if (categories.length > 0 && activeCategoryId === null) {
+      const user: User = JSON.parse(userCookie);
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setActiveCategoryId(categories[0].id);
+      setDepotId(user.depot_id || null);
     }
-  }, [categories, activeCategoryId]);
+  }, []);
 
   useEffect(() => {
-    if (depotId && activeCategoryId) {
-      fetchMenus(depotId, activeCategoryId);
+    const loadData = async () => {
+      if (!depotId) return;
+      try {
+        const data: DepotMenuResponse[] = await getDepotMenus(depotId);
+        if (!data || data.length === 0) return;
+
+        setLocalMenus(data);
+
+        const uniqueCats: Category[] = [];
+        const seenIds = new Set();
+
+        data.forEach((menu) => {
+          if (menu.categories && !seenIds.has(menu.categories.id)) {
+            seenIds.add(menu.categories.id);
+            uniqueCats.push(menu.categories);
+          }
+        });
+
+        setLocalCategories(uniqueCats);
+        setActiveCategoryId((prev) =>
+          prev === null && uniqueCats.length > 0 ? uniqueCats[0].id : prev,
+        );
+      } catch (error) {
+        toast.error("Gagal memuat daftar menu");
+        console.error("Error fetching depot menus:", error);
+      }
+    };
+    loadData();
+  }, [depotId, getDepotMenus]);
+
+  const handleToggleStatus = async (menuId: number, currentStatus: boolean) => {
+    if (!depotId) return;
+    const newStatus = !currentStatus;
+
+    setLocalMenus((prev) =>
+      prev.map((m) =>
+        m.id === menuId ? { ...m, is_available: newStatus } : m,
+      ),
+    );
+
+    try {
+      await updateMenuStatus(depotId, menuId, newStatus);
+      toast.success(newStatus ? "Menu diaktifkan" : "Menu ditandai habis");
+    } catch (error) {
+      setLocalMenus((prev) =>
+        prev.map((m) =>
+          m.id === menuId ? { ...m, is_available: currentStatus } : m,
+        ),
+      );
+      toast.error("Gagal mengubah status menu");
     }
-  }, [depotId, activeCategoryId, fetchMenus]);
-
-  const handleToggleAvailable = async (menu: Menu) => {
-    if (!depotId || !activeCategoryId) return;
-
-    setTogglingId(menu.id);
-
-    const formData = new FormData();
-    formData.append("name", menu.name);
-    formData.append("price", menu.price.toString());
-    if (menu.half_price)
-      formData.append("half_price", menu.half_price.toString());
-    formData.append("category_id", menu.category_id.toString());
-    if (menu.description) formData.append("description", menu.description);
-
-    formData.append("is_available", String(!menu.is_available));
-
-    await updateMenu(menu.id, depotId, activeCategoryId, formData);
-
-    setTogglingId(null);
   };
 
-  if (!depotId) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-gray-500">
-        <AlertCircle size={48} className="text-red-400 mb-4" />
-        <h2 className="text-xl font-bold text-gray-800">Akses Ditolak</h2>
-        <p>Akun kasir ini tidak terikat pada cabang (Depot) manapun.</p>
-      </div>
-    );
-  }
+  const filteredMenus = useMemo(() => {
+    const targetCategoryId =
+      activeCategoryId !== null
+        ? activeCategoryId
+        : localCategories.length > 0
+          ? localCategories[0].id
+          : null;
+
+    return localMenus.filter((menu) => {
+      if (searchQuery) {
+        return menu.name.toLowerCase().includes(searchQuery.toLowerCase());
+      }
+      if (targetCategoryId === null) return false;
+      return Number(menu.categories?.id) === Number(targetCategoryId);
+    });
+  }, [localMenus, activeCategoryId, searchQuery, localCategories]);
 
   return (
-    <div className="space-y-6 flex flex-col h-[calc(100vh-8rem)]">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 shrink-0">
-        <h1 className="text-2xl font-bold text-gray-800">Ketersediaan Menu</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Matikan menu yang bahan bakunya sedang habis agar tidak bisa dipesan.
-        </p>
+    <div className="flex flex-col h-[calc(100vh-6rem)] gap-4">
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">
+            Manajemen Stok Menu
+          </h1>
+          <p className="text-sm text-gray-500">
+            Atur ketersediaan menu di depot Anda hari ini
+          </p>
+        </div>
+
+        <div className="relative w-full md:w-96">
+          <Search
+            size={18}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
+          <input
+            type="text"
+            placeholder="Cari menu..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+          />
+        </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 shrink-0">
-        {isCategoryLoading ? (
-          <div className="h-12 flex items-center px-4 text-gray-400 animate-pulse text-sm">
-            Memuat kategori...
-          </div>
-        ) : categories.length === 0 ? (
-          <div className="h-12 flex items-center px-4 text-gray-400 text-sm italic">
-            Belum ada kategori di cabang ini.
-          </div>
-        ) : (
-          <div className="flex overflow-x-auto hide-scrollbar gap-2 p-1">
-            {categories.map((category) => (
+      {!searchQuery && localCategories.length > 0 && (
+        <div className="flex overflow-x-auto hide-scrollbar gap-2 shrink-0 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+          {localCategories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setActiveCategoryId(category.id)}
+              className={`whitespace-nowrap px-5 py-2 rounded-xl text-sm font-medium transition-all ${
+                activeCategoryId === category.id
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                  : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="flex-1 overflow-y-auto pr-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredMenus.map((menu) => (
+            <div
+              key={menu.id}
+              className={`bg-white rounded-2xl border-2 transition-all p-4 flex flex-col gap-4 ${
+                menu.is_available
+                  ? "border-transparent shadow-sm"
+                  : "border-red-100 bg-red-50/30 opacity-80"
+              }`}
+            >
+              <div className="flex gap-4">
+                <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                  {menu.image_url ? (
+                    <Image
+                      src={menu.image_url}
+                      alt={menu.name}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-50">
+                      <Info size={20} />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-gray-800 truncate">
+                    {menu.name}
+                  </h3>
+                  <p className="text-blue-600 font-bold text-sm">
+                    {formatRupiah(menu.price)}
+                  </p>
+                  <span className="inline-block mt-1 px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded-md font-medium capitalize">
+                    {menu.categories?.name}
+                  </span>
+                </div>
+              </div>
+
+              <div className="text-xs text-gray-500 line-clamp-2 italic h-8">
+                {menu.description || "Tidak ada deskripsi menu."}
+              </div>
+
               <button
-                key={category.id}
-                onClick={() => setActiveCategoryId(category.id)}
-                className={`whitespace-nowrap px-6 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  activeCategoryId === category.id
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                onClick={() => handleToggleStatus(menu.id, menu.is_available)}
+                className={`w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+                  menu.is_available
+                    ? "bg-green-100 text-green-700 hover:bg-green-200"
+                    : "bg-red-600 text-white hover:bg-red-700 shadow-md shadow-red-100"
                 }`}
               >
-                {category.name}
+                {menu.is_available ? (
+                  <>
+                    <CheckCircle2 size={16} /> Tersedia
+                  </>
+                ) : (
+                  <>
+                    <XCircle size={16} /> Habis / Kosong
+                  </>
+                )}
               </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-        {isMenuLoading ? (
-          <div className="flex-1 flex items-center justify-center text-gray-400 animate-pulse">
-            Memuat daftar menu...
-          </div>
-        ) : menus.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-            <SearchX size={48} className="mb-4 text-gray-300" />
-            <p>Tidak ada menu di kategori ini.</p>
-          </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {menus.map((menu) => (
-                <div
-                  key={menu.id}
-                  className={`flex flex-col border rounded-2xl overflow-hidden transition-colors ${
-                    menu.is_available
-                      ? "border-gray-200 bg-white"
-                      : "border-red-200 bg-red-50/30 opacity-75"
-                  }`}
-                >
-                  <div className="flex items-center p-3 gap-4">
-                    <div className="w-16 h-16 rounded-full bg-gray-100 overflow-hidden relative shrink-0 border border-gray-200">
-                      {menu.image_url ? (
-                        <Image
-                          src={menu.image_url}
-                          alt={menu.name}
-                          fill
-                          unoptimized
-                          className={`object-cover ${!menu.is_available && "grayscale"}`}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300">
-                          <ImageIcon size={20} />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <h3
-                        className={`font-bold truncate text-sm ${menu.is_available ? "text-gray-800" : "text-gray-500 line-through"}`}
-                      >
-                        {menu.name}
-                      </h3>
-                      <p className="text-blue-600 font-semibold text-sm">
-                        {formatRupiah(menu.price)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="p-3 pt-0 mt-auto">
-                    <button
-                      onClick={() => handleToggleAvailable(menu)}
-                      disabled={togglingId === menu.id}
-                      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                        togglingId === menu.id
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          : menu.is_available
-                            ? "bg-green-100 text-green-700 hover:bg-green-200 border border-green-200"
-                            : "bg-red-100 text-red-600 hover:bg-red-200 border border-red-200 shadow-inner"
-                      }`}
-                    >
-                      <Power size={16} />
-                      {togglingId === menu.id
-                        ? "Memproses..."
-                        : menu.is_available
-                          ? "TERSEDIA"
-                          : "HABIS (NONAKTIF)"}
-                    </button>
-                  </div>
-                </div>
-              ))}
             </div>
+          ))}
+        </div>
+
+        {filteredMenus.length === 0 && (
+          <div className="h-64 flex flex-col items-center justify-center text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
+            <Info size={40} className="mb-2 opacity-20" />
+            <p>Tidak ada menu yang ditemukan</p>
           </div>
         )}
       </div>

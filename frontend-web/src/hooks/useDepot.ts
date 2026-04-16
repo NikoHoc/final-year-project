@@ -143,9 +143,19 @@ export const useDepots = () => {
     }
   }, []);
 
+  const updateMenuStatus = useCallback(async (depotId: number, menuId: number, isAvailable: boolean) => {
+    try {
+      await depotService.updateMenuStatus(depotId, menuId, isAvailable);
+      return true;
+    } catch (error) {
+      console.error("Gagal update status menu:", error);
+      throw error;
+    }
+  }, []);
+
   return { 
     depots, isLoading, fetchDepots,
     toggleDepotStatus, deleteDepot, createDepot, updateDepot, setupPaymentConfig,
-    getDepotMenus, assignDepotMenus
+    getDepotMenus, assignDepotMenus, updateMenuStatus
    }; 
 };
