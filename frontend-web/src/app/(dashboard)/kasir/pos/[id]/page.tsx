@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Cookies from "js-cookie";
@@ -16,12 +16,10 @@ import {
   Banknote,
   ChefHat,
 } from "lucide-react";
-
-import { useCategories } from "@/hooks/useCategories";
-import { useMenus } from "@/hooks/useMenus";
+import { useDepots } from "@/hooks/useDepot";
 import { useCart } from "@/hooks/useCart";
 import { transactionService } from "@/services/transactionService";
-import { User, Menu, TransactionItem } from "@/types";
+import { User, Menu, TransactionItem, Category, DepotMenuResponse } from "@/types";
 import { formatRupiah } from "@/utils/format";
 import toast from "react-hot-toast";
 
@@ -39,34 +37,70 @@ export default function PosPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const { categories, fetchCategories } = useCategories();
-  const { menus, fetchMenus } = useMenus();
+  const { getDepotMenus } = useDepots();
+  const [localCategories, setLocalCategories] = useState<Category[]>([]);
+  const [localMenus, setLocalMenus] = useState<DepotMenuResponse[]>([]);
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const {
-    cartItems,
-    setCartItems,
-    useTax,
-    setUseTax,
-    addItem,
-    removeItem,
-    updateQuantity,
-    updateNote,
-    toggleHalfPortion,
-    totals,
+    cartItems, setCartItems, setUseTax,
+    addItem, removeItem, updateQuantity, updateNote,
+    toggleHalfPortion, totals,
   } = useCart();
 
-  // get id depot untuk load kategori
   useEffect(() => {
+    setUseTax(true);
     const userCookie = Cookies.get("user");
     if (userCookie) {
       const user: User = JSON.parse(userCookie);
       setDepotId(user.depot_id || null);
       setUserId(user.id || null);
-      if (user.depot_id) fetchCategories(user.depot_id);
     }
-  }, [fetchCategories]);
+  }, [setUseTax]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!depotId) return;
+      
+      try {
+        const data: DepotMenuResponse[] = await getDepotMenus(depotId);
+        
+        if (!data || data.length === 0) {
+          console.error("Data dari API kosong atau bukan array:", data);
+          return;
+        }
+
+        setLocalMenus(data);
+
+        const uniqueCats: {id: number, name: string}[] = [];
+        const seenIds = new Set();
+
+        data.forEach((menu) => {
+          if (menu.categories && !seenIds.has(menu.categories.id)) {
+            seenIds.add(menu.categories.id);
+            uniqueCats.push({
+              id: menu.categories.id,
+              name: menu.categories.name
+            });
+          }
+        });
+
+        setLocalCategories(uniqueCats);
+
+        setActiveCategoryId((prev) => {
+          if (prev === null && uniqueCats.length > 0) {
+            return uniqueCats[0].id;
+          }
+          return prev;
+        });
+      } catch (error) {
+        console.error("Gagal memuat menu:", error);
+      }
+    };
+
+    loadData();
+  }, [depotId, getDepotMenus, activeCategoryId]);
 
   // load transaksi jika ada
   useEffect(() => {
@@ -74,8 +108,6 @@ export default function PosPage() {
       if (transactionId !== "new") {
         try {
           const transaction = await transactionService.getById(transactionId);
-          setUseTax(transaction.tax_amount > 0);
-
           if (transaction.table_id) setTableId(transaction.table_id.toString());
 
           const loadedCart =
@@ -96,33 +128,25 @@ export default function PosPage() {
 
           setCartItems(loadedCart);
         } catch (error) {
-          console.error("Error mengambil data transaksi lama:", error);
+          console.log("Error mengambil data transaksi lama:", error);
           toast.error("Gagal memuat data transaksi lama");
         }
       }
     };
     loadExistingTransaction();
-  }, [transactionId, setCartItems, setUseTax]);
+  }, [transactionId, setCartItems]);
 
-  // load kategori awal
-  useEffect(() => {
-    if (categories.length > 0 && !activeCategoryId) {
-      setActiveCategoryId(categories[0].id);
-    }
-  }, [categories, activeCategoryId]);
+  const filteredMenus = useMemo(() => {
+    return localMenus.filter((menu) => {
+      if (!menu.is_available) return false;
 
-  // load menu sesuai kategori yg aktif
-  useEffect(() => {
-    if (depotId && activeCategoryId) {
-      fetchMenus(depotId, activeCategoryId);
-    }
-  }, [depotId, activeCategoryId, fetchMenus]);
+      if (searchQuery) {
+        return menu.name.toLowerCase().includes(searchQuery.toLowerCase());
+      }
 
-  const filteredMenus = menus.filter(
-    (menu) =>
-      menu.is_available &&
-      menu.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+      return Number(menu.categories.id) === Number(activeCategoryId);
+    });
+  }, [localMenus, activeCategoryId, searchQuery]);
 
   const handleSimpanPesanan = async () => {
     if (!depotId || cartItems.length === 0) return;
@@ -142,7 +166,7 @@ export default function PosPage() {
           depot_id: depotId,
           type: orderType as "onsite" | "online" | "takeaway",
           table_id: tableId ? parseInt(tableId) : null,
-          use_tax: useTax,
+          use_tax: true,
           items: itemsPayload,
         });
 
@@ -205,54 +229,49 @@ export default function PosPage() {
           </div>
         </div>
 
-        <div className="flex overflow-x-auto hide-scrollbar gap-2 p-3 border-b border-gray-100 shrink-0">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setActiveCategoryId(category.id)}
-              className={`whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeCategoryId === category.id
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
-        <div className="flex-1 overflow-y-auto p-4 bg-slate-50">
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredMenus.map((menu) => (
+        {!searchQuery && localCategories.length > 0 && (
+          <div className="flex overflow-x-auto hide-scrollbar gap-2 p-3 border-b border-gray-100 shrink-0">
+            {localCategories.map((category) => (
               <button
-                key={menu.id}
-                onClick={() => addItem(menu)}
-                className="flex flex-col text-left bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-blue-400 hover:shadow-md transition-all active:scale-95"
+                key={category.id}
+                onClick={() => setActiveCategoryId(category.id)}
+                className={`whitespace-nowrap px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  activeCategoryId === category.id ? "bg-blue-600 text-white" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                }`}
               >
-                <div className="relative w-full aspect-video bg-gray-100">
-                  {menu.image_url ? (
-                    <Image
-                      src={menu.image_url}
-                      alt={menu.name}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-300">
-                      No Image
-                    </div>
-                  )}
-                </div>
-                <div className="p-3">
-                  <h3 className="font-bold text-gray-800 text-sm line-clamp-2">
-                    {menu.name}
-                  </h3>
-                  <p className="text-blue-600 font-semibold text-sm mt-1">
-                    {formatRupiah(menu.price)}
-                  </p>
-                </div>
+                {category.name}
               </button>
             ))}
+          </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto p-4 bg-slate-50">
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredMenus.length > 0 ? (
+              filteredMenus.map((menu) => (
+                <button
+                  key={menu.id}
+                  onClick={() => addItem(menu)}
+                  className="flex flex-col text-left bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-blue-400 hover:shadow-md transition-all active:scale-95"
+                >
+                  <div className="relative w-full aspect-video bg-gray-100">
+                    {menu.image_url ? (
+                      <Image src={menu.image_url} alt={menu.name} fill className="object-cover" unoptimized />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-gray-300 text-xs">No Image</div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <h3 className="font-bold text-gray-800 text-sm line-clamp-2">{menu.name}</h3>
+                    <p className="text-blue-600 font-semibold text-sm mt-1">{formatRupiah(menu.price)}</p>
+                  </div>
+                </button>
+              ))
+            ) : (
+              <div className="col-span-full py-10 text-center text-gray-400">
+                Menu tidak ditemukan
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -393,20 +412,21 @@ export default function PosPage() {
                 {formatRupiah(totals.subtotal)}
               </span>
             </div>
-            <label className="flex items-center justify-between cursor-pointer group">
+            <div className="flex items-center justify-between group opacity-70">
               <div className="flex items-center gap-2 text-gray-600">
                 <input
                   type="checkbox"
-                  checked={useTax}
-                  onChange={(e) => setUseTax(e.target.checked)}
-                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                  // checked={useTax}
+                  // onChange={(e) => setUseTax(e.target.checked)}
+                  checked={true}
+                  readOnly
+                  className="w-4 h-4 rounded text-blue-600 cursor-not-allowed"
+                  title="PPN 10%"
                 />
                 <span>Pajak (10%)</span>
               </div>
-              <span className="font-semibold">
-                {formatRupiah(totals.taxAmount)}
-              </span>
-            </label>
+              <span className="font-semibold">{formatRupiah(totals.taxAmount)}</span>
+            </div>
             <div className="flex justify-between text-gray-900 pt-2 border-t border-gray-200 mt-2">
               <span className="font-bold text-base">Total Bayar</span>
               <span className="font-black text-xl text-blue-600">

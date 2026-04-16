@@ -233,7 +233,7 @@ exports.getDepotMenus = async (req, res) => {
       .select(`
         id,
         is_available,
-        menus ( id, name, price, half_price, image_url, description, categories ( id, name ) )
+        menus ( id, name, price, half_price, image_url, description, is_available, categories ( id, name ) )
       `)
       .eq("depot_id", id);
 

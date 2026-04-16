@@ -118,7 +118,7 @@ export const useDepots = () => {
     }
   };
 
-  const getDepotMenus = async (id: number) => {
+  const getDepotMenus = useCallback(async (id: number) => {
     try {
       return await depotService.getMenus(id);
     } catch (error) {
@@ -126,9 +126,9 @@ export const useDepots = () => {
       toast.error("Gagal mengambil menu");
       return [];
     }
-  };
+  }, []);
 
-  const assignDepotMenus = async (id: number, menuIds: number[]) => {
+  const assignDepotMenus = useCallback(async (id: number, menuIds: number[]) => {
     setIsLoading(true);
     try {
       await depotService.assignMenus(id, menuIds);
@@ -141,7 +141,7 @@ export const useDepots = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   return { 
     depots, isLoading, fetchDepots,

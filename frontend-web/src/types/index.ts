@@ -129,3 +129,8 @@ export interface CreateTransactionPayload {
   use_tax?: boolean;
   items: CartItemPayload[];
 }
+
+export interface DepotMenuResponse extends Menu {
+  is_available: boolean;
+  categories: Category | { id: number; name: string }; 
+}
