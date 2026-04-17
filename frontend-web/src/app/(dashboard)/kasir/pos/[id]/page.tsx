@@ -22,6 +22,7 @@ import { transactionService } from "@/services/transactionService";
 import { User, Menu, TransactionItem, Category, DepotMenuResponse } from "@/types";
 import { formatRupiah } from "@/utils/format";
 import toast from "react-hot-toast";
+import CheckoutModal from "@/components/pos/CheckoutModal";
 
 export default function PosPage() {
   const router = useRouter();
@@ -42,6 +43,8 @@ export default function PosPage() {
   const [localMenus, setLocalMenus] = useState<DepotMenuResponse[]>([]);
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   const {
     cartItems, setCartItems, setUseTax,
@@ -432,22 +435,32 @@ export default function PosPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-2">
+            {orderType === "onsite" && (
+              <button
+                onClick={handleSimpanPesanan}
+                disabled={cartItems.length === 0 || isProcessing}
+                className="flex items-center justify-center gap-2 py-3 bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold transition-all"
+              >
+                <ChefHat size={18} /> Simpan
+              </button>
+            )}
             <button
-              onClick={handleSimpanPesanan}
+              onClick={() => setIsCheckoutOpen(true)} 
               disabled={cartItems.length === 0 || isProcessing}
-              className="flex items-center justify-center gap-2 py-3 bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold transition-all"
+              className={`flex items-center justify-center gap-2 py-3 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold transition-all shadow-md shadow-blue-200 ${
+                orderType !== "onsite" ? "col-span-2" : ""
+              }`}
             >
-              <ChefHat size={18} /> Simpan
-            </button>
-            <button
-              disabled={cartItems.length === 0 || isProcessing}
-              className="flex items-center justify-center gap-2 py-3 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold transition-all shadow-md shadow-blue-200"
-            >
-              <Banknote size={18} /> Bayar
+              <Banknote size={18} /> Checkout
             </button>
           </div>
         </div>
       </div>
+
+      <CheckoutModal 
+        isOpen={isCheckoutOpen} 
+        onClose={() => setIsCheckoutOpen(false)} 
+      />
     </div>
   );
 }

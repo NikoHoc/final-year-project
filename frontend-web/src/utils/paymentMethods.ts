@@ -1,0 +1,11 @@
+export const PAYMENT_METHODS = [
+  "CASH",
+  "QRIS MANDIRI",
+  "QRIS BCA",
+  "DEBIT BCA",
+  "DEBIT MANDIRI",
+  "DEBIT BNI",
+  "DEBIT BRI",
+  "TRANSFER MANDIRI",
+  "TRANSFER BCA"
+];
