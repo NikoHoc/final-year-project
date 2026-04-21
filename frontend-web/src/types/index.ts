@@ -46,6 +46,13 @@ export interface PaymentConfig {
   midtrans_client_key: string;
 }
 
+export interface PaymentMethod {
+  id: number;
+  name: string;
+  is_active: boolean;
+  created_at?: string;
+}
+
 export interface Category {
   id: number;
   name: string;

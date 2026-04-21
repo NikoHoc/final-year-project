@@ -1,21 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import {
-  CheckSquare,
-  Square,
-  Minus,
-  Plus,
-  CheckCircle2,
-  Eye,
-} from "lucide-react";
 import Modal from "@/components/ui/Modal";
-import { formatRupiah } from "@/utils/format";
 import { PAYMENT_METHODS } from "@/utils/paymentMethods";
 import toast from "react-hot-toast";
 import OrderItemList from "./OrderItemList";
 import PaymentActionForm from "./PaymentActionForm";
 import ReceiptPreview, { PaidSegment } from "./ReceiptPreview";
+import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 
 export interface CheckoutItem {
   id: string;
@@ -44,6 +36,9 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
 
   const segmentIdCounter = useRef(1);
+
+  const { methods: dbMethods, isLoading: isLoadingMethods, fetchMethods } = usePaymentMethods();
+  const activeMethods = dbMethods.filter(m => m.is_active);
 
   const dummyTableId = "5";
   const dummyTransactionId = "TRX-99821A";
@@ -88,13 +83,25 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
 
   useEffect(() => {
     if (isOpen) {
+      fetchMethods();
+
       const now = new Date();
       const timeString = now.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }) +
         `, ${now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`;
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentTime(timeString);
     }
-  }, [isOpen]);
+  }, [isOpen, fetchMethods]);
+
+  useEffect(() => {
+    if (activeMethods.length > 0) {
+      const isCurrentMethodValid = activeMethods.some(m => m.name === selectedMethod);
+      if (!isCurrentMethodValid) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSelectedMethod(activeMethods[0].name);
+      }
+    }
+  }, [activeMethods, selectedMethod]);
 
   // --- KALKULASI NOTA AKTIF ---
   const itemsInNota = items.filter((item) => item.qtyInNota > 0);
@@ -361,6 +368,8 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
             change={change}
             handleProcessPayment={handleProcessPayment}
             itemsInNotaLength={itemsInNota.length}
+            paymentMethods={activeMethods}
+            isLoadingMethods={isLoadingMethods}
           />
         </div>
         <ReceiptPreview

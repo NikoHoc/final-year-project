@@ -1,7 +1,7 @@
 "use client";
 
 import { formatRupiah } from "@/utils/format";
-import { PAYMENT_METHODS } from "@/utils/paymentMethods";
+import { PaymentMethod } from "@/types";
 
 interface PaymentActionFormProps {
   isAllFullyPaid: boolean;
@@ -14,6 +14,8 @@ interface PaymentActionFormProps {
   change: number;
   handleProcessPayment: () => void;
   itemsInNotaLength: number;
+  paymentMethods: PaymentMethod[]; 
+  isLoadingMethods: boolean;
 }
 
 export default function PaymentActionForm({
@@ -27,6 +29,8 @@ export default function PaymentActionForm({
   change,
   handleProcessPayment,
   itemsInNotaLength,
+  paymentMethods,
+  isLoadingMethods,
 }: PaymentActionFormProps) {
   
   if (isAllFullyPaid) return null;
@@ -44,9 +48,18 @@ export default function PaymentActionForm({
           <select 
             value={selectedMethod} 
             onChange={(e) => setSelectedMethod(e.target.value)} 
-            className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isLoadingMethods || paymentMethods.length === 0}
+            className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
+            {isLoadingMethods ? (
+              <option value="">Memuat...</option>
+            ) : paymentMethods.length > 0 ? (
+              paymentMethods.map((m) => (
+                <option key={m.id} value={m.name}>{m.name}</option>
+              ))
+            ) : (
+              <option value="">Tidak ada metode</option>
+            )}
           </select>
         </div>
         <div>

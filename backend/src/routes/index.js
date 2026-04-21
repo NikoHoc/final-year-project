@@ -10,6 +10,7 @@ const userRoutes = require('./userRoutes');
 const expenseRoutes = require('./expenseRoutes');
 const stockRoutes = require('./stockRoutes');
 const transactionRoutes = require('./transactionRoutes');
+const paymentMethodRoutes = require('./paymentMethodRoutes');
 
 router.use('/auth', authRoutes);
 router.use('/depots', depotRoutes);
@@ -20,5 +21,6 @@ router.use('/users', userRoutes);
 router.use('/expenses', expenseRoutes);
 router.use('/stocks', stockRoutes);
 router.use('/transactions', transactionRoutes);
+router.use('/payment-methods', paymentMethodRoutes);
 
 module.exports = router;
