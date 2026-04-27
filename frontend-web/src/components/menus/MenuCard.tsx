@@ -7,11 +7,12 @@ interface MenuCardProps {
   menu: Menu;
   onEdit?: (menu: Menu) => void;
   onDelete?: (menu: Menu) => void;
+  onClick?: () => void;
 }
 
-export default function MenuCard({ menu, onEdit, onDelete }: MenuCardProps) {
+export default function MenuCard({ menu, onEdit, onDelete, onClick }: MenuCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+    <div onClick={onClick} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
       <div className="relative h-40 w-full bg-gray-100">
         {menu.image_url ? (
           <Image 
@@ -56,7 +57,7 @@ export default function MenuCard({ menu, onEdit, onDelete }: MenuCardProps) {
             {onEdit && (
               <button 
                 onClick={() => onEdit(menu)}
-                className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                className="cursor-pointer p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                 title="Edit Menu"
               >
                 <Edit2 className="w-4 h-4" />
@@ -65,7 +66,7 @@ export default function MenuCard({ menu, onEdit, onDelete }: MenuCardProps) {
             {onDelete && (
               <button 
                 onClick={() => onDelete(menu)}
-                className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                className="cursor-pointer p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
                 title="Hapus Menu"
               >
                 <Trash2 className="w-4 h-4" />

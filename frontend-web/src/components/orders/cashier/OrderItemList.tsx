@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
 import { CheckSquare, Square, Minus, Plus, CheckCircle2, Eye } from "lucide-react";
 import { formatRupiah } from "@/utils/format";
-import { CheckoutItem } from "./CheckoutModal";
+import { CheckoutItem } from "./CheckoutPaymentModal";
 import { PaidSegment } from "./ReceiptPreview";
 
 interface OrderItemListProps {
@@ -12,8 +11,8 @@ interface OrderItemListProps {
   toggleSelectAll: () => void;
   unpaidItems: CheckoutItem[];
   paidSegments: PaidSegment[];
-  handleDecreaseNota: (id: string) => void;
-  handleIncreaseNota: (id: string) => void;
+  handleRemoveFromNota: (id: string) => void;
+  handleAddToNota: (id: string) => void;
   setViewingSegmentId: (id: number | null) => void;
   setShowMasterReceipt: (show: boolean) => void;
 }
@@ -24,8 +23,8 @@ export default function OrderItemList({
   toggleSelectAll,
   unpaidItems,
   paidSegments,
-  handleDecreaseNota,
-  handleIncreaseNota,
+  handleRemoveFromNota,
+  handleAddToNota,
   setViewingSegmentId,
   setShowMasterReceipt,
 }: OrderItemListProps) {
@@ -55,11 +54,11 @@ export default function OrderItemList({
                   <div className="flex flex-col items-end">
                     <span className="text-[10px] text-gray-500 mb-1">Sisa: {qtyAvailable}</span>
                     <div className={`flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-1 ${selectAll ? "opacity-50" : ""}`}>
-                      <button onClick={() => handleDecreaseNota(item.id)} disabled={item.qtyInNota === 0 || selectAll} className="w-7 h-7 flex items-center justify-center rounded bg-white shadow-sm text-gray-600 hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed">
+                      <button onClick={() => handleRemoveFromNota(item.id)} disabled={item.qtyInNota === 0 || selectAll} className="w-7 h-7 flex items-center justify-center rounded bg-white shadow-sm text-gray-600 hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed">
                         <Minus size={14} />
                       </button>
                       <span className="w-6 text-center text-sm font-bold text-blue-600">{item.qtyInNota}</span>
-                      <button onClick={() => handleIncreaseNota(item.id)} disabled={qtyAvailable === 0 || selectAll} className="w-7 h-7 flex items-center justify-center rounded bg-white shadow-sm text-gray-600 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed">
+                      <button onClick={() => handleAddToNota(item.id)} disabled={qtyAvailable === 0 || selectAll} className="w-7 h-7 flex items-center justify-center rounded bg-white shadow-sm text-gray-600 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed">
                         <Plus size={14} />
                       </button>
                     </div>
@@ -77,7 +76,7 @@ export default function OrderItemList({
         {paidSegments.length > 0 && (
           <div className="space-y-3 pt-4 border-t border-gray-100">
             <h4 className="text-xs font-bold text-green-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-              <CheckCircle2 size={14} /> Sudah Lunas (Berdasarkan Pelanggan)
+              <CheckCircle2 size={14} /> Sudah Lunas
             </h4>
             {paidSegments.map((segment) => (
               <div key={segment.id} className="p-3 bg-gray-50 border border-gray-200 rounded-xl">

@@ -32,6 +32,7 @@ exports.createTransaction = async (req, res) => {
         price_at_time: priceToUse,
         is_half_portion: item.is_half_portion || false,
         note: item.note,
+        batch_number: item.batch_number || 1
       });
     }
 
@@ -128,6 +129,7 @@ exports.addTransactionItems = async (req, res) => {
         is_half_portion: item.is_half_portion || false,
         note: item.note,
         is_printed: false,
+        batch_number: item.batch_number
       });
     }
 
@@ -334,15 +336,7 @@ exports.getTransactions = async (req, res) => {
   try {
     let query = supabase
       .from("transactions")
-      .select(
-        `
-        *,
-        transaction_items (
-          id, menu_id, quantity, price_at_time, note, is_printed,
-          menus ( name, image_url )
-        )
-      `,
-      )
+      .select("*") 
       .eq("depot_id", depot_id)
       .order("created_at", { ascending: false });
 
@@ -372,8 +366,11 @@ exports.getTransactionDetail = async (req, res) => {
         `
         *,
         transaction_items (
-          id, menu_id, quantity, price_at_time, is_half_portion, note, is_printed,
-          menus ( name, image_url )
+          id, menu_id, quantity, price_at_time, is_half_portion, note, is_printed, batch_number, created_at,
+          menus ( 
+            name, image_url,
+            categories (id, name, type)
+          )
         )
       `,
       )

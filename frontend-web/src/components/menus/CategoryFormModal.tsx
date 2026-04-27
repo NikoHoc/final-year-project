@@ -8,7 +8,7 @@ interface CategoryFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialData?: Category | null;
-  onSubmit: (name: string) => Promise<boolean>;
+  onSubmit: (data: { name: string; type: "food" | "drink" | "other" }) => Promise<boolean>;
 }
 
 export default function CategoryFormModal({
@@ -18,6 +18,7 @@ export default function CategoryFormModal({
   onSubmit,
 }: CategoryFormModalProps) {
   const [name, setName] = useState("");
+  const [type, setType] = useState<"food" | "drink" | "other">("food");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEditMode = !!initialData;
@@ -26,6 +27,7 @@ export default function CategoryFormModal({
     if (isOpen) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(initialData?.name || "");
+      setType(initialData?.type || "food");
     }
   }, [isOpen, initialData]);
 
@@ -33,7 +35,7 @@ export default function CategoryFormModal({
     e.preventDefault();
     setIsSubmitting(true);
 
-    const success = await onSubmit(name);
+    const success = await onSubmit({ name, type });
 
     setIsSubmitting(false);
     if (success) onClose();
@@ -60,7 +62,20 @@ export default function CategoryFormModal({
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-black"
           />
         </div>
-
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Tipe Kategori <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value as "food" | "drink" | "other")}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-black"
+          >
+            <option value="food">Makanan</option>
+            <option value="drink">Minuman</option>
+            <option value="other">Lainnya</option>
+          </select>
+        </div>
         <div className="flex gap-3 pt-4 border-t border-gray-100">
           <button
             type="button"

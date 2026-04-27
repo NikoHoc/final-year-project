@@ -27,18 +27,18 @@ interface DummyItem {
   qtyInNota: number;
 }
 
-interface CheckoutModalProps {
+interface CheckoutPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
+export default function CheckoutPaymentModal({ isOpen, onClose }: CheckoutPaymentModalProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
 
   const segmentIdCounter = useRef(1);
 
-  const { methods: dbMethods, isLoading: isLoadingMethods, fetchMethods } = usePaymentMethods();
-  const activeMethods = dbMethods.filter(m => m.is_active);
+  const { methods, isLoading: isLoadingMethods, fetchMethods } = usePaymentMethods();
+  const activeMethods = methods.filter(m => m.is_active);
 
   const dummyTableId = "5";
   const dummyTransactionId = "TRX-99821A";
@@ -124,7 +124,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   const masterPaid = paidSegments.reduce((sum, seg) => sum + seg.paidAmount, 0);
   const masterChange = paidSegments.reduce((sum, seg) => sum + seg.changeAmount, 0);
 
-  const handleIncreaseNota = (id: string) => {
+  const handleAddToNota = (id: string) => {
     if (selectAll) return;
     setItems((prev) =>
       prev.map((item) => {
@@ -138,7 +138,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
     );
   };
 
-  const handleDecreaseNota = (id: string) => {
+  const handleRemoveFromNota = (id: string) => {
     if (selectAll) return;
     setItems((prev) =>
       prev.map((item) => {
@@ -221,8 +221,8 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
         tax: masterTax,
         total: masterGrandTotal,
         method: masterMethods,
-        paid: masterPaid,      // <--- GUNAKAN DATA TOTAL BAYAR
-        change: masterChange,  // <--- GUNAKAN DATA TOTAL KEMBALIAN
+        paid: masterPaid,      
+        change: masterChange,
         time: currentTime,
         status: "REKAP",
       };
@@ -352,8 +352,8 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
             toggleSelectAll={toggleSelectAll}
             unpaidItems={unpaidItems}
             paidSegments={paidSegments}
-            handleDecreaseNota={handleDecreaseNota}
-            handleIncreaseNota={handleIncreaseNota}
+            handleRemoveFromNota={handleRemoveFromNota}
+            handleAddToNota={handleAddToNota}
             setViewingSegmentId={setViewingSegmentId}
             setShowMasterReceipt={setShowMasterReceipt}
           />

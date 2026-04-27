@@ -3,13 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import { ShoppingBag, Power, Coffee, AlertCircle, LayoutGrid } from "lucide-react";
+import { ShoppingBag, Power, AlertCircle } from "lucide-react";
 
 import { useTables } from "@/hooks/useTables";
 import { transactionService } from "@/services/transactionService";
 import { depotService } from "@/services/depotService";
 import { User, Transaction, Depot } from "@/types";
 import toast from "react-hot-toast";
+import TableList from "@/components/tables/TableList";
 
 export default function KasirDashboard() {
   const router = useRouter();
@@ -90,7 +91,7 @@ export default function KasirDashboard() {
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard POS</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Dashboard POS - Kasir</h1>
           <p className="text-gray-500 text-sm mt-1">Pilih meja untuk Dine-in, atau klik Takeaway.</p>
         </div>
         
@@ -122,54 +123,14 @@ export default function KasirDashboard() {
         </div>
       )}
 
-      {tables.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 flex flex-col items-center justify-center text-center">
-          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 mb-4">
-            <LayoutGrid size={32} />
-          </div>
-          <h3 className="text-lg font-bold text-gray-800">Belum Ada data meja</h3>
-          <p className="text-gray-500 max-w-sm mt-2 mb-6">Tambahkan data meja terlebih dahulu untuk mulai menerima pesanan pelanggan secara Dine-in.</p>
-          <button 
-            onClick={() => router.push("/kasir/tables")} 
-            className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
-          >
-            Kelola Meja Sekarang
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-          {tables.map((table) => {
-            const activeTx = activeTransactions.find(t => t.table_id === table.id);
-            const isOccupied = !!activeTx;
-
-            return (
-              <button
-                key={table.id}
-                onClick={() => handleTableClick(table.id)}
-                disabled={!depot.is_open && !isOccupied} 
-                className={`relative flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all group ${
-                  isOccupied 
-                    ? "bg-yellow-50 border-yellow-400 shadow-md shadow-yellow-100/50 hover:bg-yellow-100" 
-                    : "bg-white border-gray-100 hover:border-blue-400 hover:shadow-md" 
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 transition-colors ${
-                  isOccupied ? "bg-yellow-200 text-yellow-800" : "bg-gray-50 text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-600"
-                }`}>
-                  <Coffee size={32} />
-                </div>
-                <span className="text-lg font-bold text-gray-800">{table.table_number}</span>
-                
-                <span className={`text-xs mt-1 font-semibold ${isOccupied ? "text-yellow-700" : "text-gray-400"}`}>
-                  {isOccupied ? "Terisi (Belum Bayar)" : "Kosong"}
-                </span>
-
-                <div className={`absolute top-0 inset-x-0 h-1.5 rounded-t-xl ${isOccupied ? "bg-yellow-400" : "bg-green-400"}`} />
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <TableList 
+        role="kasir"
+        tables={tables}
+        activeTransactions={activeTransactions}
+        isDepotOpen={depot.is_open ?? false}
+        onTableClick={handleTableClick}
+        onManageTables={() => router.push("/kasir/tables")}
+      />
     </div>
   );
 }

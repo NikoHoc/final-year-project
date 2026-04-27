@@ -15,7 +15,7 @@ exports.getCategories = async (req, res) => {
 };
 
 exports.createCategory = async (req, res) => {
-  const { name } = req.body;
+  const { name, type } = req.body;
 
   if (!name) {
     return res.status(400).json({
@@ -27,7 +27,12 @@ exports.createCategory = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("categories")
-      .insert([{ name }])
+      .insert([
+        { 
+          name, 
+          type: type || 'food' 
+        }
+      ])
       .select()
       .single();
 
@@ -45,21 +50,23 @@ exports.createCategory = async (req, res) => {
 
 exports.updateCategory = async (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
+  const { name, type } = req.body;
 
   if (!name) {
     return res.status(400).json({ status: false, message: "Nama kategori tidak boleh kosong" });
   }
   
   try {
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (type) updateData.type = type;
+
     const { data, error } = await supabase
       .from("categories")
-      .update({ name })
+      .update(updateData)
       .eq("id", id)
       .select()
       .single();
-
-    if (error) throw error;
 
     return res.status(200).json({
       status: true,

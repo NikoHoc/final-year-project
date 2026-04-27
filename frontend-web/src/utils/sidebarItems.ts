@@ -5,7 +5,6 @@ import {
   UtensilsCrossed, 
   Receipt, 
   ClockAlert,
-  ClipboardList,
   TableCellsMerge,
   CreditCard
 } from "lucide-react";
@@ -35,8 +34,7 @@ export const SIDEBAR_ITEMS: Record<Role, SidebarItem[]> = {
     { title: "Transaksi Online", path: "/kasir/online", icon: Receipt },
   ],
   pelayan: [
-    { title: "Daftar Meja", path: "/pelayan", icon: LayoutDashboard },
-    { title: "Pesanan Aktif", path: "/pelayan/orders", icon: ClipboardList },
+    { title: "Dashboard Pelayan", path: "/pelayan", icon: LayoutDashboard },
   ],
   pelanggan: [],
 };

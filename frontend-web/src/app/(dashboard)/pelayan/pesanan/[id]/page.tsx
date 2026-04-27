@@ -7,20 +7,25 @@ import { ArrowLeft } from "lucide-react";
 import { useDepots } from "@/hooks/useDepot";
 import { useCart } from "@/hooks/useCart";
 import { transactionService } from "@/services/transactionService";
-import { User, Menu, TransactionItem, Category, DepotMenuResponse } from "@/types";
+import {
+  User,
+  Menu,
+  TransactionItem,
+  Category,
+  DepotMenuResponse,
+} from "@/types";
 import toast from "react-hot-toast";
-import CheckoutPaymentModal from "@/components/orders/cashier/CheckoutPaymentModal";
 import MenuCategorySection from "@/components/menus/MenuCategorySection";
 import OrderCart from "@/components/orders/OrderCart";
+import CheckoutOrderModal from "@/components/orders/waiter/CheckoutOrderModal";
 
-export default function PosPage() {
+export default function PelayanPesananPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
 
   const transactionId = params.id as string;
   const initialTableId = searchParams.get("table_id");
-  const orderType = searchParams.get("type") || "onsite";
 
   const [depotId, setDepotId] = useState<number | null>(null);
   const [tableId, setTableId] = useState<string | null>(initialTableId);
@@ -31,62 +36,58 @@ export default function PosPage() {
   const [localCategories, setLocalCategories] = useState<Category[]>([]);
   const [localMenus, setLocalMenus] = useState<DepotMenuResponse[]>([]);
 
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isCheckoutOrderModalOpen, setCheckoutOrderModalOpen] = useState(false);
 
   const {
-    cartItems, setCartItems, setUseTax,
-    addItem, removeItem, updateQuantity, updateNote,
-    toggleHalfPortion, totals,
+    cartItems,
+    setCartItems,
+    addItem,
+    removeItem,
+    updateQuantity,
+    updateNote,
+    toggleHalfPortion,
   } = useCart();
 
   useEffect(() => {
-    setUseTax(true);
     const userCookie = Cookies.get("user");
     if (userCookie) {
       const user: User = JSON.parse(userCookie);
       setDepotId(user.depot_id || null);
       setUserId(user.id || null);
     }
-  }, [setUseTax]);
+  }, []);
 
+  // Load Menu dan kategori
   useEffect(() => {
     const loadData = async () => {
       if (!depotId) return;
-      
       try {
         const data: DepotMenuResponse[] = await getDepotMenus(depotId);
-        
-        if (!data || data.length === 0) {
-          console.error("Data dari API kosong atau bukan array:", data);
-          return;
-        }
+        if (!data || data.length === 0) return;
 
         setLocalMenus(data);
 
-        const uniqueCats: {id: number, name: string}[] = [];
+        const uniqueCats: { id: number; name: string }[] = [];
         const seenIds = new Set();
-
         data.forEach((menu) => {
           if (menu.categories && !seenIds.has(menu.categories.id)) {
             seenIds.add(menu.categories.id);
             uniqueCats.push({
               id: menu.categories.id,
-              name: menu.categories.name
+              name: menu.categories.name,
             });
           }
         });
-
         setLocalCategories(uniqueCats);
       } catch (error) {
         toast.error("Gagal memuat daftar menu");
         console.error("Gagal memuat menu:", error);
       }
     };
-
     loadData();
   }, [depotId, getDepotMenus]);
 
-  // load transaksi jika ada
+  // Load Transaksi Lama
   useEffect(() => {
     const loadExistingTransaction = async () => {
       if (transactionId !== "new") {
@@ -102,7 +103,7 @@ export default function PosPage() {
               is_half_portion: item.is_half_portion,
               note: item.note || "",
               is_saved: true,
-              batch_number: item.batch_number, 
+              batch_number: item.batch_number,
               created_at: item.created_at,
               menu: {
                 ...item.menus,
@@ -111,7 +112,6 @@ export default function PosPage() {
                 half_price: item.price_at_time,
               } as Menu,
             })) || [];
-
           setCartItems(loadedCart);
         } catch (error) {
           console.log("Error mengambil data transaksi lama:", error);
@@ -130,9 +130,9 @@ export default function PosPage() {
       const savedItems = cartItems.filter(item => item.is_saved);
 
       const lastBatchNumber = savedItems.length > 0 
-        ? Math.max(...savedItems.map(item => item.batch_number || 1)) 
-        : 0;
-      
+      ? Math.max(...savedItems.map(item => item.batch_number || 1)) 
+      : 0;
+    
       const nextBatchNumber = lastBatchNumber + 1;
 
       if (transactionId === "new") {
@@ -147,24 +147,21 @@ export default function PosPage() {
         const response = await transactionService.create({
           user_id: userId,
           depot_id: depotId,
-          type: orderType as "onsite" | "online" | "takeaway",
+          type: "onsite",
           table_id: tableId ? parseInt(tableId) : null,
           use_tax: true,
           items: itemsPayload,
         });
 
         toast.success("Pesanan berhasil dikirim ke dapur!");
-
         const newTxId = response?.data?.transaction?.id;
-
         if (newTxId) {
-          router.push(`/kasir/pos/${newTxId}`);
+          router.push(`/pelayan/pesanan/${newTxId}`);
         } else {
-          router.push("/kasir");
+          router.push("/pelayan");
         }
       } else {
-        const newItemsOnly = cartItems.filter((item) => item.is_saved !== true);
-
+        const newItemsOnly = cartItems.filter((item) => !item.is_saved);
         if (newItemsOnly.length > 0) {
           const newPayload = newItemsOnly.map((item) => ({
             menu_id: item.menu_id,
@@ -173,10 +170,9 @@ export default function PosPage() {
             note: item.note,
             batch_number: nextBatchNumber,
           }));
-
           await transactionService.addItems(transactionId, newPayload);
+          console.log("batch number terbaru: ", nextBatchNumber);
           toast.success("Pesanan tambahan dikirim!");
-
           window.location.reload();
         }
       }
@@ -193,44 +189,44 @@ export default function PosPage() {
       <div className="flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex items-center gap-4">
           <button
-            onClick={() => router.push("/kasir")}
+            onClick={() => router.push("/pelayan")}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft size={20} className="text-gray-600" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-gray-800">Meja {tableId} - {orderType.toUpperCase()}</h1>          
+            <h1 className="text-xl font-bold text-gray-800">Meja {tableId}</h1>
           </div>
         </div>
 
         <div className="md:col-span-8 h-full bg-white/50 p-4 border border-gray-100 overflow-hidden">
-          <MenuCategorySection 
-            menus={localMenus}    
+          <MenuCategorySection
+            menus={localMenus}
             categories={localCategories}
-            onMenuItemClick={addItem} 
-            isLoading={isLoading} 
+            onMenuItemClick={addItem}
+            isLoading={isLoading}
           />
         </div>
       </div>
 
       <OrderCart
-        variant="kasir"
+        variant="pelayan"
         cartItems={cartItems}
         tableId={tableId}
-        orderType={orderType}
         isProcessing={isProcessing}
-        totals={totals}
         onUpdateQuantity={updateQuantity}
         onUpdateNote={updateNote}
         onToggleHalf={toggleHalfPortion}
         onRemove={removeItem}
         onSave={handleSimpanPesanan}
-        onCheckout={() => setIsCheckoutOpen(true)}
+        onCheckout={() => setCheckoutOrderModalOpen(true)}
       />
 
-      <CheckoutPaymentModal 
-        isOpen={isCheckoutOpen} 
-        onClose={() => setIsCheckoutOpen(false)} 
+      <CheckoutOrderModal 
+        isOpen={isCheckoutOrderModalOpen}
+        onClose={() => setCheckoutOrderModalOpen(false)}
+        cartItems={cartItems}
+        tableId={tableId}
       />
     </div>
   );

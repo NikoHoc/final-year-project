@@ -7,13 +7,13 @@ export const categoryService = {
     return response.data.data as Category[];
   },
 
-  create: async (name: string) => {
-    const response = await api.post("/categories", { name });
+  create: async (data: { name: string; type: string }) => {
+    const response = await api.post("/categories", data);
     return response.data;
   },
 
-  update: async (id: number, name: string) => {
-    const response = await api.put(`/categories/${id}`, { name });
+  update: async (id: number, data: { name: string; type: string }) => {
+    const response = await api.put(`/categories/${id}`, data);
     return response.data;
   },
 

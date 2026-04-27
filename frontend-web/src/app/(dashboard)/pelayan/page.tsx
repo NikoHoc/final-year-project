@@ -1,79 +1,100 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { User } from "@/types";
-import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import { AlertCircle } from "lucide-react";
 
-export default function PelayanPage() {
-  const [userData, setUserData] = useState<User | null>(null);
-  const { logout } = useAuth();
+import { useTables } from "@/hooks/useTables";
+import { transactionService } from "@/services/transactionService";
+import { depotService } from "@/services/depotService";
+import { User, Transaction, Depot } from "@/types";
+import TableList from "@/components/tables/TableList";
+
+export default function PelayanDashboard() {
+  const router = useRouter();
+  const { tables, fetchTables } = useTables();
+  
+  const [depot, setDepot] = useState<Depot | null>(null);
+  const [activeTransactions, setActiveTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadDashboardData = useCallback(async () => {
+    setIsLoading(true);
+    const userCookie = Cookies.get("user");
+    if (userCookie) {
+      try {
+        const user: User = JSON.parse(userCookie);
+        if (user.depot_id) {
+          const depotData = await depotService.getById(user.depot_id);
+          setDepot(depotData.data || depotData); 
+
+          await fetchTables(user.depot_id);
+
+          const allTransactions = await transactionService.getAll(user.depot_id);
+          const active = allTransactions.filter(
+            t => t.payment_status === "unpaid" && t.order_status !== "cancelled"
+          );
+          setActiveTransactions(active);
+        }
+      } catch (error) {
+        console.error("Gagal memuat data dashboard pelayan", error);
+      }
+    }
+    setIsLoading(false);
+  }, [fetchTables]);
 
   useEffect(() => {
-    const storedUser = Cookies.get("user");
-    if (storedUser) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setUserData(JSON.parse(storedUser));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  const handleTableClick = (tableId: number) => {
+    const activeTx = activeTransactions.find(t => t.table_id === tableId);
+    
+    if (activeTx) {
+      router.push(`/pelayan/pesanan/${activeTx.id}`);
+    } else {
+      router.push(`/pelayan/pesanan/new?table_id=${tableId}`);
     }
-  }, []);
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64 animate-pulse text-gray-400">Memuat Radar Meja Pelayan...</div>;
+  }
+
+  if (!depot) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-gray-500">
+        <AlertCircle size={48} className="text-red-400 mb-4" />
+        <h2 className="text-xl font-bold">Akses Ditolak</h2>
+        <p>Akun pelayan ini tidak terikat pada cabang manapun.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8 font-poppins min-h-screen bg-gray-100">
-      <div className="mx-auto bg-white rounded-lg shadow p-6">
-        <h1 className="text-3xl font-bold font-montserrat text-blue-600 mb-6">
-          Halaman Pelayan
-        </h1>
-
-        <p className="mb-4 text-gray-600">
-          Berhasil masuk! Ini adalah data Anda:
+    <div className="space-y-6">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between items-start gap-2">
+        <h1 className="text-2xl font-bold text-blue-600">List Meja Depot</h1>
+        <p className="text-gray-500 text-sm">
+          Pilih meja untuk mencatat pesanan pelanggan. (Status Depot: <span className={depot.is_open ? "text-green-600 font-bold" : "text-red-600 font-bold"}>{depot.is_open ? "BUKA" : "TUTUP"}</span>)
         </p>
-
-        {userData ? (
-          <div className="bg-blue-50 p-4 rounded-md border border-blue-200 text-black">
-            <ul className="space-y-2">
-              <li>
-                <strong>Email:</strong> {userData.email || "Tidak ada email"}
-              </li>
-              <li>
-                <strong>Nama:</strong> {userData.full_name || "Tidak ada nama"}
-              </li>
-              <li>
-                <strong>Role:</strong>
-                <span className="ml-2 px-2 py-1 bg-blue-600 text-white text-xs rounded uppercase">
-                  {userData.role}
-                </span>
-              </li>
-              <li>
-                <strong>Depot ID:</strong> {userData.depot_id || "Semua Cabang"}
-              </li>
-            </ul>
-          </div>
-        ) : (
-          <p className="text-red-500">
-            Memuat data user atau Anda belum login...
-          </p>
-        )}
-        <button
-          onClick={logout}
-          className="w-full py-2.5 px-4 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 font-medium rounded-lg transition-colors flex justify-center items-center"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-            />
-          </svg>
-          Keluar (Logout)
-        </button>
       </div>
+
+      {!depot.is_open && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200 text-center font-medium flex items-center justify-center gap-2">
+          <AlertCircle size={20} /> Depot sedang ditutup. Tidak bisa menambah pesanan baru.
+        </div>
+      )}
+
+      <TableList 
+        role="pelayan"
+        tables={tables}
+        activeTransactions={activeTransactions}
+        isDepotOpen={depot.is_open ?? false}
+        onTableClick={handleTableClick}
+      />
     </div>
   );
 }

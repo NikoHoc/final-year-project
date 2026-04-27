@@ -56,6 +56,7 @@ export interface PaymentMethod {
 export interface Category {
   id: number;
   name: string;
+  type?: "food" | "drink" | "other";
   created_at?: string;
   updated_at?: string;
 }
@@ -68,7 +69,10 @@ export interface Menu {
   half_price?: number;
   image_url?: string;
   description?: string;
-  categories?: { name: string };
+  categories?: { 
+    name: string,
+    type?: "food" | "drink" | "other"
+  };
 }
 
 export interface Table {
@@ -87,7 +91,9 @@ export interface TransactionItem {
   price_at_time: number;
   is_half_portion: boolean;
   note?: string;
-  is_printed: boolean;
+  is_printed?: boolean;
+  batch_number?: number;
+  created_at?: string;
   menus: { 
     id?: number;
     name: string;
@@ -123,6 +129,8 @@ export interface CartItemPayload {
   quantity: number;
   is_half_portion: boolean;
   note?: string;
+  batch_number?: number;
+  created_at?: string;
 }
 
 export interface CreateTransactionPayload {
