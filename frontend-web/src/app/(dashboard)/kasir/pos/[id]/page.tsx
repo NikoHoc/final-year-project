@@ -1,17 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { ArrowLeft } from "lucide-react";
 import { useDepots } from "@/hooks/useDepot";
 import { useCart } from "@/hooks/useCart";
 import { transactionService } from "@/services/transactionService";
-import { User, Menu, TransactionItem, Category, DepotMenuResponse } from "@/types";
+import {
+  User,
+  TransactionItem,
+  Category,
+  DepotMenuResponse,
+} from "@/types";
 import toast from "react-hot-toast";
 import CheckoutPaymentModal from "@/components/orders/cashier/CheckoutPaymentModal";
 import MenuCategorySection from "@/components/menus/MenuCategorySection";
 import OrderCart from "@/components/orders/OrderCart";
+import { TransactionPayment } from "@/types";
 
 export default function PosPage() {
   const router = useRouter();
@@ -31,12 +37,19 @@ export default function PosPage() {
   const [localCategories, setLocalCategories] = useState<Category[]>([]);
   const [localMenus, setLocalMenus] = useState<DepotMenuResponse[]>([]);
 
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [existingPayments, setExistingPayments] = useState<TransactionPayment[]>([]);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const {
-    cartItems, setCartItems, setUseTax,
-    addItem, removeItem, updateQuantity, updateNote,
-    toggleHalfPortion, totals,
+    cartItems,
+    setCartItems,
+    setUseTax,
+    addItem,
+    removeItem,
+    updateQuantity,
+    updateNote,
+    toggleHalfPortion,
+    totals,
   } = useCart();
 
   useEffect(() => {
@@ -52,10 +65,10 @@ export default function PosPage() {
   useEffect(() => {
     const loadData = async () => {
       if (!depotId) return;
-      
+
       try {
         const data: DepotMenuResponse[] = await getDepotMenus(depotId);
-        
+
         if (!data || data.length === 0) {
           console.error("Data dari API kosong atau bukan array:", data);
           return;
@@ -63,7 +76,7 @@ export default function PosPage() {
 
         setLocalMenus(data);
 
-        const uniqueCats: {id: number, name: string}[] = [];
+        const uniqueCats: { id: number; name: string }[] = [];
         const seenIds = new Set();
 
         data.forEach((menu) => {
@@ -71,7 +84,7 @@ export default function PosPage() {
             seenIds.add(menu.categories.id);
             uniqueCats.push({
               id: menu.categories.id,
-              name: menu.categories.name
+              name: menu.categories.name,
             });
           }
         });
@@ -87,52 +100,63 @@ export default function PosPage() {
   }, [depotId, getDepotMenus]);
 
   // load transaksi jika ada
-  useEffect(() => {
-    const loadExistingTransaction = async () => {
-      if (transactionId !== "new") {
-        try {
-          const transaction = await transactionService.getById(transactionId);
-          if (transaction.table_id) setTableId(transaction.table_id.toString());
+  const loadExistingTransaction = useCallback(async () => {
+    if (!transactionId || transactionId === "new") {
+      setCartItems([]);
+      setExistingPayments([]);
+      return;
+    }
+    try {
+      const transaction = await transactionService.getById(transactionId);
+      if (transaction && transaction.table_id) {
+        setTableId(transaction.table_id.toString());
 
-          const loadedCart =
-            transaction.transaction_items?.map((item: TransactionItem) => ({
-              unique_id: item.id.toString(),
-              menu_id: item.menu_id,
-              quantity: item.quantity,
-              is_half_portion: item.is_half_portion,
-              note: item.note || "",
-              is_saved: true,
-              batch_number: item.batch_number, 
-              created_at: item.created_at,
-              menu: {
-                ...item.menus,
-                id: item.menu_id,
-                price: item.price_at_time,
-                half_price: item.price_at_time,
-              } as Menu,
-            })) || [];
+        const savedItems = (transaction.transaction_items || []).map(
+          (item: TransactionItem) => ({
+            id: item.id,
+            unique_id: item.id.toString(),
+            menu_id: item.menu_id,
+            quantity: item.quantity,
+            quantity_paid: item.quantity_paid || 0,
+            price_at_time: item.price_at_time,
+            is_half_portion: item.is_half_portion,
+            note: item.note,
+            menu: item.menus!,
+            is_saved: true,
+            batch_number: item.batch_number,
+          }),
+        );
 
-          setCartItems(loadedCart);
-        } catch (error) {
-          console.log("Error mengambil data transaksi lama:", error);
-          toast.error("Gagal memuat data transaksi lama");
-        }
+        setCartItems(savedItems);
+
+        setExistingPayments(transaction.transaction_payments || []);
       }
-    };
-    loadExistingTransaction();
+    } catch (error) {
+      console.log("Error mengambil data transaksi lama:", error);
+      toast.error("Gagal memuat data transaksi lama");
+    }
   }, [transactionId, setCartItems]);
+
+  useEffect(() => {
+    loadExistingTransaction();
+  }, [loadExistingTransaction]);
+
+  const handlePaymentSuccess = () => {
+    loadExistingTransaction();
+  };
 
   const handleSimpanPesanan = async () => {
     if (!depotId || cartItems.length === 0) return;
     setIsProcessing(true);
 
     try {
-      const savedItems = cartItems.filter(item => item.is_saved);
+      const savedItems = cartItems.filter((item) => item.is_saved);
 
-      const lastBatchNumber = savedItems.length > 0 
-        ? Math.max(...savedItems.map(item => item.batch_number || 1)) 
-        : 0;
-      
+      const lastBatchNumber =
+        savedItems.length > 0
+          ? Math.max(...savedItems.map((item) => item.batch_number || 1))
+          : 0;
+
       const nextBatchNumber = lastBatchNumber + 1;
 
       if (transactionId === "new") {
@@ -199,16 +223,18 @@ export default function PosPage() {
             <ArrowLeft size={20} className="text-gray-600" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-gray-800">Meja {tableId} - {orderType.toUpperCase()}</h1>          
+            <h1 className="text-xl font-bold text-gray-800">
+              Meja {tableId} - {orderType.toUpperCase()}
+            </h1>
           </div>
         </div>
 
         <div className="md:col-span-8 h-full bg-white/50 p-4 border border-gray-100 overflow-hidden">
-          <MenuCategorySection 
-            menus={localMenus}    
+          <MenuCategorySection
+            menus={localMenus}
             categories={localCategories}
-            onMenuItemClick={addItem} 
-            isLoading={isLoading} 
+            onMenuItemClick={addItem}
+            isLoading={isLoading}
           />
         </div>
       </div>
@@ -225,12 +251,17 @@ export default function PosPage() {
         onToggleHalf={toggleHalfPortion}
         onRemove={removeItem}
         onSave={handleSimpanPesanan}
-        onCheckout={() => setIsCheckoutOpen(true)}
+        onCheckout={() => setIsPaymentModalOpen(true)}
       />
 
-      <CheckoutPaymentModal 
-        isOpen={isCheckoutOpen} 
-        onClose={() => setIsCheckoutOpen(false)} 
+      <CheckoutPaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        transactionId={transactionId}
+        tableId={tableId || ""}
+        cartItems={cartItems}
+        existingPayments={existingPayments}
+        onSuccess={handlePaymentSuccess}
       />
     </div>
   );

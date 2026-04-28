@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Printer, ClipboardList, CheckCircle2 } from "lucide-react";
+import { Printer, ClipboardList, CheckCircle2, ChefHat } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import { CartItem } from "@/hooks/useCart";
 
@@ -63,10 +63,10 @@ export default function CheckoutOrderModal({
         <div className="w-1/3 border-r border-gray-100 p-6 overflow-y-auto bg-white space-y-4">
           <div className="mb-6">
             <h2 className="text-xl font-black text-gray-800 flex items-center gap-2">
-              <Printer className="text-blue-600" size={20} /> Tiket Dapur
+              <ChefHat className="text-blue-600" size={30} /> List Pesanan
             </h2>
             <p className="text-xs text-gray-500 font-medium">
-              Meja {tableId} • Pilih Pesanan
+              Meja {tableId} • Pilih Batch Pesanan
             </p>
             <div className="h-px border-t border-dashed border-gray-400 my-3"></div>
           </div>
@@ -115,9 +115,12 @@ export default function CheckoutOrderModal({
           </button>
         </div>
 
-        {/* PANEL KANAN: Abu-abu Terang (Agar Kertas Putih Terlihat Kontras) */}
         <div className="w-2/3 p-8 flex flex-col h-full bg-gray-100/80">
-          <div className="flex bg-gray-200/50 p-1 rounded-xl w-fit mb-6">
+          <h2 className="text-xl font-black text-gray-800 flex items-center gap-2">
+            <Printer className="text-blue-600" size={20} /> Tiket Dapur
+          </h2>
+          <p className="text-xs italic">*Pilih opsi cetak pesanan</p>
+          <div className="flex bg-gray-200/50 p-1 rounded-xl w-fit mb-6 mt-2">
             {["all", "food", "drink"].map((id) => (
               <button
                 key={id}
@@ -136,7 +139,11 @@ export default function CheckoutOrderModal({
           <div className="flex-1 bg-white border border-gray-200 rounded-sm shadow-xl overflow-y-auto p-10 font-mono text-xs max-w-95 mx-auto w-full relative">
             <div className="text-center mb-6">
               <p className="font-bold text-sm uppercase tracking-widest">
-                KITCHEN TICKET
+                {filterType === "all"
+                  ? "CHECKER"
+                  : filterType === "food"
+                    ? "MAKANAN"
+                    : "MINUMAN"}
               </p>
               <div className="h-px border-t border-dashed border-gray-400 my-3"></div>
               <p className="font-bold text-base">MEJA: {tableId}</p>
@@ -150,28 +157,32 @@ export default function CheckoutOrderModal({
             </div>
 
             <div className="space-y-4">
-              {previewItems.map((item) => (
-                <div key={item.unique_id} className="pb-1">
-                  <div className="flex gap-3">
-                    <span className="font-bold text-sm">{item.quantity}x</span>
-                    <span className="font-bold text-sm uppercase flex-1">
-                      {item.menu.name}
-                    </span>
+              {previewItems.length === 0 ? (
+                <div className="text-center py-4 text-gray-400 italic">Tidak ada pesanan</div>
+              ) : (
+                previewItems.map((item) => (
+                  <div key={item.unique_id} className="pb-1">
+                    <div className="flex gap-3">
+                      <span className="font-bold text-sm">{item.quantity}x</span>
+                      <span className="font-bold text-sm uppercase flex-1">
+                        {item.menu.name}
+                      </span>
+                    </div>
+                    <div className="pl-8 space-y-1">
+                      {item.is_half_portion && (
+                        <p className="text-[10px] font-black border-l-2 border-black pl-2">
+                          1/2 PORSI
+                        </p>
+                      )}
+                      {item.note && (
+                        <p className="text-[10px] italic bg-gray-100 p-1">
+                          Note: {item.note}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="pl-8 space-y-1">
-                    {item.is_half_portion && (
-                      <p className="text-[10px] font-black border-l-2 border-black pl-2">
-                        1/2 PORSI
-                      </p>
-                    )}
-                    {item.note && (
-                      <p className="text-[10px] italic bg-gray-100 p-1">
-                        Note: {item.note}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
 
             <div className="mt-12 pt-4 border-t border-dashed border-gray-300 text-center text-[10px] text-gray-400">
@@ -182,7 +193,7 @@ export default function CheckoutOrderModal({
           <div className="mt-8 flex justify-end gap-3">
             <button
               onClick={onClose}
-              className="px-6 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-200 transition-all"
+              className="px-6 py-3 rounded-xl font-bold text-gray-500 hover:bg-red-500 hover:text-white transition-all"
             >
               Tutup
             </button>

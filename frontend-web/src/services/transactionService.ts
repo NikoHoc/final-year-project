@@ -29,4 +29,14 @@ export const transactionService = {
     const response = await api.put(`/transactions/${id}/status`, data);
     return response.data;
   },
+
+  processPayment: async (transactionId: string, payload: {
+    payment_method_id: number;
+    paid_amount: number;
+    change_amount: number;
+    items: { transaction_item_id: number, quantity: number, price_at_time: number }[];
+  }) => {
+    const response = await api.put(`/transactions/${transactionId}/pay`, payload);
+    return response.data;
+  }
 };

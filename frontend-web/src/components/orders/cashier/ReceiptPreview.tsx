@@ -39,8 +39,8 @@ export interface ReceiptData {
 interface ReceiptPreviewProps {
   receiptRef: React.RefObject<HTMLDivElement | null>;
   rcp: ReceiptData;
-  dummyTableId: string;
-  dummyTransactionId: string;
+  tableId: string;
+  transactionId: string;
   activeSegmentToView: PaidSegment | null;
   showMasterReceipt: boolean;
   setShowMasterReceipt: (show: boolean) => void;
@@ -54,8 +54,8 @@ interface ReceiptPreviewProps {
 export default function ReceiptPreview({
   receiptRef,
   rcp,
-  dummyTableId,
-  dummyTransactionId,
+  tableId,
+  transactionId,
   activeSegmentToView,
   showMasterReceipt,
   setShowMasterReceipt,
@@ -92,9 +92,9 @@ export default function ReceiptPreview({
         </div>
 
         <div className="space-y-2 section-gap text-[11px] mt-4">
-          <div className="flex justify-between"><span>No. TRX:</span> <span className="font-bold">{dummyTransactionId}</span></div>
+          <div className="flex justify-between"><span>No. TRX:</span> <span className="font-bold">{transactionId}</span></div>
           <div className="flex justify-between"><span>Waktu:</span> <span>{rcp.time}</span></div>
-          <div className="flex justify-between"><span>Meja:</span> <span>{dummyTableId || "-"}</span></div>
+          <div className="flex justify-between"><span>Meja:</span> <span>{tableId || "-"}</span></div>
         </div>
 
         <div className="border-t border-b border-dashed border-gray-400 py-4 section-gap space-y-2 text-xs mt-4">

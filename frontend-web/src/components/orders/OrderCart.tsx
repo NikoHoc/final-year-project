@@ -80,11 +80,7 @@ export default function OrderCart({
         
         {variant === "kasir" && (
           <p className="text-blue-600 font-semibold text-sm">
-            {formatRupiah(
-              item.is_half_portion && item.menu?.half_price
-                ? item.menu.half_price
-                : item.menu?.price || 0
-            )}
+            {formatRupiah(item.price_at_time)}
           </p>
         )}
 

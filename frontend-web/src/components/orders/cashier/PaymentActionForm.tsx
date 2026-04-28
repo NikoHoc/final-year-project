@@ -16,6 +16,7 @@ interface PaymentActionFormProps {
   itemsInNotaLength: number;
   paymentMethods: PaymentMethod[]; 
   isLoadingMethods: boolean;
+  isSubmitting?: boolean;
 }
 
 export default function PaymentActionForm({
@@ -31,6 +32,7 @@ export default function PaymentActionForm({
   itemsInNotaLength,
   paymentMethods,
   isLoadingMethods,
+  isSubmitting
 }: PaymentActionFormProps) {
   
   if (isAllFullyPaid) return null;
@@ -90,7 +92,7 @@ export default function PaymentActionForm({
         disabled={!isMoneySufficient || itemsInNotaLength === 0} 
         className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold text-lg shadow-md hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-[0.98]"
       >
-        Bayar Sekarang
+        {isSubmitting ? "Memproses..." : "Bayar Sekarang"}
       </button>
     </div>
   );

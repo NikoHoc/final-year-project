@@ -2,12 +2,15 @@
 
 import { useState, useRef, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
-import { PAYMENT_METHODS } from "@/utils/paymentMethods";
 import toast from "react-hot-toast";
 import OrderItemList from "./OrderItemList";
 import PaymentActionForm from "./PaymentActionForm";
 import ReceiptPreview, { PaidSegment } from "./ReceiptPreview";
 import { usePaymentMethods } from "@/hooks/usePaymentMethods";
+import { transactionService } from "@/services/transactionService";
+import { CartItem } from "@/hooks/useCart"; 
+import { TransactionPayment } from "@/types";
+import { useRouter } from "next/navigation";
 
 export interface CheckoutItem {
   id: string;
@@ -17,87 +20,99 @@ export interface CheckoutItem {
   qtyPaid: number;
   qtyInNota: number;
 }
-
-interface DummyItem {
-  id: string;
-  name: string;
-  price: number;
-  qtyTotal: number;
-  qtyPaid: number;
-  qtyInNota: number;
-}
-
 interface CheckoutPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
+  cartItems: CartItem[];
+  transactionId: string;
+  tableId: string;
+  existingPayments: TransactionPayment[]; 
+  onSuccess: () => void;
 }
-
-export default function CheckoutPaymentModal({ isOpen, onClose }: CheckoutPaymentModalProps) {
+export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, transactionId, tableId, existingPayments, onSuccess }: CheckoutPaymentModalProps) {
+  const router = useRouter()
   const receiptRef = useRef<HTMLDivElement>(null);
-
-  const segmentIdCounter = useRef(1);
 
   const { methods, isLoading: isLoadingMethods, fetchMethods } = usePaymentMethods();
   const activeMethods = methods.filter(m => m.is_active);
 
-  const dummyTableId = "5";
-  const dummyTransactionId = "TRX-99821A";
-
-  const [items, setItems] = useState<DummyItem[]>([
-    {
-      id: "1",
-      name: "Nasi Goreng Spesial",
-      price: 25000,
-      qtyTotal: 3,
-      qtyPaid: 0,
-      qtyInNota: 0,
-    },
-    {
-      id: "2",
-      name: "Es Teh Manis",
-      price: 5000,
-      qtyTotal: 4,
-      qtyPaid: 0,
-      qtyInNota: 0,
-    },
-    {
-      id: "3",
-      name: "Ayam Bakar Madu",
-      price: 30000,
-      qtyTotal: 1,
-      qtyPaid: 0,
-      qtyInNota: 0,
-    },
-  ]);
-
+  const [items, setItems] = useState<CheckoutItem[]>([]);
+  
   const [paidSegments, setPaidSegments] = useState<PaidSegment[]>([]);
   const [selectAll, setSelectAll] = useState(false);
   const [customerMoney, setCustomerMoney] = useState<string>("");
-  const [selectedMethod, setSelectedMethod] = useState(PAYMENT_METHODS[0]);
-  const [usedPaymentMethods, setUsedPaymentMethods] = useState<string[]>([]);
+  const [selectedMethod, setSelectedMethod] = useState<string>("");
 
   const [viewingSegmentId, setViewingSegmentId] = useState<number | null>(null);
   const [showMasterReceipt, setShowMasterReceipt] = useState<boolean>(false);
 
   const [currentTime, setCurrentTime] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       fetchMethods();
 
-      const now = new Date();
-      const timeString = now.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }) +
-        `, ${now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCurrentTime(timeString);
+      const updateTime = () => {
+        const now = new Date();
+        setCurrentTime(now.toLocaleString("id-ID", {
+          day: "numeric", month: "long", year: "numeric",
+          hour: "2-digit", minute: "2-digit"
+        }));
+      };
+      
+      updateTime();
+      const timer = setInterval(updateTime, 60000); 
+      
+      return () => clearInterval(timer);
     }
   }, [isOpen, fetchMethods]);
+
+  useEffect(() => {
+    if (isOpen) {
+      const mappedItems = cartItems.map((item) => ({
+        id: item.id ? item.id.toString() : item.unique_id,
+        name: item.menu.name,
+        price: item.price_at_time,
+        qtyTotal: item.quantity,
+        qtyPaid: item.quantity_paid || 0,
+        qtyInNota: 0,
+      }));
+      setItems(mappedItems);
+
+      const mappedSegments: PaidSegment[] = (existingPayments || []).map((payment, index) => {
+        const segItems = payment.transaction_payment_items?.map((pi) => ({
+          id: pi.transaction_item_id.toString(),
+          name: cartItems.find((c) => c.id === pi.transaction_item_id)?.menu.name || "Item",
+          price: pi.price_at_time,
+          qty: pi.quantity,
+        })) || [];
+
+        const segmentSubtotal = segItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+        const segmentTax = segmentSubtotal * 0.1;
+        const segmentGrandTotal = payment.paid_amount - payment.change_amount;
+
+        return {
+          id: payment.id,
+          customerName: `Pelanggan ${index + 1}`,
+          items: segItems,
+          subtotal: segmentSubtotal,
+          tax: segmentTax, 
+          grandTotal: segmentGrandTotal,
+          method: payment.payment_methods?.name || "Unknown",
+          time: new Date(payment.created_at).toLocaleString("id-ID"),
+          paidAmount: payment.paid_amount,
+          changeAmount: payment.change_amount,
+        };
+      });
+      setPaidSegments(mappedSegments);
+    }
+  }, [isOpen, cartItems, existingPayments]);
 
   useEffect(() => {
     if (activeMethods.length > 0) {
       const isCurrentMethodValid = activeMethods.some(m => m.name === selectedMethod);
       if (!isCurrentMethodValid) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelectedMethod(activeMethods[0].name);
       }
     }
@@ -120,7 +135,9 @@ export default function CheckoutPaymentModal({ isOpen, onClose }: CheckoutPaymen
   const masterSubtotal = masterItems.reduce((sum, item) => sum + item.price * item.qtyPaid, 0);
   const masterTax = masterSubtotal * 0.1;
   const masterGrandTotal = masterSubtotal + masterTax;
-  const masterMethods = Array.from(new Set(usedPaymentMethods)).join(" & ");
+  const masterMethods = Array.from(new Set(
+    existingPayments.map(p => p.payment_methods?.name).filter(Boolean)
+  )).join(" & ");
   const masterPaid = paidSegments.reduce((sum, seg) => sum + seg.paidAmount, 0);
   const masterChange = paidSegments.reduce((sum, seg) => sum + seg.changeAmount, 0);
 
@@ -160,52 +177,49 @@ export default function CheckoutPaymentModal({ isOpen, onClose }: CheckoutPaymen
     );
   };
 
-  const handleProcessPayment = () => {
+  const handleProcessPayment = async () => {
     if (!isMoneySufficient || itemsInNota.length === 0) return;
 
-    const newSegment: PaidSegment = {
-      id: segmentIdCounter.current++,
-      customerName: `Customer ${paidSegments.length + 1}`,
-      items: itemsInNota.map((i) => ({
-        id: i.id,
-        name: i.name,
-        price: i.price,
-        qty: i.qtyInNota,
-      })),
-      subtotal: subtotalNota,
-      tax: taxNota,
-      grandTotal: grandTotalNota,
-      method: selectedMethod,
-      time: currentTime,
-      paidAmount: moneyValue, 
-      changeAmount: change, 
-    };
+    const selectedMethodObj = activeMethods.find(m => m.name === selectedMethod);
+    if (!selectedMethodObj) {
+      toast.error("Metode pembayaran tidak valid");
+      return;
+    }
 
-    setPaidSegments([...paidSegments, newSegment]);
-    setUsedPaymentMethods((prev) => Array.from(new Set([...prev, selectedMethod])));
+    setIsSubmitting(true);
 
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item.qtyInNota > 0) {
-          return {
-            ...item,
-            qtyPaid: item.qtyPaid + item.qtyInNota,
-            qtyInNota: 0,
-          };
-        }
-        return item;
-      }),
-    );
+    try {
+      const payload = {
+        payment_method_id: selectedMethodObj.id,
+        paid_amount: moneyValue,
+        change_amount: change,
+        items: itemsInNota.map((i) => ({
+          transaction_item_id: parseInt(i.id),
+          quantity: i.qtyInNota,
+          price_at_time: i.price,
+        })),
+      };
 
-    setCustomerMoney("");
-    setSelectAll(false);
-    toast.success(`${newSegment.customerName} Berhasil Membayar!`);
+      await transactionService.processPayment(transactionId, payload);
+
+      toast.success("Pembayaran Segmen Berhasil!");
+      setCustomerMoney("");
+      setSelectAll(false);
+      
+      onSuccess(); 
+
+    } catch (error) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err?.response?.data?.message || "Gagal memproses pembayaran");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleFinalizeTransaction = () => {
-    const finalPaymentMethods = usedPaymentMethods.join(" & ");
-    toast.success(`Transaksi Selesai Total! (Metode: ${finalPaymentMethods})`);
+    toast.success(`Transaksi Meja ${tableId} Selesai!`);
     onClose();
+    router.push("/kasir");
   };
 
   // --- LOGIKA DATA NOTA YANG DITAMPILKAN ---
@@ -370,13 +384,14 @@ export default function CheckoutPaymentModal({ isOpen, onClose }: CheckoutPaymen
             itemsInNotaLength={itemsInNota.length}
             paymentMethods={activeMethods}
             isLoadingMethods={isLoadingMethods}
+            isSubmitting={isSubmitting}
           />
         </div>
         <ReceiptPreview
           receiptRef={receiptRef}
           rcp={rcp}
-          dummyTableId={dummyTableId}
-          dummyTransactionId={dummyTransactionId}
+          tableId={tableId}
+          transactionId={transactionId}
           activeSegmentToView={activeSegmentToView}
           showMasterReceipt={showMasterReceipt}
           setShowMasterReceipt={setShowMasterReceipt}

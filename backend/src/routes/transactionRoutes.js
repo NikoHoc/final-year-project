@@ -21,5 +21,6 @@ router.get("/depot/:depot_id", transactionController.getTransactions);
 router.get("/:id", transactionController.getTransactionDetail);
 
 router.put("/:id/print-items", roleMiddleware(["kasir", "pelayan"]), transactionController.updateItemsPrintStatus);
+router.put('/:id/pay', transactionController.processPayment);
 
 module.exports = router;

@@ -104,6 +104,8 @@ export default function PelayanPesananPage() {
               note: item.note || "",
               is_saved: true,
               batch_number: item.batch_number,
+              quantity_paid: item.quantity_paid || 0,
+              price_at_time: item.price_at_time,
               created_at: item.created_at,
               menu: {
                 ...item.menus,

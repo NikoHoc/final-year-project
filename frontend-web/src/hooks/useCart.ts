@@ -2,9 +2,12 @@ import { useState, useMemo } from "react";
 import { Menu, CartItemPayload } from "@/types";
 
 export interface CartItem extends CartItemPayload {
+  id?: number;
   unique_id: string;
   menu: Menu;
   is_saved?: boolean;
+  quantity_paid: number;
+  price_at_time: number;
 }
 
 export const useCart = () => {
@@ -35,6 +38,8 @@ export const useCart = () => {
           is_half_portion: isHalfPortion,
           menu: menu,
           is_saved: false,
+          quantity_paid: 0,
+          price_at_time: isHalfPortion && menu.half_price ? menu.half_price : menu.price,
         },
       ];
     });
@@ -81,7 +86,7 @@ export const useCart = () => {
     let subtotal = 0;
 
     cartItems.forEach((item) => {
-      const priceToUse = item.is_half_portion && item.menu.half_price ? item.menu.half_price : item.menu.price;
+      const priceToUse = item.price_at_time || 0;
       subtotal += priceToUse * item.quantity;
     });
 

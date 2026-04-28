@@ -362,18 +362,18 @@ exports.getTransactionDetail = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("transactions")
-      .select(
-        `
+      .select(`
         *,
         transaction_items (
-          id, menu_id, quantity, price_at_time, is_half_portion, note, is_printed, batch_number, created_at,
-          menus ( 
-            name, image_url,
-            categories (id, name, type)
-          )
+          *,
+          menus (name, image_url, categories (id, name, type))
+        ),
+        transaction_payments (
+          *,
+          payment_methods (name),
+          transaction_payment_items (*)
         )
-      `,
-      )
+      `)
       .eq("id", id)
       .single();
 
@@ -428,6 +428,86 @@ exports.updateItemsPrintStatus = async (req, res) => {
       message: "Status print item berhasil diperbarui",
       updated_items: data 
     });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.processPayment = async (req, res) => {
+  const { id } = req.params; 
+  const { 
+    payment_method_id, 
+    paid_amount, 
+    change_amount, 
+    items
+  } = req.body;
+
+  try {
+    // buat section pembayaran
+    const { data: payment, error: pError } = await supabase
+      .from("transaction_payments")
+      .insert([{
+        transaction_id: id,
+        payment_method_id,
+        paid_amount,
+        change_amount
+      }])
+      .select()
+      .single();
+
+    if (pError) throw pError;
+
+    for (const item of items) {
+      // input item yang sudah dibayar
+      await supabase.from("transaction_payment_items").insert([{
+        transaction_payment_id: payment.id,
+        transaction_item_id: item.transaction_item_id,
+        quantity: item.quantity,
+        price_at_time: item.price_at_time
+      }]);
+
+      // update quantity paid pada transaction items
+      const { data: currentItem } = await supabase
+        .from("transaction_items")
+        .select("quantity_paid")
+        .eq("id", item.transaction_item_id)
+        .single();
+
+      await supabase
+        .from("transaction_items")
+        .update({ quantity_paid: (currentItem.quantity_paid || 0) + item.quantity })
+        .eq("id", item.transaction_item_id);
+    }
+
+    // mendapatkan metode pembayaran transaksi
+    const { data: allPayments } = await supabase
+      .from("transaction_payments")
+      .select("payment_methods(name)")
+      .eq("transaction_id", id);
+
+    const methods = [...new Set(allPayments.map(p => p.payment_methods.name))].join(", ");
+    
+    // mengecek apakah transaction items sudah lunas semua?
+    const { data: allItems } = await supabase
+      .from("transaction_items")
+      .select("quantity, quantity_paid")
+      .eq("transaction_id", id);
+
+    const isFullyPaid = allItems.every(i => i.quantity_paid >= i.quantity);
+
+    // update transaksi
+    const { data: finalTx } = await supabase
+      .from("transactions")
+      .update({
+        payment_method: methods,
+        payment_status: isFullyPaid ? 'paid' : 'unpaid',
+        order_status: isFullyPaid ? 'completed' : 'confirmed'
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    return res.status(200).json({ status: true, message: "Pembayaran Berhasil", data: finalTx });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
   }

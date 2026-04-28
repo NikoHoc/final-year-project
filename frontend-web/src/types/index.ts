@@ -88,17 +88,14 @@ export interface TransactionItem {
   transaction_id: string;
   menu_id: number;
   quantity: number;
+  quantity_paid: number;
   price_at_time: number;
   is_half_portion: boolean;
   note?: string;
   is_printed?: boolean;
   batch_number?: number;
   created_at?: string;
-  menus: { 
-    id?: number;
-    name: string;
-    image_url: string;
-  };
+  menus?: Menu;
 }
 
 export interface Transaction {
@@ -121,7 +118,27 @@ export interface Transaction {
   midtrans_url?: string;
   rejection_reason?: string;
   created_at: string;
-  transaction_items?: TransactionItem[]; 
+  transaction_items?: TransactionItem[];
+  transaction_payments?: TransactionPayment[];
+}
+
+export interface TransactionPayment {
+  id: number;
+  transaction_id: string;
+  payment_method_id: number;
+  paid_amount: number;
+  change_amount: number;
+  created_at: string;
+  payment_methods?: { name: string };
+  transaction_payment_items?: TransactionPaymentItem[];
+}
+
+export interface TransactionPaymentItem {
+  id: number;
+  transaction_payment_id: number;
+  transaction_item_id: number;
+  quantity: number;
+  price_at_time: number;
 }
 
 export interface CartItemPayload {
