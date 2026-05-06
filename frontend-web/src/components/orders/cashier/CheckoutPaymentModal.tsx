@@ -19,6 +19,8 @@ export interface CheckoutItem {
   qtyTotal: number;
   qtyPaid: number;
   qtyInNota: number;
+  is_half_portion?: boolean;
+  note?: string;
 }
 interface CheckoutPaymentModalProps {
   isOpen: boolean;
@@ -77,16 +79,23 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
         qtyTotal: item.quantity,
         qtyPaid: item.quantity_paid || 0,
         qtyInNota: 0,
+        is_half_portion: item.is_half_portion,
+        note: item.note,
       }));
       setItems(mappedItems);
 
       const mappedSegments: PaidSegment[] = (existingPayments || []).map((payment, index) => {
-        const segItems = payment.transaction_payment_items?.map((pi) => ({
-          id: pi.transaction_item_id.toString(),
-          name: cartItems.find((c) => c.id === pi.transaction_item_id)?.menu.name || "Item",
-          price: pi.price_at_time,
-          qty: pi.quantity,
-        })) || [];
+        const segItems = payment.transaction_payment_items?.map((pi) => {
+          const originalCartItem = cartItems.find((c) => c.id === pi.transaction_item_id);
+          return {
+            id: pi.transaction_item_id.toString(),
+            name: originalCartItem?.menu.name || "Item",
+            price: pi.price_at_time,
+            qty: pi.quantity,
+            is_half_portion: originalCartItem?.is_half_portion,
+            note: originalCartItem?.note,
+          };
+        }) || [];
 
         const segmentSubtotal = segItems.reduce((sum, item) => sum + item.price * item.qty, 0);
         const segmentTax = segmentSubtotal * 0.1;

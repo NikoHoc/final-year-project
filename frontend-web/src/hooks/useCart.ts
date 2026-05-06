@@ -8,6 +8,7 @@ export interface CartItem extends CartItemPayload {
   is_saved?: boolean;
   quantity_paid: number;
   price_at_time: number;
+  serve_status?: 'cooking' | 'served';
 }
 
 export const useCart = () => {

@@ -107,6 +107,7 @@ export default function PelayanPesananPage() {
               quantity_paid: item.quantity_paid || 0,
               price_at_time: item.price_at_time,
               created_at: item.created_at,
+              serve_status: item.serve_status || 'cooking',
               menu: {
                 ...item.menus,
                 id: item.menu_id,

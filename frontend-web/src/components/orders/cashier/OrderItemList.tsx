@@ -48,8 +48,21 @@ export default function OrderItemList({
               return (
                 <div key={item.id} className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-xl hover:border-blue-300 transition-colors">
                   <div className="flex-1 min-w-0 pr-4">
-                    <h4 className="font-bold text-gray-800 text-sm truncate">{item.name}</h4>
+                    <h4 className="font-bold text-gray-800 text-sm truncate">
+                      {item.name}
+                      {item.is_half_portion && (
+                        <span className="ml-2 text-[9px] bg-red-100 text-red-500 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                          1/2 Porsi
+                        </span>
+                      )}
+                    </h4>
                     <p className="text-blue-600 font-semibold text-sm">{formatRupiah(item.price)}</p>
+                    {/* CATATAN (NOTE) */}
+                    {item.note && (
+                      <p className="text-[10px] text-orange-500 italic mt-0.5 truncate">
+                        # {item.note}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col items-end">
                     <span className="text-[10px] text-gray-500 mb-1">Sisa: {qtyAvailable}</span>

@@ -8,6 +8,8 @@ export interface ReceiptItem {
   name: string;
   price: number;
   qty: number;
+  is_half_portion?: boolean;
+  note?: string;
 }
 
 export interface PaidSegment {
@@ -102,9 +104,23 @@ export default function ReceiptPreview({
             <div className="text-center py-4 text-gray-400 italic">Belum ada pesanan</div>
           ) : (
             rcp.items.map((item: ReceiptItem) => (
-              <div key={item.id} className="flex items-start justify-between item-row">
-                <div className="flex gap-2"><span className="w-4">{item.qty}x</span><span>{item.name}</span></div>
-                <span>{(item.price * item.qty).toLocaleString("id-ID")}</span>
+              <div key={item.id} className="flex flex-col item-row mb-2">
+                <div className="flex items-start justify-between">
+                  <div className="flex gap-2">
+                    <span className="w-4">{item.qty}x</span>
+                    <span>
+                      {item.name}
+                      {item.is_half_portion && <span className="ml-1 text-[9px] font-bold uppercase tracking-wider">[1/2 porsi]</span>}
+                    </span>
+                  </div>
+                  <span>{(item.price * item.qty).toLocaleString("id-ID")}</span>
+                </div>
+                {/* CATATAN (NOTE) DI NOTA */}
+                {item.note && (
+                  <div className="pl-6 text-[10px] italic text-gray-600 mt-1">
+                    # {item.note}
+                  </div>
+                )}
               </div>
             ))
           )}

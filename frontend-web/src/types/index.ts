@@ -96,6 +96,7 @@ export interface TransactionItem {
   batch_number?: number;
   created_at?: string;
   menus?: Menu;
+  serve_status?: 'cooking' | 'served';
 }
 
 export interface Transaction {

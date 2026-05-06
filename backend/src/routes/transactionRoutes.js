@@ -23,4 +23,8 @@ router.get("/:id", transactionController.getTransactionDetail);
 router.put("/:id/print-items", roleMiddleware(["kasir", "pelayan"]), transactionController.updateItemsPrintStatus);
 router.put('/:id/pay', transactionController.processPayment);
 
+router.put("/:id/items/:itemId/serve-status", authMiddleware, roleMiddleware(["kasir", "pelayan"]), transactionController.updateServeStatus);
+router.put("/:id/items/:itemId/quantity", authMiddleware, roleMiddleware(["kasir", "pelayan"]), transactionController.updateItemQuantity);
+router.delete("/:id/items/:itemId", authMiddleware, roleMiddleware(["kasir", "pelayan"]), transactionController.deleteTransactionItem);
+
 module.exports = router;

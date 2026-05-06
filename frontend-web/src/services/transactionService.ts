@@ -38,5 +38,24 @@ export const transactionService = {
   }) => {
     const response = await api.put(`/transactions/${transactionId}/pay`, payload);
     return response.data;
+  },
+
+  updateServeStatus: async (transactionId: string, itemId: string, status: 'cooking' | 'served') => {
+    const response = await api.put(`/transactions/${transactionId}/items/${itemId}/serve-status`, {
+      serve_status: status
+    });
+    return response.data;
+  },
+
+  updateItemQuantity: async (transactionId: string, itemId: string, quantity: number) => {
+    const response = await api.put(`/transactions/${transactionId}/items/${itemId}/quantity`, {
+      quantity: quantity
+    });
+    return response.data;
+  },
+
+  deleteTransactionItem: async (transactionId: string, itemId: string) => {
+    const response = await api.delete(`/transactions/${transactionId}/items/${itemId}`);
+    return response.data;
   }
 };

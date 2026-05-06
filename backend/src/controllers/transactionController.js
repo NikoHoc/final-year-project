@@ -512,3 +512,76 @@ exports.processPayment = async (req, res) => {
     return res.status(500).json({ status: false, message: err.message });
   }
 };
+
+
+exports.updateServeStatus = async (req, res) => {
+  try {
+    const { id, itemId } = req.params;
+    const { serve_status } = req.body;
+
+    if (!['cooking', 'served'].includes(serve_status)) {
+      return res.status(400).json({ status: false, message: "Status tidak valid" });
+    }
+
+    const { data, error } = await supabase
+      .from("transaction_items")
+      .update({ serve_status })
+      .match({ id: itemId, transaction_id: id })
+      .select()
+      .single();
+
+    if (error) throw error;
+    if (!data) return res.status(404).json({ status: false, message: "Item tidak ditemukan" });
+
+    return res.status(200).json({ status: true, message: "Status pesanan diperbarui", data });
+  } catch (error) {
+    console.error("Error update serve status:", error);
+    return res.status(500).json({ status: false, message: error.message });
+  }
+};
+
+exports.updateItemQuantity = async (req, res) => {
+  try {
+    const { id, itemId } = req.params;
+    const { quantity } = req.body;
+
+    if (quantity === undefined || quantity < 1) {
+      return res.status(400).json({ status: false, message: "Kuantitas minimal adalah 1" });
+    }
+
+    const { data, error } = await supabase
+      .from("transaction_items")
+      .update({ quantity })
+      .match({ id: itemId, transaction_id: id })
+      .select()
+      .single();
+
+    if (error) throw error;
+    if (!data) return res.status(404).json({ status: false, message: "Item tidak ditemukan" });
+
+    return res.status(200).json({ status: true, message: "Kuantitas diperbarui", data });
+  } catch (error) {
+    console.error("Error update item quantity:", error);
+    return res.status(500).json({ status: false, message: error.message });
+  }
+};
+
+exports.deleteTransactionItem = async (req, res) => {
+  try {
+    const { id, itemId } = req.params;
+
+    const { data, error } = await supabase
+      .from("transaction_items")
+      .delete()
+      .match({ id: itemId, transaction_id: id })
+      .select()
+      .single();
+
+    if (error) throw error;
+    
+    return res.status(200).json({ status: true, message: "Item pesanan berhasil dibatalkan", data });
+  } catch (error) {
+    console.error("Error delete item:", error);
+    return res.status(500).json({ status: false, message: error.message });
+  }
+};

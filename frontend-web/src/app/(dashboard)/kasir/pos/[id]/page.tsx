@@ -124,6 +124,7 @@ export default function PosPage() {
             menu: item.menus!,
             is_saved: true,
             batch_number: item.batch_number,
+            serve_status: item.serve_status || 'cooking',
           }),
         );
 
