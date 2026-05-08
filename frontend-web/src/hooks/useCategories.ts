@@ -20,9 +20,9 @@ export const useCategories = () => {
     }
   }, []);
 
-  const createCategory = async (name: string) => {
+  const createCategory = async (data: { name: string; type: string }) => {
     try {
-      await categoryService.create(name);
+      await categoryService.create(data);
       toast.success("Kategori berhasil ditambahkan!");
       await fetchCategories();
       return true;
@@ -33,9 +33,9 @@ export const useCategories = () => {
     }
   };
 
-  const updateCategory = async (id: number, name: string) => {
+  const updateCategory = async (id: number, data: { name: string; type: string }) => {
     try {
-      await categoryService.update(id, name);
+      await categoryService.update(id, data);
       toast.success("Kategori berhasil diperbarui!");
       await fetchCategories();
       return true;

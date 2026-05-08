@@ -29,13 +29,13 @@ export default function AdminMenusPage() {
     fetchMenus();
   }, [fetchCategories, fetchMenus]);
 
-  const handleSaveCategory = async (name: string) => {
-    if (editingCategory) {
-      return await updateCategory(editingCategory.id, name);
-    } else {
-      return await createCategory(name);
-    }
-  };
+  const handleSaveCategory = async (data: { name: string; type: "food" | "drink" | "other" }) => {
+  if (editingCategory) {
+    return await updateCategory(editingCategory.id, data);
+  } else {
+    return await createCategory(data);
+  }
+};
 
   const handleDeleteCategory = async () => {
     if (!catToDelete) return;

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Printer, ClipboardList, CheckCircle2, ChefHat } from "lucide-react";
+import { useState, useMemo, useRef } from "react";
+import { Printer, ClipboardList, Filter } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import { CartItem } from "@/hooks/useCart";
 
@@ -22,8 +22,10 @@ export default function CheckoutOrderModal({
 }: CheckoutOrderModalProps) {
   const [selectedBatch, setSelectedBatch] = useState<number | "all">("all");
   const [filterType, setFilterType] = useState<FilterType>("all");
+  const printRef = useRef<HTMLDivElement>(null);
 
-  const { savedBatches } = useMemo(() => {
+  // Mengambil angka batch yang tersedia
+  const { savedBatches, batchNumbers } = useMemo(() => {
     const saved = cartItems.filter((item) => item.is_saved);
     const batches = saved.reduce(
       (acc: Record<number, CartItem[]>, item: CartItem) => {
@@ -32,177 +34,218 @@ export default function CheckoutOrderModal({
         acc[bNum].push(item);
         return acc;
       },
-      {},
+      {}
     );
-    return { savedBatches: batches };
+    return { 
+      savedBatches: batches, 
+      batchNumbers: Object.keys(batches).map(Number).sort((a, b) => a - b) 
+    };
   }, [cartItems]);
 
+  // Filter Data Gabungan
   const previewItems = useMemo(() => {
-    const itemsToFilter =
-      selectedBatch === "all"
-        ? cartItems.filter((i) => i.is_saved)
-        : savedBatches[selectedBatch as number] || [];
+    let items: CartItem[] = [];
+    if (selectedBatch === "all") {
+      items = cartItems.filter((item) => item.is_saved);
+    } else {
+      items = savedBatches[selectedBatch] || [];
+    }
 
-    return itemsToFilter.filter((item) => {
-      if (filterType === "all") return true;
-      const catType = item.menu?.categories?.type;
-      if (filterType === "food") return catType === "food";
-      if (filterType === "drink") return catType === "drink";
-      return true;
+    if (filterType === "food") {
+      return items.filter((i) => i.menu.categories?.type === "food");
+    }
+    if (filterType === "drink") {
+      return items.filter((i) => i.menu.categories?.type === "drink");
+    }
+    return items;
+  }, [cartItems, selectedBatch, savedBatches, filterType]);
+
+  // Mengelompokkan item preview berdasarkan Batch untuk tampilan UI di kiri
+  const groupedPreviewItems = useMemo(() => {
+    const groups: Record<number, CartItem[]> = {};
+    previewItems.forEach((item) => {
+      const b = Number(item.batch_number) || 1;
+      if (!groups[b]) groups[b] = [];
+      groups[b].push(item);
     });
-  }, [selectedBatch, filterType, savedBatches, cartItems]);
+    return groups;
+  }, [previewItems]);
+
+  const getReceiptTitle = () => {
+    if (filterType === "food") return "MAKANAN";
+    if (filterType === "drink") return "MINUMAN";
+    return "CHECKER";
+  };
+
+  const handlePrint = () => {
+    const content = printRef.current?.innerHTML;
+    if (!content) return;
+
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) return;
+
+    doc.write(`
+      <html>
+        <head>
+          <style>
+            @page { margin: 0; size: 80mm auto; }
+            body { 
+              font-family: 'Courier New', Courier, monospace; 
+              width: 70mm; margin: 0 auto; 
+              padding: 15px; /* PADDING AGAR TIDAK NEMPEL PINGGIR */
+              font-size: 13px;
+              color: #000;
+            }
+            .text-center { text-align: center; }
+            .font-bold { font-weight: bold; }
+            .text-xl { font-size: 22px; }
+            .text-sm { font-size: 16px; }
+            .text-\\[10px\\] { font-size: 10px; }
+            .uppercase { text-transform: uppercase; }
+            .tracking-widest { letter-spacing: 0.1em; }
+            .border-b { border-bottom: 1px dashed #000; padding-bottom: 12px; margin-bottom: 12px; }
+            .flex { display: flex; }
+            .items-start { align-items: flex-start; }
+            .w-6 { width: 28px; display: inline-block; }
+            .pl-8 { padding-left: 28px; }
+            .mt-1 { margin-top: 4px; }
+            .space-y-4 > * + * { margin-top: 16px; } /* JARAK ANTAR ITEM AGAR LEGA */
+          </style>
+        </head>
+        <body>${content}</body>
+      </html>
+    `);
+    doc.close();
+    
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      document.body.removeChild(iframe);
+    }, 500);
+  };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Checkout Pesanan Pelanggan"
-      maxWidth="6xl"
-    >
-      <div className="flex h-[80vh] -mx-6 -my-6 overflow-hidden">
-        <div className="w-1/3 border-r border-gray-100 p-6 overflow-y-auto bg-white space-y-4">
-          <div className="mb-6">
-            <h2 className="text-xl font-black text-gray-800 flex items-center gap-2">
-              <ChefHat className="text-blue-600" size={30} /> List Pesanan
-            </h2>
-            <p className="text-xs text-gray-500 font-medium">
-              Meja {tableId} • Pilih Batch Pesanan
-            </p>
-            <div className="h-px border-t border-dashed border-gray-400 my-3"></div>
-          </div>
-
-          {Object.keys(savedBatches).map((bNumStr) => {
-            const bNum = Number(bNumStr);
-            return (
-              <div
-                key={bNum}
-                onClick={() => setSelectedBatch(bNum)}
-                className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                  selectedBatch === bNum
-                    ? "bg-blue-600 border-blue-600 shadow-lg shadow-blue-100 text-white"
-                    : "bg-gray-50 border border-gray-200 rounded-xl text-gray-800 hover:border-blue-200"
+    <Modal isOpen={isOpen} onClose={onClose} title="Opsi Cetak Pesanan" maxWidth="6xl">
+      <div className="flex flex-col lg:flex-row h-[75vh] bg-gray-50 rounded-b-2xl overflow-hidden -mx-6 -mb-6">
+        <div className="w-full lg:w-[50%] flex flex-col bg-white border-r border-gray-200">
+          
+          <div className="p-4 border-b border-gray-100 bg-white shadow-sm shrink-0">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">
+              Pilih Batch Pesanan
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedBatch("all")}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                  selectedBatch === "all" ? "bg-blue-600 text-white border-blue-600" : "bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300"
                 }`}
               >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-bold text-sm">Batch #{bNum}</p>
-                    <p
-                      className={`text-[10px] ${selectedBatch === bNum ? "text-blue-100" : "text-gray-400"}`}
-                    >
-                      {savedBatches[bNum].length} Menu
-                    </p>
+                Semua Batch
+              </button>
+              {batchNumbers.map((num) => (
+                <button
+                  key={num}
+                  onClick={() => setSelectedBatch(num)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                    selectedBatch === num ? "bg-blue-600 text-white border-blue-600" : "bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300"
+                  }`}
+                >
+                  Batch {num}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/30">
+            {Object.keys(groupedPreviewItems).length > 0 ? (
+              Object.entries(groupedPreviewItems).map(([batchNum, items]) => (
+                <div key={batchNum} className="space-y-2">
+                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">BATCH {batchNum}</h4>
+                  <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden divide-y divide-gray-50 shadow-sm">
+                    {items.map((item, idx) => (
+                      <div key={idx} className="p-3">
+                        <h4 className="font-bold text-gray-800 text-sm leading-tight">
+                          {item.quantity}x {item.menu.name}
+                        </h4>
+                        {item.is_half_portion && <p className="text-[10px] font-bold text-purple-600 mt-1 uppercase"># 1/2 Porsi</p>}
+                        {item.note && <p className="text-[10px] text-orange-500 mt-1 uppercase"># {item.note}</p>}
+                      </div>
+                    ))}
                   </div>
-                  <CheckCircle2
-                    size={18}
-                    className={
-                      selectedBatch === bNum ? "text-blue-200" : "text-gray-200"
-                    }
-                  />
                 </div>
+              ))
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-gray-400 italic py-10">
+                <ClipboardList size={40} className="mb-2 opacity-20" />
+                <p className="text-sm">Tidak ada item untuk dicetak</p>
               </div>
-            );
-          })}
-          <div className="h-px border-t border-dashed border-gray-400 my-3"></div>
-          <button
-            onClick={() => setSelectedBatch("all")}
-            className={`w-full p-4 rounded-2xl border-2 flex items-center gap-3 font-bold transition-all mt-4 ${
-              selectedBatch === "all"
-                ? "bg-gray-800 border-gray-800 text-white shadow-lg"
-                : "bg-gray-50 border border-gray-200 rounded-xl text-gray-600 hover:border-gray-200"
-            }`}
-          >
-            <ClipboardList size={18} /> Semua Batch
-          </button>
+            )}
+          </div>
         </div>
 
-        <div className="w-2/3 p-8 flex flex-col h-full bg-gray-100/80">
-          <h2 className="text-xl font-black text-gray-800 flex items-center gap-2">
-            <Printer className="text-blue-600" size={20} /> Tiket Dapur
-          </h2>
-          <p className="text-xs italic">*Pilih opsi cetak pesanan</p>
-          <div className="flex bg-gray-200/50 p-1 rounded-xl w-fit mb-6 mt-2">
-            {["all", "food", "drink"].map((id) => (
-              <button
-                key={id}
-                onClick={() => setFilterType(id as FilterType)}
-                className={`px-6 py-2 rounded-lg text-xs font-bold transition-all ${
-                  filterType === id
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-500"
-                }`}
-              >
-                {id === "all" ? "Semua" : id === "food" ? "Makanan" : "Minuman"}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex-1 bg-white border border-gray-200 rounded-sm shadow-xl overflow-y-auto p-10 font-mono text-xs max-w-95 mx-auto w-full relative">
-            <div className="text-center mb-6">
-              <p className="font-bold text-sm uppercase tracking-widest">
-                {filterType === "all"
-                  ? "CHECKER"
-                  : filterType === "food"
-                    ? "MAKANAN"
-                    : "MINUMAN"}
-              </p>
-              <div className="h-px border-t border-dashed border-gray-400 my-3"></div>
-              <p className="font-bold text-base">MEJA: {tableId}</p>
-              <p className="uppercase">
-                Batch: {selectedBatch === "all" ? "SEMUA" : `#${selectedBatch}`}
-              </p>
-              <p className="text-[10px] opacity-60">
-                {new Date().toLocaleString("id-ID")}
-              </p>
-              <div className="h-px border-t border-dashed border-gray-400 my-3"></div>
+        <div className="w-full lg:w-[50%] bg-gray-100 p-6 flex flex-col items-center overflow-y-auto relative">
+          <div className="w-full max-w-[320px] mb-4">
+            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block text-center">
+              Cetak Pesanan
+            </label>
+            <div className="flex gap-2">
+              {(["all", "food", "drink"] as FilterType[]).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setFilterType(type)}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border flex flex-col items-center justify-center gap-1 shadow-sm ${
+                    filterType === type ? "bg-gray-800 text-white border-gray-800" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                  }`}
+                >
+                  <Filter size={14} />
+                  {type === "all" ? "Semua" : type === "food" ? "Makanan" : "Minuman"}
+                </button>
+              ))}
             </div>
-
+          </div>
+          <div
+            ref={printRef}
+            className="w-full max-w-[320px] bg-white p-6 shadow-md border-t-8 border-gray-800"
+          >
+            <div className="text-center border-b border-gray-300 pb-4 mb-4">
+              <h2 className="font-bold text-xl uppercase tracking-widest border-b border-gray-300">{getReceiptTitle()}</h2>
+              <h3 className="font-bold text-sm mt-1 uppercase">PESANAN MEJA {tableId}</h3>
+              <p className="text-[10px] text-gray-500 mt-1">{new Date().toLocaleString("id-ID")}</p>
+            </div>
             <div className="space-y-4">
               {previewItems.length === 0 ? (
-                <div className="text-center py-4 text-gray-400 italic">Tidak ada pesanan</div>
+                <p className="text-center text-[10px] text-gray-400 py-4 italic">Item kosong</p>
               ) : (
-                previewItems.map((item) => (
-                  <div key={item.unique_id} className="pb-1">
-                    <div className="flex gap-3">
-                      <span className="font-bold text-sm">{item.quantity}x</span>
-                      <span className="font-bold text-sm uppercase flex-1">
-                        {item.menu.name}
-                      </span>
+                previewItems.map((item, idx) => (
+                  <div key={idx} className="text-sm leading-tight text-gray-900">
+                    <div className="flex items-start">
+                      <span className="w-6 font-bold">{item.quantity}x</span>
+                      <span className="font-bold">{item.menu.name}</span>
                     </div>
-                    <div className="pl-8 space-y-1">
-                      {item.is_half_portion && (
-                        <p className="text-[10px] font-black border-l-2 border-black pl-2">
-                          1/2 PORSI
-                        </p>
-                      )}
-                      {item.note && (
-                        <p className="text-[10px] italic bg-gray-100 p-1">
-                          Note: {item.note}
-                        </p>
-                      )}
-                    </div>
+                    {item.is_half_portion && <div className="pl-8 font-bold mt-1"># 1/2 PORSI</div>}
+                    {item.note && <div className="pl-8 mt-1 uppercase"># {item.note}</div>}
                   </div>
                 ))
               )}
             </div>
-
-            <div className="mt-12 pt-4 border-t border-dashed border-gray-300 text-center text-[10px] text-gray-400">
-              -- SELESAI --
-            </div>
           </div>
-
-          <div className="mt-8 flex justify-end gap-3">
+          <div className="w-full max-w-[320px] mt-6 space-y-3">
             <button
-              onClick={onClose}
-              className="px-6 py-3 rounded-xl font-bold text-gray-500 hover:bg-red-500 hover:text-white transition-all"
+              onClick={handlePrint}
+              disabled={previewItems.length === 0}
+              className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 shadow-lg shadow-blue-200 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
             >
-              Tutup
+              <Printer size={18} /> CETAK KE {getReceiptTitle()}
             </button>
             <button
-              onClick={() => window.print()}
-              disabled={previewItems.length === 0}
-              className="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-200 disabled:opacity-50"
+              onClick={onClose}
+              className="w-full py-3 bg-white text-gray-500 rounded-2xl font-bold text-xs hover:bg-gray-100 border border-gray-200 transition-all"
             >
-              <Printer size={18} /> CETAK TIKET
+              Tutup
             </button>
           </div>
         </div>
