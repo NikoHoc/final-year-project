@@ -187,7 +187,7 @@ export default function ReceiptPreview({
             onClick={handleFinalizeTransaction}
             className="w-full py-4 bg-green-600 text-white rounded-xl font-black text-base hover:bg-green-700 shadow-lg shadow-green-200 flex items-center justify-center gap-2 mt-4 animate-bounce"
           >
-            <CheckCircle2 size={20} /> SELESAIKAN MEJA INI
+            <CheckCircle2 size={20} /> SELESAIKAN PESANAN INI
           </button>
         )}
       </div>

@@ -25,11 +25,11 @@ export default function PosPage() {
   const searchParams = useSearchParams();
 
   const transactionId = params.id as string;
-  const initialTableId = searchParams.get("table_id");
-  const orderType = searchParams.get("type") || "onsite";
+  const initialType = searchParams.get("type") || "onsite";
+  const [orderType, setOrderType] = useState<string>(initialType);
+  const [tableId, setTableId] = useState<string | null>(searchParams.get("table_id"));
 
   const [depotId, setDepotId] = useState<number | null>(null);
-  const [tableId, setTableId] = useState<string | null>(initialTableId);
   const [userId, setUserId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -101,18 +101,20 @@ export default function PosPage() {
 
   // load transaksi jika ada
   const loadExistingTransaction = useCallback(async () => {
-    if (!transactionId || transactionId === "new") {
-      setCartItems([]);
-      setExistingPayments([]);
-      return;
-    }
-    try {
-      const transaction = await transactionService.getById(transactionId);
-      if (transaction && transaction.table_id) {
-        setTableId(transaction.table_id.toString());
+    if (transactionId === "new") return;
 
-        const savedItems = (transaction.transaction_items || []).map(
-          (item: TransactionItem) => ({
+    try {
+      const data = await transactionService.getById(transactionId);
+      if (data) {
+        setOrderType(data.type || "onsite");
+        
+        if (data.table_id) {
+          setTableId(data.table_id.toString());
+        } else {
+          setTableId(null);
+        }
+
+        const mappedItems = (data.transaction_items || []).map((item: TransactionItem) => ({
             id: item.id,
             unique_id: item.id.toString(),
             menu_id: item.menu_id,
@@ -125,16 +127,14 @@ export default function PosPage() {
             is_saved: true,
             batch_number: item.batch_number,
             serve_status: item.serve_status || 'cooking',
-          }),
-        );
-
-        setCartItems(savedItems);
-
-        setExistingPayments(transaction.transaction_payments || []);
+        }));
+        
+        setCartItems(mappedItems);
+        setExistingPayments(data.transaction_payments || []);
       }
     } catch (error) {
-      console.log("Error mengambil data transaksi lama:", error);
-      toast.error("Gagal memuat data transaksi lama");
+      console.error("Gagal memuat transaksi:", error);
+      toast.error("Gagal memuat detail pesanan");
     }
   }, [transactionId, setCartItems]);
 
@@ -225,7 +225,7 @@ export default function PosPage() {
           </button>
           <div>
             <h1 className="text-xl font-bold text-gray-800">
-              Meja {tableId} - {orderType.toUpperCase()}
+              {tableId ? `Meja ${tableId} - ${orderType.toUpperCase()}` : `${orderType.toUpperCase()}`}
             </h1>
           </div>
         </div>

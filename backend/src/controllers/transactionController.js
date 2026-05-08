@@ -336,7 +336,10 @@ exports.getTransactions = async (req, res) => {
   try {
     let query = supabase
       .from("transactions")
-      .select("*") 
+      .select(`
+        *,
+        transaction_items (*) 
+      `)
       .eq("depot_id", depot_id)
       .order("created_at", { ascending: false });
 
@@ -501,7 +504,6 @@ exports.processPayment = async (req, res) => {
       .update({
         payment_method: methods,
         payment_status: isFullyPaid ? 'paid' : 'unpaid',
-        order_status: isFullyPaid ? 'completed' : 'confirmed'
       })
       .eq("id", id)
       .select()

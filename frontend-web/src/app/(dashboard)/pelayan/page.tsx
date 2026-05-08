@@ -3,13 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import { AlertCircle } from "lucide-react";
+import { ShoppingBag, AlertCircle } from "lucide-react";
 
 import { useTables } from "@/hooks/useTables";
 import { transactionService } from "@/services/transactionService";
 import { depotService } from "@/services/depotService";
 import { User, Transaction, Depot } from "@/types";
 import TableList from "@/components/tables/TableList";
+import TakeawayCard from "@/components/orders/TakeawayCard";
 
 export default function PelayanDashboard() {
   const router = useRouter();
@@ -49,13 +50,16 @@ export default function PelayanDashboard() {
     loadDashboardData();
   }, [loadDashboardData]);
 
+  const onsiteTransactions = activeTransactions.filter((t) => t.type === "onsite");
+  const takeawayTransactions = activeTransactions.filter((t) => t.type === "takeaway");
+
   const handleTableClick = (tableId: number) => {
-    const activeTx = activeTransactions.find(t => t.table_id === tableId);
+    const activeTx = onsiteTransactions.find(t => t.table_id === tableId);
     
     if (activeTx) {
-      router.push(`/pelayan/pesanan/${activeTx.id}`);
+      router.push(`/pelayan/pesanan/${activeTx.id}?type=onsite`);
     } else {
-      router.push(`/pelayan/pesanan/new?table_id=${tableId}`);
+      router.push(`/pelayan/pesanan/new?table_id=${tableId}&type=onsite`);
     }
   };
 
@@ -75,11 +79,23 @@ export default function PelayanDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between items-start gap-2">
-        <h1 className="text-2xl font-bold text-blue-600">List Meja Depot</h1>
-        <p className="text-gray-500 text-sm">
-          Pilih meja untuk mencatat pesanan pelanggan. (Status Depot: <span className={depot.is_open ? "text-green-600 font-bold" : "text-red-600 font-bold"}>{depot.is_open ? "BUKA" : "TUTUP"}</span>)
-        </p>
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Dashboard Pelayan</h1>
+          <p className="text-gray-500 text-sm">
+            Pilih meja untuk mencatat pesanan pelanggan. (Status Depot: <span className={depot.is_open ? "text-green-600 font-bold" : "text-red-600 font-bold"}>{depot.is_open ? "BUKA" : "TUTUP"}</span>)
+          </p>
+        </div>
+        
+        <div className="flex gap-3 w-full md:w-auto">
+          <button 
+            onClick={() => router.push(`/pelayan/pesanan/new?type=takeaway`)}
+            disabled={!depot.is_open}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-xl font-bold transition-all shadow-sm"
+          >
+            <ShoppingBag size={18} /> Takeaway
+          </button>
+        </div>
       </div>
 
       {!depot.is_open && (
@@ -88,13 +104,40 @@ export default function PelayanDashboard() {
         </div>
       )}
 
-      <TableList 
-        role="pelayan"
-        tables={tables}
-        activeTransactions={activeTransactions}
-        isDepotOpen={depot.is_open ?? false}
-        onTableClick={handleTableClick}
-      />
+      <div className="space-y-4">
+        <h3 className="font-black text-gray-800 flex items-center gap-2 text-sm uppercase tracking-widest">
+          <div className="w-1.5 h-5 bg-gray-800 rounded-full"></div>
+          Status Meja (Dine-In)
+        </h3>
+        <TableList 
+          tables={tables} 
+          activeTransactions={onsiteTransactions} 
+          isDepotOpen={!!depot?.is_open}
+          role="pelayan"
+          onTableClick={handleTableClick}
+        />
+      </div>
+
+      <div className="space-y-4 mt-10">
+        <h3 className="font-black text-gray-800 flex items-center gap-2 text-sm uppercase tracking-widest">
+          <div className="w-1.5 h-5 bg-blue-600 rounded-full"></div>
+          Antrean Takeaway
+        </h3>
+        
+        {takeawayTransactions.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {takeawayTransactions.map((transaction) => (
+              <TakeawayCard key={transaction.id} transaction={transaction} role="pelayan" />
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white border border-gray-100 rounded-2xl py-12 flex flex-col items-center justify-center text-gray-400 shadow-sm">
+            <ShoppingBag size={40} className="mb-3 text-gray-300" />
+            <p className="text-sm font-bold text-gray-500">Tidak ada antrean</p>
+            <p className="text-xs mt-1">Belum ada pesanan takeaway yang aktif saat ini.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

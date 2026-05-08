@@ -225,11 +225,23 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
     }
   };
 
-  const handleFinalizeTransaction = () => {
-    toast.success(`Transaksi Meja ${tableId} Selesai!`);
+  const handleFinalizeTransaction = async () => {
+  try {
+    setIsSubmitting(true);
+
+    await transactionService.updateStatus(transactionId, { 
+      order_status: 'completed' 
+    });
+    
+    toast.success(`Transaksi Selesai!`);
     onClose();
     router.push("/kasir");
-  };
+  } catch (error) {
+    toast.error("Gagal menyelesaikan transaksi");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   // --- LOGIKA DATA NOTA YANG DITAMPILKAN ---
   const unpaidItems = items.filter((item) => item.qtyTotal > item.qtyPaid);

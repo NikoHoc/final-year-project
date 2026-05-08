@@ -11,6 +11,7 @@ import { depotService } from "@/services/depotService";
 import { User, Transaction, Depot } from "@/types";
 import toast from "react-hot-toast";
 import TableList from "@/components/tables/TableList";
+import TakeawayCard from "@/components/orders/TakeawayCard";
 
 export default function KasirDashboard() {
   const router = useRouter();
@@ -33,10 +34,7 @@ export default function KasirDashboard() {
           await fetchTables(user.depot_id);
 
           const allTransactions = await transactionService.getAll(user.depot_id);
-          const active = allTransactions.filter(
-            t => t.payment_status === "unpaid" && t.order_status !== "cancelled"
-          );
-          setActiveTransactions(active);
+          setActiveTransactions(allTransactions.filter(t => t.order_status !== 'completed'));
         }
       } catch (error) {
         console.error("Gagal memuat data dashboard", error);
@@ -49,6 +47,9 @@ export default function KasirDashboard() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadDashboardData();
   }, [loadDashboardData]);
+
+  const onsiteTransactions = activeTransactions.filter((t) => t.type === "onsite");
+  const takeawayTransactions = activeTransactions.filter((t) => t.type === "takeaway");
 
   const handleToggleDepotStatus = async () => {
     if (!depot) return;
@@ -64,10 +65,10 @@ export default function KasirDashboard() {
   };
 
   const handleTableClick = (tableId: number) => {
-    const activeTx = activeTransactions.find(t => t.table_id === tableId);
+    const activeTx = onsiteTransactions.find(t => t.table_id === tableId);
     
     if (activeTx) {
-      router.push(`/kasir/pos/${activeTx.id}`);
+      router.push(`/kasir/pos/${activeTx.id}?type=onsite`);
     } else {
       router.push(`/kasir/pos/new?table_id=${tableId}&type=onsite`);
     }
@@ -123,14 +124,41 @@ export default function KasirDashboard() {
         </div>
       )}
 
-      <TableList 
-        role="kasir"
-        tables={tables}
-        activeTransactions={activeTransactions}
-        isDepotOpen={depot.is_open ?? false}
-        onTableClick={handleTableClick}
-        onManageTables={() => router.push("/kasir/tables")}
-      />
+      <div className="space-y-4">
+        <h3 className="font-black text-gray-800 flex items-center gap-2 text-sm uppercase tracking-widest">
+          <div className="w-1.5 h-5 bg-gray-800 rounded-full"></div>
+          Status Meja (Dine-In)
+        </h3>
+        <TableList 
+          tables={tables} 
+          activeTransactions={onsiteTransactions} 
+          isDepotOpen={!!depot?.is_open}
+          role="kasir"
+          onTableClick={handleTableClick}
+          onManageTables={() => router.push("/kasir/tables")}
+        />
+      </div>
+
+      <div className="space-y-4 mt-10">
+        <h3 className="font-black text-gray-800 flex items-center gap-2 text-sm uppercase tracking-widest">
+          <div className="w-1.5 h-5 bg-blue-600 rounded-full"></div>
+          Antrean Takeaway
+        </h3>
+        
+        {takeawayTransactions.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {takeawayTransactions.map((transaction) => (
+              <TakeawayCard key={transaction.id} transaction={transaction} role="kasir" />
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white border border-gray-100 rounded-2xl py-12 flex flex-col items-center justify-center text-gray-400 shadow-sm">
+            <ShoppingBag size={40} className="mb-3 text-gray-300" />
+            <p className="text-sm font-bold text-gray-500">Tidak ada antrean</p>
+            <p className="text-xs mt-1">Belum ada pesanan takeaway yang aktif saat ini.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

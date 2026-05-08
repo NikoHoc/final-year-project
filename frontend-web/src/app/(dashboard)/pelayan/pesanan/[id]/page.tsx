@@ -25,10 +25,11 @@ export default function PelayanPesananPage() {
   const searchParams = useSearchParams();
 
   const transactionId = params.id as string;
-  const initialTableId = searchParams.get("table_id");
+  const initialType = searchParams.get("type") || "onsite";
+  const [orderType, setOrderType] = useState<string>(initialType);
+  const [tableId, setTableId] = useState<string | null>(searchParams.get("table_id"));
 
   const [depotId, setDepotId] = useState<number | null>(null);
-  const [tableId, setTableId] = useState<string | null>(initialTableId);
   const [userId, setUserId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -97,6 +98,7 @@ export default function PelayanPesananPage() {
 
           const loadedCart =
             transaction.transaction_items?.map((item: TransactionItem) => ({
+              id: item.id,
               unique_id: item.id.toString(),
               menu_id: item.menu_id,
               quantity: item.quantity,
