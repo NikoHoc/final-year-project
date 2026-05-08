@@ -212,8 +212,10 @@ export default function CheckoutOrderModal({
             className="w-full max-w-[320px] bg-white p-6 shadow-md border-t-8 border-gray-800"
           >
             <div className="text-center border-b border-gray-300 pb-4 mb-4">
-              <h2 className="font-bold text-xl uppercase tracking-widest border-b border-gray-300">{getReceiptTitle()}</h2>
-              <h3 className="font-bold text-sm mt-1 uppercase">PESANAN MEJA {tableId}</h3>
+              <h2 className="font-bold text-xl border-b border-gray-300 uppercase tracking-widest">{getReceiptTitle()}</h2>
+              <h3 className="font-bold text-sm mt-1 uppercase">
+                {tableId ? `PESANAN MEJA ${tableId}` : "BUNGKUS"}
+              </h3>
               <p className="text-[10px] text-gray-500 mt-1">{new Date().toLocaleString("id-ID")}</p>
             </div>
             <div className="space-y-4">

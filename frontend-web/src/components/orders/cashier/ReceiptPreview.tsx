@@ -94,9 +94,18 @@ export default function ReceiptPreview({
         </div>
 
         <div className="space-y-2 section-gap text-[11px] mt-4">
-          <div className="flex justify-between"><span>No. TRX:</span> <span className="font-bold">{transactionId}</span></div>
-          <div className="flex justify-between"><span>Waktu:</span> <span>{rcp.time}</span></div>
-          <div className="flex justify-between"><span>Meja:</span> <span>{tableId || "-"}</span></div>
+          <div className="flex justify-between">
+            <span>Transaksi:</span> 
+            <span className="font-bold">TRX-{transactionId.slice(-6).toUpperCase()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Waktu:</span> 
+            <span>{rcp.time}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Meja:</span> 
+            <span className="font-bold">{tableId ? tableId : "BUNGKUS"}</span>
+          </div>
         </div>
 
         <div className="border-t border-b border-dashed border-gray-400 py-4 section-gap space-y-2 text-xs mt-4">
