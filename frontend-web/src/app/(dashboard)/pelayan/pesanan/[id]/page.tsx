@@ -160,7 +160,7 @@ export default function PelayanPesananPage() {
         const response = await transactionService.create({
           user_id: userId,
           depot_id: depotId,
-          type: "onsite",
+          type: orderType as "onsite" | "online" | "takeaway",
           table_id: tableId ? parseInt(tableId) : null,
           use_tax: true,
           customer_name: customerName,
