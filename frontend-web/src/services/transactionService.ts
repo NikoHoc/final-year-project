@@ -1,5 +1,5 @@
 import api from "./api";
-import { Transaction, CreateTransactionPayload, CartItemPayload } from "@/types";
+import { Transaction, CreateTransactionPayload, AddItemsPayload } from "@/types";
 
 export const transactionService = {
   getAll: async (depotId: number) => {
@@ -17,10 +17,10 @@ export const transactionService = {
     return response.data;
   },
 
-  addItems: async (id: string, items: CartItemPayload[]) => {
-    const response = await api.post(`/transactions/${id}/items`, { items });
-    return response.data;
-  },
+  addItems: async (id: string, payload: AddItemsPayload) => {
+  const response = await api.post(`/transactions/${id}/items`, payload);
+  return response.data;
+},
 
   updateStatus: async (
     id: string,

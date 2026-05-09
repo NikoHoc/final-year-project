@@ -42,6 +42,11 @@ export default function TakeawayCard({ transaction, role }: TakeawayCardProps) {
         <h4 className={`font-black text-lg ${isPaid ? "text-blue-900" : "text-yellow-900"}`}>
           TRX-{transaction.id.toString().slice(-4)}
         </h4>
+        {transaction.customer_name && (
+          <p className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+            {transaction.customer_name}
+          </p>
+        )}
         <div className="flex items-center gap-1.5 text-xs opacity-70">
           <Clock size={12} />
           <span>{new Date(transaction.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB</span>

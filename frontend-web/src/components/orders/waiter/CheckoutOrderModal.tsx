@@ -10,6 +10,7 @@ interface CheckoutOrderModalProps {
   onClose: () => void;
   cartItems: CartItem[];
   tableId: string | null;
+  customerName: string | null;
 }
 
 type FilterType = "all" | "food" | "drink";
@@ -19,6 +20,7 @@ export default function CheckoutOrderModal({
   onClose,
   cartItems,
   tableId,
+  customerName
 }: CheckoutOrderModalProps) {
   const [selectedBatch, setSelectedBatch] = useState<number | "all">("all");
   const [filterType, setFilterType] = useState<FilterType>("all");
@@ -216,6 +218,11 @@ export default function CheckoutOrderModal({
               <h3 className="font-bold text-sm mt-1 uppercase">
                 {tableId ? `PESANAN MEJA ${tableId}` : "BUNGKUS"}
               </h3>
+              {customerName && (
+                <p className="font-black text-sm uppercase mt-1 border border-black inline-block px-2">
+                  A/N: {customerName}
+                </p>
+              )}
               <p className="text-[10px] text-gray-500 mt-1">{new Date().toLocaleString("id-ID")}</p>
             </div>
             <div className="space-y-4">

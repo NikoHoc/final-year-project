@@ -2,7 +2,7 @@ const supabase = require("../config/supabase");
 const { snap } = require("../config/midtrans");
 
 exports.createTransaction = async (req, res) => {
-  const { depot_id, user_id, type, table_id, customer_id, pickup_method, use_tax, items } = req.body;
+  const { depot_id, user_id, type, table_id, customer_id, customer_name, pickup_method, use_tax, items } = req.body;
 
   if (!depot_id || !items || items.length === 0) {
     return res
@@ -58,6 +58,7 @@ exports.createTransaction = async (req, res) => {
           type,
           table_id: table_id || null,
           customer_id: customer_id || null,
+          customer_name: customer_name || null,
           pickup_method: pickup_method || null,
           subtotal,
           tax_amount,
@@ -95,7 +96,7 @@ exports.createTransaction = async (req, res) => {
 
 exports.addTransactionItems = async (req, res) => {
   const { id } = req.params;
-  const { items } = req.body;
+  const { items = [], customer_name } = req.body;
 
   try {
     const { data: transaction } = await supabase
@@ -103,6 +104,7 @@ exports.addTransactionItems = async (req, res) => {
       .select("*")
       .eq("id", id)
       .single();
+
     if (!transaction || transaction.payment_status === "paid") {
       return res
         .status(400)
@@ -112,54 +114,62 @@ exports.addTransactionItems = async (req, res) => {
     let additionalSubtotal = 0;
     const itemInserts = [];
 
-    for (const item of items) {
-      const { data: menu } = await supabase
-        .from("menus")
-        .select("price, half_price")
-        .eq("id", item.menu_id)
-        .single();
-      const priceToUse = item.is_half_portion ? menu.half_price : menu.price;
-      additionalSubtotal += priceToUse * item.quantity;
-
-      itemInserts.push({
-        transaction_id: id,
-        menu_id: item.menu_id,
-        quantity: item.quantity,
-        price_at_time: priceToUse,
-        is_half_portion: item.is_half_portion || false,
-        note: item.note,
-        is_printed: false,
-        batch_number: item.batch_number
-      });
+    if (items.length > 0) {
+      for (const item of items) {
+        const { data: menu } = await supabase
+          .from("menus")
+          .select("price, half_price")
+          .eq("id", item.menu_id)
+          .single();
+  
+        const priceToUse = item.is_half_portion ? menu.half_price : menu.price;
+        additionalSubtotal += priceToUse * item.quantity;
+  
+        itemInserts.push({
+          transaction_id: id,
+          menu_id: item.menu_id,
+          quantity: item.quantity,
+          price_at_time: priceToUse,
+          is_half_portion: item.is_half_portion || false,
+          note: item.note,
+          is_printed: false,
+          batch_number: item.batch_number
+        });
+      }
+  
+      const { error: itemsError } = await supabase
+        .from("transaction_items")
+        .insert(itemInserts);
+  
+      if (itemsError) throw itemsError;
     }
 
-    const { error: itemsError } = await supabase
-      .from("transaction_items")
-      .insert(itemInserts);
+    const updatePayload = {};
 
-    if (itemsError) throw itemsError;
+    if (customer_name !== undefined) {
+      updatePayload.customer_name = customer_name;
+    }
 
-    const newSubtotal = transaction.subtotal + additionalSubtotal;
+    if (additionalSubtotal > 0) {
+      const newSubtotal = transaction.subtotal + additionalSubtotal;
+      const isUsingTax = transaction.tax_amount > 0;
+      const newTax = isUsingTax ? (newSubtotal * 0.1) : 0;
+      const newGrandTotal = newSubtotal + newTax;
 
-    const isUsingTax = transaction.tax_amount > 0;
-    const newTax = isUsingTax ? (newSubtotal * 0.1) : 0;
-
-    const newGrandTotal = newSubtotal + newTax;
+      updatePayload.subtotal = newSubtotal;
+      updatePayload.tax_amount = newTax;
+      updatePayload.grand_total = newGrandTotal;
+    }
 
     await supabase
       .from("transactions")
-      .update({
-        subtotal: newSubtotal,
-        tax_amount: newTax,
-        grand_total: newGrandTotal,
-      })
+      .update(updatePayload)
       .eq("id", id);
 
     return res.status(201).json({
       status: true,
       message: "Pesanan tambahan berhasil dimasukkan",
-
-      data: { added_items: itemInserts, new_grand_total: newGrandTotal },
+      data: { added_items: itemInserts, new_grand_total: newGrandTotal, updatePayload },
     });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });

@@ -33,10 +33,7 @@ export default function PelayanDashboard() {
           await fetchTables(user.depot_id);
 
           const allTransactions = await transactionService.getAll(user.depot_id);
-          const active = allTransactions.filter(
-            t => t.payment_status === "unpaid" && t.order_status !== "cancelled"
-          );
-          setActiveTransactions(active);
+          setActiveTransactions(allTransactions.filter(t => t.order_status !== 'completed'));
         }
       } catch (error) {
         console.error("Gagal memuat data dashboard pelayan", error);
@@ -107,7 +104,7 @@ export default function PelayanDashboard() {
       <div className="space-y-4">
         <h3 className="font-black text-gray-800 flex items-center gap-2 text-sm uppercase tracking-widest">
           <div className="w-1.5 h-5 bg-gray-800 rounded-full"></div>
-          Status Meja (Dine-In)
+          DINE - IN
         </h3>
         <TableList 
           tables={tables} 

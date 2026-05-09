@@ -43,6 +43,7 @@ interface ReceiptPreviewProps {
   rcp: ReceiptData;
   tableId: string;
   transactionId: string;
+  customerName: string | null;
   activeSegmentToView: PaidSegment | null;
   showMasterReceipt: boolean;
   setShowMasterReceipt: (show: boolean) => void;
@@ -58,6 +59,7 @@ export default function ReceiptPreview({
   rcp,
   tableId,
   transactionId,
+  customerName,
   activeSegmentToView,
   showMasterReceipt,
   setShowMasterReceipt,
@@ -106,6 +108,12 @@ export default function ReceiptPreview({
             <span>Meja:</span> 
             <span className="font-bold">{tableId ? tableId : "BUNGKUS"}</span>
           </div>
+          {customerName && (
+            <div className="flex justify-between">
+              <span>Pelanggan:</span> 
+              <span className="font-bold uppercase">{customerName}</span>
+            </div>
+          )}
         </div>
 
         <div className="border-t border-b border-dashed border-gray-400 py-4 section-gap space-y-2 text-xs mt-4">

@@ -105,6 +105,7 @@ export interface Transaction {
   user_id?: string | null; 
   table_id?: number | null; 
   customer_id?: string | null; 
+  customer_name?: string | null;
   type: TransactionType;
   order_status: OrderStatus;
   payment_status: PaymentStatus;
@@ -151,12 +152,18 @@ export interface CartItemPayload {
   created_at?: string;
 }
 
+export interface AddItemsPayload {
+  customer_name?: string | null;
+  items: CartItemPayload[];
+}
+
 export interface CreateTransactionPayload {
   depot_id: number;
   user_id?: string | null;
   type: "onsite" | "online" | "takeaway";
   table_id?: number | null;
   customer_id?: string | null;
+  customer_name?: string | null;
   pickup_method?: "dine_in" | "pickup_self" | "driver" | null;
   use_tax?: boolean;
   items: CartItemPayload[];

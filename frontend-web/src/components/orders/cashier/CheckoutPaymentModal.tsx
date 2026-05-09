@@ -29,9 +29,10 @@ interface CheckoutPaymentModalProps {
   transactionId: string;
   tableId: string;
   existingPayments: TransactionPayment[]; 
+  customerName: string | null;
   onSuccess: () => void;
 }
-export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, transactionId, tableId, existingPayments, onSuccess }: CheckoutPaymentModalProps) {
+export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, transactionId, tableId, existingPayments, customerName, onSuccess }: CheckoutPaymentModalProps) {
   const router = useRouter()
   const receiptRef = useRef<HTMLDivElement>(null);
 
@@ -413,6 +414,7 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
           rcp={rcp}
           tableId={tableId}
           transactionId={transactionId}
+          customerName={customerName}
           activeSegmentToView={activeSegmentToView}
           showMasterReceipt={showMasterReceipt}
           setShowMasterReceipt={setShowMasterReceipt}

@@ -80,7 +80,6 @@ export default function OrderCart({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {/* JIKA KERANJANG KOSONG TAMPILKAN INI */}
         {cartItems.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-gray-400 space-y-3 py-10">
             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
@@ -102,8 +101,6 @@ export default function OrderCart({
                   <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
                   Pesanan Baru
                 </h4>
-                
-                {/* Membungkus semua item baru ke dalam 1 Card Container dengan Divider */}
                 <div className="bg-blue-50/30 border border-blue-100 rounded-2xl overflow-hidden divide-y divide-blue-100 shadow-sm">
                   {unsavedItems.map((item) => (
                     <div key={item.unique_id} className="p-3 space-y-2">
@@ -115,8 +112,6 @@ export default function OrderCart({
                           </p>
                         )}
                       </div>
-
-                      {/* Baris 2: Quantity Controls + Delete (Sejajar) */}
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center bg-white border border-blue-100 rounded-lg p-0.5">
                           <button onClick={() => onUpdateQuantity(item.unique_id, -1)} className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"><Minus size={14} /></button>
@@ -127,8 +122,6 @@ export default function OrderCart({
                           <Trash2 size={14} />
                         </button>
                       </div>
-
-                      {/* Baris 3: Catatan + 1/2 Porsi (Sejajar) */}
                       <div className="flex items-center gap-2">
                         <input 
                           type="text" 
@@ -151,8 +144,6 @@ export default function OrderCart({
                 </div>
               </div>
             )}
-
-            {/* SECTION 2: RIWAYAT PESANAN (SAVED BATCHES) */}
             {Object.entries(savedBatches).map(([batchNum, items]) => (
               <div key={batchNum} className="space-y-2">
                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">BATCH {batchNum}</h4>
@@ -199,8 +190,6 @@ export default function OrderCart({
           </>
         )}
       </div>
-
-      {/* FOOTER: TOTAL HARGA & PAJAK */}
       <div className="p-4 bg-gray-50 border-t border-gray-100 space-y-3">
         {variant === "kasir" && totals && (
           <div className="space-y-1 pb-2">

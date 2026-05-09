@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, UserRoundPlus } from "lucide-react";
 import { useDepots } from "@/hooks/useDepot";
 import { useCart } from "@/hooks/useCart";
 import { transactionService } from "@/services/transactionService";
@@ -12,6 +12,7 @@ import {
   TransactionItem,
   Category,
   DepotMenuResponse,
+  AddItemsPayload,
 } from "@/types";
 import toast from "react-hot-toast";
 import CheckoutPaymentModal from "@/components/orders/cashier/CheckoutPaymentModal";
@@ -28,6 +29,7 @@ export default function PosPage() {
   const initialType = searchParams.get("type") || "onsite";
   const [orderType, setOrderType] = useState<string>(initialType);
   const [tableId, setTableId] = useState<string | null>(searchParams.get("table_id"));
+  const [customerName, setCustomerName] = useState<string>("");
 
   const [depotId, setDepotId] = useState<number | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -107,6 +109,7 @@ export default function PosPage() {
       const data = await transactionService.getById(transactionId);
       if (data) {
         setOrderType(data.type || "onsite");
+        setCustomerName(data.customer_name || ""); 
         
         if (data.table_id) {
           setTableId(data.table_id.toString());
@@ -175,6 +178,7 @@ export default function PosPage() {
           type: orderType as "onsite" | "online" | "takeaway",
           table_id: tableId ? parseInt(tableId) : null,
           use_tax: true,
+          customer_name: customerName,
           items: itemsPayload,
         });
 
@@ -191,13 +195,16 @@ export default function PosPage() {
         const newItemsOnly = cartItems.filter((item) => item.is_saved !== true);
 
         if (newItemsOnly.length > 0) {
-          const newPayload = newItemsOnly.map((item) => ({
-            menu_id: item.menu_id,
-            quantity: item.quantity,
-            is_half_portion: item.is_half_portion,
-            note: item.note,
-            batch_number: nextBatchNumber,
-          }));
+          const newPayload : AddItemsPayload = {
+            customer_name: customerName,
+            items: newItemsOnly.map((item) => ({
+              menu_id: item.menu_id,
+              quantity: item.quantity,
+              is_half_portion: item.is_half_portion,
+              note: item.note,
+              batch_number: nextBatchNumber,
+            })),
+          };
 
           await transactionService.addItems(transactionId, newPayload);
           toast.success("Pesanan tambahan dikirim!");
@@ -216,17 +223,30 @@ export default function PosPage() {
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-6rem)] gap-4">
       <div className="flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center gap-4">
-          <button
-            onClick={() => router.push("/kasir")}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft size={20} className="text-gray-600" />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">
-              {tableId ? `Meja ${tableId} - ${orderType.toUpperCase()}` : `${orderType.toUpperCase()}`}
-            </h1>
+        <div className="p-4 border-b border-gray-100 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push("/kasir")}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft size={20} className="text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-xl font-bold text-gray-800">
+                {tableId ? `Meja ${tableId} - ${orderType.toUpperCase()}` : `${orderType.toUpperCase()}`}
+              </h1>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200 w-full md:w-auto">
+            <UserRoundPlus size={18} className="text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="Nama Pelanggan (Opsional)"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              className="bg-transparent border-none outline-none text-sm font-medium text-gray-700 placeholder:text-gray-400 w-full md:w-48"
+            />
           </div>
         </div>
 
@@ -257,6 +277,7 @@ export default function PosPage() {
 
       <CheckoutPaymentModal
         isOpen={isPaymentModalOpen}
+        customerName={customerName}
         onClose={() => setIsPaymentModalOpen(false)}
         transactionId={transactionId}
         tableId={tableId || ""}

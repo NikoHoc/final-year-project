@@ -127,7 +127,7 @@ export default function KasirDashboard() {
       <div className="space-y-4">
         <h3 className="font-black text-gray-800 flex items-center gap-2 text-sm uppercase tracking-widest">
           <div className="w-1.5 h-5 bg-gray-800 rounded-full"></div>
-          Status Meja (Dine-In)
+          dine in
         </h3>
         <TableList 
           tables={tables} 
