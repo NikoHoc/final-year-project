@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { ArrowLeft, UserRoundPlus } from "lucide-react";
@@ -91,45 +91,49 @@ export default function PelayanPesananPage() {
     loadData();
   }, [depotId, getDepotMenus]);
 
-  // Load Transaksi Lama
-  useEffect(() => {
-    const loadExistingTransaction = async () => {
-      if (transactionId !== "new") {
-        try {
-          const transaction = await transactionService.getById(transactionId);
-          if (transaction.table_id) setTableId(transaction.table_id.toString());
-          setOrderType(transaction.type || "onsite");
-          setCustomerName(transaction.customer_name || ""); 
-          const loadedCart =
-            transaction.transaction_items?.map((item: TransactionItem) => ({
-              id: item.id,
-              unique_id: item.id.toString(),
-              menu_id: item.menu_id,
-              quantity: item.quantity,
-              is_half_portion: item.is_half_portion,
-              note: item.note || "",
-              is_saved: true,
-              batch_number: item.batch_number,
-              quantity_paid: item.quantity_paid || 0,
-              price_at_time: item.price_at_time,
-              created_at: item.created_at,
-              serve_status: item.serve_status || 'cooking',
-              menu: {
-                ...item.menus,
-                id: item.menu_id,
-                price: item.price_at_time,
-                half_price: item.price_at_time,
-              } as Menu,
-            })) || [];
-          setCartItems(loadedCart);
-        } catch (error) {
-          console.log("Error mengambil data transaksi lama:", error);
-          toast.error("Gagal memuat data transaksi lama");
-        }
+  const loadExistingTransaction = useCallback(async () => {
+    if (transactionId === "new") return;
+
+    try {
+      const transaction = await transactionService.getById(transactionId);
+      if (transaction) {
+        setOrderType(transaction.type || "onsite");
+        setTableId(transaction.table_id ? transaction.table_id.toString() : null);
+        setCustomerName(transaction.customer_name || "");
+
+        const loadedCart =
+          transaction.transaction_items?.map((item: TransactionItem) => ({
+            id: item.id,
+            unique_id: item.id.toString(),
+            menu_id: item.menu_id,
+            quantity: item.quantity,
+            is_half_portion: item.is_half_portion,
+            note: item.note || "",
+            is_saved: true,
+            batch_number: item.batch_number,
+            quantity_paid: item.quantity_paid || 0,
+            price_at_time: item.price_at_time,
+            created_at: item.created_at,
+            serve_status: item.serve_status || 'cooking',
+            menu: {
+              ...item.menus,
+              id: item.menu_id,
+              price: item.price_at_time,
+              half_price: item.price_at_time,
+            } as Menu,
+          })
+        ) || [];
+        setCartItems(loadedCart);
       }
-    };
-    loadExistingTransaction();
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Gagal memuat detail pesanan");
+    }
   }, [transactionId, setCartItems]);
+
+  useEffect(() => {
+    loadExistingTransaction();
+  }, [loadExistingTransaction]);
 
   const handleSimpanPesanan = async () => {
     if (!depotId || cartItems.length === 0) return;
@@ -185,9 +189,11 @@ export default function PelayanPesananPage() {
           };
 
           await transactionService.addItems(transactionId, newPayload);
+          
           toast.success("Pesanan tambahan dikirim!");
-
-          window.location.reload();
+          setTimeout(() => {
+            loadExistingTransaction();
+          }, 1500);
         }
       }
     } catch (error) {
@@ -248,6 +254,7 @@ export default function PelayanPesananPage() {
         onRemove={removeItem}
         onSave={handleSimpanPesanan}
         onCheckout={() => setCheckoutOrderModalOpen(true)}
+        onRefresh={loadExistingTransaction}
       />
 
       <CheckoutOrderModal 

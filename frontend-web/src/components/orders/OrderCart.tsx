@@ -7,6 +7,7 @@ import { CartItem } from "@/hooks/useCart";
 import EditOrderItemModal from "./EditOrderItemModal"; 
 import { transactionService } from "@/services/transactionService";
 import { useParams } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface OrderCartProps {
   variant: "kasir" | "pelayan";
@@ -25,6 +26,7 @@ interface OrderCartProps {
   onUpdateNote: (uniqueId: string, note: string) => void;
   onToggleHalf: (uniqueId: string) => void;
   onRemove: (uniqueId: string) => void;
+  onRefresh?: () => void;
 }
 
 export default function OrderCart({
@@ -38,6 +40,7 @@ export default function OrderCart({
   onUpdateNote,
   onToggleHalf,
   onRemove,
+  onRefresh
 }: OrderCartProps) {
   const params = useParams();
   const transactionId = params.id as string;
@@ -63,9 +66,17 @@ export default function OrderCart({
     try {
       const newStatus = item.serve_status === 'cooking' ? 'served' : 'cooking';
       await transactionService.updateServeStatus(transactionId, item.id.toString(), newStatus);
-      window.location.reload(); 
+
+      toast.success(`Status ${item.menu.name} diperbarui`);
+
+      if (onRefresh) {
+        onRefresh();
+      } else {
+        window.location.reload();
+      }
     } catch (error) {
       console.error(error);
+      toast.error("Gagal mengubah status item");
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -167,7 +178,7 @@ export default function OrderCart({
                         <button 
                           onClick={() => handleToggleStatus(item)}
                           disabled={isUpdatingStatus}
-                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-black border transition-all ${
+                          className={`cursor-pointer flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-black border transition-all ${
                             item.serve_status === 'served' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-600 border-orange-200'
                           }`}
                         >
@@ -177,7 +188,7 @@ export default function OrderCart({
                         <button
                           onClick={() => setEditingItem(item)}
                           disabled={item.serve_status === 'served'}
-                          className={`p-1.5 rounded-lg transition-colors ${item.serve_status === 'served' ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:bg-gray-100 hover:text-blue-600'}`}
+                          className={`p-1.5 rounded-lg transition-colors ${item.serve_status === 'served' ? 'text-gray-200 cursor-not-allowed' : 'cursor-pointer text-gray-400 hover:bg-gray-100 hover:text-blue-600'}`}
                         >
                           <Settings size={14} />
                         </button>
@@ -222,7 +233,7 @@ export default function OrderCart({
         onClose={() => setEditingItem(null)}
         item={editingItem}
         transactionId={transactionId}
-        onRefresh={() => window.location.reload()}
+        onSuccess={onRefresh}
       />
     </aside>
   );

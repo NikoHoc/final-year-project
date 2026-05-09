@@ -12,10 +12,10 @@ interface EditOrderItemModalProps {
   onClose: () => void;
   item: CartItem | null;
   transactionId: string;
-  onRefresh: () => void;
+  onSuccess?: () => void;
 }
 
-export default function EditOrderItemModal({ isOpen, onClose, item, transactionId, onRefresh }: EditOrderItemModalProps) {
+export default function EditOrderItemModal({ isOpen, onClose, item, transactionId, onSuccess }: EditOrderItemModalProps) {
   const [cancelQty, setCancelQty] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -40,7 +40,9 @@ export default function EditOrderItemModal({ isOpen, onClose, item, transactionI
       }
       
       toast.success(`${cancelQty} porsi berhasil dibatalkan`);
-      onRefresh(); // Tarik data terbaru dari DB
+      if (onSuccess) {
+        onSuccess();
+      }
       onClose();
     } catch (error) {
       toast.error("Gagal memperbarui pesanan");
@@ -60,7 +62,9 @@ export default function EditOrderItemModal({ isOpen, onClose, item, transactionI
       }
       
       toast.success("Sisa pesanan berhasil dibatalkan sepenuhnya");
-      onRefresh();
+      if (onSuccess) {
+        onSuccess();
+      }
       onClose();
     } catch (error) {
       toast.error("Gagal membatalkan pesanan");

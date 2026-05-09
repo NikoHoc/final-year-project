@@ -13,6 +13,7 @@ import {
   Category,
   DepotMenuResponse,
   AddItemsPayload,
+  Menu,
 } from "@/types";
 import toast from "react-hot-toast";
 import CheckoutPaymentModal from "@/components/orders/cashier/CheckoutPaymentModal";
@@ -106,18 +107,14 @@ export default function PosPage() {
     if (transactionId === "new") return;
 
     try {
-      const data = await transactionService.getById(transactionId);
-      if (data) {
-        setOrderType(data.type || "onsite");
-        setCustomerName(data.customer_name || ""); 
-        
-        if (data.table_id) {
-          setTableId(data.table_id.toString());
-        } else {
-          setTableId(null);
-        }
+      const transaction = await transactionService.getById(transactionId);
+      if (transaction) {
+        setOrderType(transaction.type || "onsite");
+        setCustomerName(transaction.customer_name || ""); 
+        setTableId(transaction.table_id ? transaction.table_id.toString() : null);
 
-        const mappedItems = (data.transaction_items || []).map((item: TransactionItem) => ({
+        const loadedCart = 
+          transaction.transaction_items?.map((item: TransactionItem) => ({
             id: item.id,
             unique_id: item.id.toString(),
             menu_id: item.menu_id,
@@ -126,14 +123,19 @@ export default function PosPage() {
             price_at_time: item.price_at_time,
             is_half_portion: item.is_half_portion,
             note: item.note,
-            menu: item.menus!,
             is_saved: true,
             batch_number: item.batch_number,
             serve_status: item.serve_status || 'cooking',
-        }));
-        
-        setCartItems(mappedItems);
-        setExistingPayments(data.transaction_payments || []);
+            menu: {
+              ...item.menus,
+              id: item.menu_id,
+              price: item.price_at_time,
+              half_price: item.price_at_time,
+            } as Menu,
+          })
+        ) || [];
+        setCartItems(loadedCart);
+        setExistingPayments(transaction.transaction_payments || []);
       }
     } catch (error) {
       console.error("Gagal memuat transaksi:", error);
@@ -207,9 +209,11 @@ export default function PosPage() {
           };
 
           await transactionService.addItems(transactionId, newPayload);
+          
           toast.success("Pesanan tambahan dikirim!");
-
-          window.location.reload();
+          setTimeout(() => {
+            loadExistingTransaction();
+          }, 1500);
         }
       }
     } catch (error) {
@@ -273,6 +277,7 @@ export default function PosPage() {
         onRemove={removeItem}
         onSave={handleSimpanPesanan}
         onCheckout={() => setIsPaymentModalOpen(true)}
+        onRefresh={loadExistingTransaction}
       />
 
       <CheckoutPaymentModal

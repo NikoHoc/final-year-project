@@ -151,8 +151,10 @@ exports.addTransactionItems = async (req, res) => {
     }
 
     if (additionalSubtotal > 0) {
-      const newSubtotal = transaction.subtotal + additionalSubtotal;
-      const isUsingTax = transaction.tax_amount > 0;
+      const currentSubtotal = Number(transaction.subtotal) || 0;
+      const newSubtotal = currentSubtotal + additionalSubtotal;
+      
+      const isUsingTax = Number(transaction.tax_amount) > 0;
       const newTax = isUsingTax ? (newSubtotal * 0.1) : 0;
       const newGrandTotal = newSubtotal + newTax;
 
@@ -161,15 +163,23 @@ exports.addTransactionItems = async (req, res) => {
       updatePayload.grand_total = newGrandTotal;
     }
 
-    await supabase
-      .from("transactions")
-      .update(updatePayload)
-      .eq("id", id);
+    if (Object.keys(updatePayload).length > 0) {
+      const { error: updateError } = await supabase
+        .from("transactions")
+        .update(updatePayload)
+        .eq("id", id);
+        
+      if (updateError) throw updateError;
+    }
 
     return res.status(201).json({
       status: true,
       message: "Pesanan tambahan berhasil dimasukkan",
-      data: { added_items: itemInserts, new_grand_total: newGrandTotal, updatePayload },
+      data: { 
+        added_items: itemInserts, 
+        new_grand_total: updatePayload.grand_total || transaction.grand_total, 
+        updatePayload 
+      },
     });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
