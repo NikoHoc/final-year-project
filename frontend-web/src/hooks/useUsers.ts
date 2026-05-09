@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { userService, UserFormData } from "@/services/userService";
 import { Employee } from "@/types";
 import toast from "react-hot-toast";
+import { handleApiError } from "@/utils/errorHandler";
 
 export const useUsers = () => {
   const [users, setUsers] = useState<Employee[]>([]);
@@ -18,8 +19,8 @@ export const useUsers = () => {
       const data = await userService.getAll(depotId, role);
       setUsers(data);
     } catch (error) {
-      console.error("Gagal mengambil data pegawai:", error);
-      toast.error("Gagal memuat daftar pengguna");
+      handleApiError(error, "Gagal memuat daftar user");
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -36,10 +37,8 @@ export const useUsers = () => {
       fetchUsers(currentDepotFilter);
       return true;
     } catch (error: unknown) {
-      console.error("Gagal menambah pegawai:", error);
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || "Gagal mendaftarkan pegawai");
-      return false;
+      handleApiError(error, "Gagal membuat user baru");
+      throw error;
     }
   };
 
@@ -50,10 +49,8 @@ export const useUsers = () => {
       fetchUsers(currentDepotFilter); 
       return true;
     } catch (error: unknown) {
-      console.error("Gagal mengupdate pegawai:", error);
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || "Gagal memperbarui data pegawai");
-      return false;
+      handleApiError(error, "Gagal memperbarui data user");
+      throw error;
     }
   };
 
@@ -63,9 +60,8 @@ export const useUsers = () => {
       toast.success("Pegawai berhasil dihapus!");
       fetchUsers(currentDepotFilter);
     } catch (error: unknown) {
-      console.error("Gagal menghapus pegawai:", error);
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || "Gagal menghapus data pegawai");
+      handleApiError(error, "Gagal menghapus user");
+      throw error;
     }
   };
 

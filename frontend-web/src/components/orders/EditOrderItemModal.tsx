@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import { CartItem } from "@/types";
-import { transactionService } from "@/services/transactionService";
 import { Minus, Plus, Trash2, AlertTriangle } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTransaction } from "@/hooks/useTransaction";
 
 interface EditOrderItemModalProps {
   isOpen: boolean;
@@ -18,6 +18,7 @@ interface EditOrderItemModalProps {
 export default function EditOrderItemModal({ isOpen, onClose, item, transactionId, onSuccess }: EditOrderItemModalProps) {
   const [cancelQty, setCancelQty] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { updateItemQuantity, deleteTransactionItem } = useTransaction();
 
   useEffect(() => {
     if (isOpen) setCancelQty(1);
@@ -34,9 +35,9 @@ export default function EditOrderItemModal({ isOpen, onClose, item, transactionI
       const newQty = item.quantity - cancelQty;
       
       if (newQty === 0) {
-        await transactionService.deleteTransactionItem(transactionId, item.id.toString());
+        await deleteTransactionItem(transactionId, item.id.toString());
       } else {
-        await transactionService.updateItemQuantity(transactionId, item.id.toString(), newQty);
+        await updateItemQuantity(transactionId, item.id.toString(), newQty);
       }
       
       toast.success(`${cancelQty} porsi berhasil dibatalkan`);
@@ -45,7 +46,7 @@ export default function EditOrderItemModal({ isOpen, onClose, item, transactionI
       }
       onClose();
     } catch (error) {
-      toast.error("Gagal memperbarui pesanan");
+      console.error("Error Client Side - Gagal memperbarui pesanan: ", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -56,9 +57,9 @@ export default function EditOrderItemModal({ isOpen, onClose, item, transactionI
     setIsSubmitting(true);
     try {
       if (item.quantity_paid === 0) {
-        await transactionService.deleteTransactionItem(transactionId, item.id.toString());
+        await deleteTransactionItem(transactionId, item.id.toString());
       } else {
-        await transactionService.updateItemQuantity(transactionId, item.id.toString(), item.quantity_paid);
+        await updateItemQuantity(transactionId, item.id.toString(), item.quantity_paid);
       }
       
       toast.success("Sisa pesanan berhasil dibatalkan sepenuhnya");
@@ -67,7 +68,7 @@ export default function EditOrderItemModal({ isOpen, onClose, item, transactionI
       }
       onClose();
     } catch (error) {
-      toast.error("Gagal membatalkan pesanan");
+      console.error("Error Client Side - Gagal membatalkan pesanan: ", error);
     } finally {
       setIsSubmitting(false);
     }

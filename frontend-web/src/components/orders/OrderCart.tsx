@@ -5,9 +5,9 @@ import { Banknote, ChefHat, ScrollText, Settings, CheckCircle2, Minus, Plus, Tra
 import { formatRupiah } from "@/utils/format";
 import { CartItem } from "@/types";
 import EditOrderItemModal from "./EditOrderItemModal"; 
-import { transactionService } from "@/services/transactionService";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
+import { useTransaction } from "@/hooks/useTransaction";
 
 interface OrderCartProps {
   variant: "kasir" | "pelayan";
@@ -47,6 +47,8 @@ export default function OrderCart({
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
+  const { updateTransactionItemStatus } = useTransaction();
+
   const unsavedItems = cartItems.filter((item) => !item.is_saved);
   
   const { savedBatches } = useMemo(() => {
@@ -65,7 +67,8 @@ export default function OrderCart({
     setIsUpdatingStatus(true);
     try {
       const newStatus = item.serve_status === 'cooking' ? 'served' : 'cooking';
-      await transactionService.updateServeStatus(transactionId, item.id.toString(), newStatus);
+
+      await updateTransactionItemStatus(transactionId as string, item.id!.toString(), newStatus);
 
       toast.success(`Status ${item.menu.name} diperbarui`);
 
@@ -75,8 +78,7 @@ export default function OrderCart({
         window.location.reload();
       }
     } catch (error) {
-      console.error(error);
-      toast.error("Gagal mengubah status item");
+      console.error("Error Client Side - Gagal mengubah status item: ", error);
     } finally {
       setIsUpdatingStatus(false);
     }

@@ -52,8 +52,7 @@ export default function KasirMenusPage() {
           prev === null && uniqueCats.length > 0 ? uniqueCats[0].id : prev,
         );
       } catch (error) {
-        toast.error("Gagal memuat daftar menu");
-        console.error("Error fetching depot menus:", error);
+        console.error("Error Client Side - gagal fetching depot menus:", error);
       }
     };
     loadData();
@@ -78,7 +77,7 @@ export default function KasirMenusPage() {
           m.id === menuId ? { ...m, is_available: currentStatus } : m,
         ),
       );
-      toast.error("Gagal mengubah status menu");
+      console.error("Error Client Side - gagal mengubah status menu:", error);
     }
   };
 

@@ -54,7 +54,7 @@ export default function TableList({
           <button
             key={table.id}
             onClick={() => onTableClick(table.id)}
-            disabled={!isDepotOpen && !isOccupied}
+            disabled={!isDepotOpen}
             className={`relative flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all group ${
               isOccupied
                 ? "bg-yellow-50 border-yellow-400 shadow-md shadow-yellow-100/50 hover:bg-yellow-100"

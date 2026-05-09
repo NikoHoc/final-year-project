@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { depotService } from "@/services/depotService";
 import { Depot } from "@/types";
 import toast from "react-hot-toast";
+import { handleApiError } from "@/utils/errorHandler";
 
 export const useDepot = (depotId?: number | null) => {
   const [depotName, setDepotName] = useState<string | null>(null);
@@ -19,8 +20,10 @@ export const useDepot = (depotId?: number | null) => {
           setDepotName(res.data.name); 
         }
       } catch (error) {
-        console.error("Gagal mengambil data depot:", error);
         setDepotName("Depot POS");
+
+        handleApiError(error, "Gagal mengambil data depot");
+        throw error;
       } finally {
         setIsLoadingDepot(false);
       }
@@ -44,8 +47,8 @@ export const useDepots = () => {
         setDepots(response);
       }
     } catch (error) {
-      console.error("Gagal mengambil daftar depot:", error);
-      toast.error("Gagal memuat daftar cabang");
+      handleApiError(error, "Gagal memuat list depot");
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -55,16 +58,24 @@ export const useDepots = () => {
     fetchDepots();
   }, [fetchDepots]);
 
-  const toggleDepotStatus = async (id: number, currentStatus: boolean) => {
+  const fetchDepotById = useCallback(async (id: number) => {
     try {
-      await depotService.toggleStatus(id, !currentStatus);
-      toast.success(
-        !currentStatus ? "Depot berhasil DIBUKA!" : "Depot berhasil DITUTUP!"
-      );
-      fetchDepots();
+      const res = await depotService.getById(id);
+      return res.data || res;
     } catch (error) {
-      console.error("Gagal mengubah status:", error);
-      toast.error("Gagal mengubah status operasional depot");
+      handleApiError(error, "Gagal memuat data cabang");
+      throw error;
+    }
+  }, []);
+
+  const toggleDepotStatus = async (id: number, nextStatus: boolean) => {
+    setIsLoading(true);
+    try {
+      await depotService.toggleStatus(id, nextStatus);
+      toast.success(`Depot berhasil di${nextStatus ? "buka" : "tutup"}`);
+    } catch (error) {
+      handleApiError(error, "Gagal mengubah status operasional depot");
+      throw error;
     }
   };
 
@@ -74,8 +85,8 @@ export const useDepots = () => {
       toast.success("Depot berhasil dihapus!");
       fetchDepots();
     } catch (error) {
-      console.error("Gagal menghapus depot:", error);
-      toast.error("Gagal menghapus depot. Pastikan depot tidak terhubung ke data lain.");
+      handleApiError(error, "Gagal menghapus depot. Pastikan depot tidak terhubung ke data lain.");
+      throw error;
     }
   };
 
@@ -86,9 +97,8 @@ export const useDepots = () => {
       fetchDepots();
       return true;
     } catch (error) {
-      console.error("Gagal menambah depot:", error);
-      toast.error("Gagal menambahkan cabang baru");
-      return false;
+      handleApiError(error, "Gagal menambahkan cabang baru");
+      throw error;
     }
   };
 
@@ -99,9 +109,8 @@ export const useDepots = () => {
       fetchDepots();
       return true;
     } catch (error) {
-      console.error("Gagal mengupdate depot:", error);
-      toast.error("Gagal memperbarui data cabang");
-      return false;
+      handleApiError(error, "Gagal memperbarui data depot");
+      throw error;
     }
   };
 
@@ -112,9 +121,8 @@ export const useDepots = () => {
       fetchDepots();
       return true;
     } catch (error) {
-      console.error("Gagal setup payment:", error);
-      toast.error("Gagal menyimpan konfigurasi Midtrans");
-      return false;
+      handleApiError(error, "Gagal menyimpan konfigurasi Midtrans");
+      throw error;
     }
   };
 
@@ -122,9 +130,8 @@ export const useDepots = () => {
     try {
       return await depotService.getMenus(id);
     } catch (error) {
-      console.error("Gagal mengambil menu depot:", error);
-      toast.error("Gagal mengambil menu");
-      return [];
+      handleApiError(error, "Gagal mengambil menu depot");
+      throw error;
     }
   }, []);
 
@@ -135,9 +142,8 @@ export const useDepots = () => {
       toast.success("Menu depot berhasil diperbarui!");
       return true;
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || "Gagal mengatur menu depot");
-      return false;
+      handleApiError(error, "Gagal mengatur menu depot");
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -148,13 +154,13 @@ export const useDepots = () => {
       await depotService.updateMenuStatus(depotId, menuId, isAvailable);
       return true;
     } catch (error) {
-      console.error("Gagal update status menu:", error);
+      handleApiError(error, "Gagal update status menu");
       throw error;
     }
   }, []);
 
   return { 
-    depots, isLoading, fetchDepots,
+    depots, isLoading, fetchDepots, fetchDepotById,
     toggleDepotStatus, deleteDepot, createDepot, updateDepot, setupPaymentConfig,
     getDepotMenus, assignDepotMenus, updateMenuStatus
    }; 

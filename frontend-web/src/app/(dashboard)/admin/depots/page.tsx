@@ -42,12 +42,14 @@ export default function DepotsPage() {
   const handleConfirmAction = async () => {
     if (!selectedDepot) return;
     if (confirmType === "operasional") {
-      await toggleDepotStatus(selectedDepot.id, !!selectedDepot.is_open);
+      await toggleDepotStatus(selectedDepot.id, !selectedDepot.is_open);
     } else if (confirmType === "delete") {
       await deleteDepot(selectedDepot.id);
     }
     setConfirmType(null);
     setSelectedDepot(null);
+
+    fetchDepots();
   };
 
   const handleFormSubmit = async (data: { name: string; address: string; phone_number: string }) => {

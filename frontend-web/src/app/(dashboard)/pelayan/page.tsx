@@ -4,17 +4,18 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { ShoppingBag, AlertCircle } from "lucide-react";
-
 import { useTables } from "@/hooks/useTables";
-import { transactionService } from "@/services/transactionService";
-import { depotService } from "@/services/depotService";
 import { User, Transaction, Depot } from "@/types";
 import TableList from "@/components/tables/TableList";
 import TakeawayCard from "@/components/orders/TakeawayCard";
+import { useDepots } from "@/hooks/useDepot";
+import { useTransaction } from "@/hooks/useTransaction";
 
 export default function PelayanDashboard() {
   const router = useRouter();
   const { tables, fetchTables } = useTables();
+  const { fetchDepotById } = useDepots();
+  const { fetchAllTransactions } = useTransaction();
   
   const [depot, setDepot] = useState<Depot | null>(null);
   const [activeTransactions, setActiveTransactions] = useState<Transaction[]>([]);
@@ -27,20 +28,20 @@ export default function PelayanDashboard() {
       try {
         const user: User = JSON.parse(userCookie);
         if (user.depot_id) {
-          const depotData = await depotService.getById(user.depot_id);
-          setDepot(depotData.data || depotData); 
+          const depotData = await fetchDepotById(user.depot_id);
+          setDepot(depotData);
 
           await fetchTables(user.depot_id);
 
-          const allTransactions = await transactionService.getAll(user.depot_id);
+          const allTransactions = await fetchAllTransactions(user.depot_id);
           setActiveTransactions(allTransactions.filter(t => t.order_status !== 'completed'));
         }
       } catch (error) {
-        console.error("Gagal memuat data dashboard pelayan", error);
+        console.error("Error Client Side - Gagal memuat data dashboard pelayan", error);
       }
     }
     setIsLoading(false);
-  }, [fetchTables]);
+  }, [fetchDepotById, fetchAllTransactions, fetchTables]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -124,7 +125,7 @@ export default function PelayanDashboard() {
         {takeawayTransactions.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {takeawayTransactions.map((transaction) => (
-              <TakeawayCard key={transaction.id} transaction={transaction} role="pelayan" />
+              <TakeawayCard key={transaction.id} transaction={transaction} role="pelayan" isDepotOpen={!!depot?.is_open} />
             ))}
           </div>
         ) : (

@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { menuService } from "@/services/menuService";
 import { Menu } from "@/types";
 import toast from "react-hot-toast";
+import { handleApiError } from "@/utils/errorHandler";
 
 export const useMenus = () => {
   const [menus, setMenus] = useState<Menu[]>([]);
@@ -14,8 +15,8 @@ export const useMenus = () => {
       const data = await menuService.getAll(categoryId);
       setMenus(data);
     } catch (error) {
-      console.error("Gagal mengambil menu:", error);
-      toast.error("Gagal memuat daftar menu");
+      handleApiError(error, "Gagal memuat daftar menu");
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -28,9 +29,8 @@ export const useMenus = () => {
       await fetchMenus(); 
       return true;
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || "Gagal menambah menu");
-      return false;
+      handleApiError(error, "Gagal menambah menu");
+      throw error;
     }
   };
 
@@ -41,9 +41,8 @@ export const useMenus = () => {
       await fetchMenus();
       return true;
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || "Gagal memperbarui menu");
-      return false;
+      handleApiError(error, "Gagal memperbarui menu");
+      throw error;
     }
   };
 
@@ -54,9 +53,8 @@ export const useMenus = () => {
       await fetchMenus();
       return true;
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || "Gagal menghapus menu");
-      return false;
+      handleApiError(error, "Gagal menghapus menu");
+      throw error;
     }
   };
 

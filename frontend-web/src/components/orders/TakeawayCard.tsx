@@ -7,9 +7,10 @@ import { useRouter } from "next/navigation";
 interface TakeawayCardProps {
   transaction: Transaction;
   role: "kasir" | "pelayan";
+  isDepotOpen: boolean;
 }
 
-export default function TakeawayCard({ transaction, role }: TakeawayCardProps) {
+export default function TakeawayCard({ transaction, role, isDepotOpen }: TakeawayCardProps) {
   const router = useRouter();
   
   const isPaid = transaction.payment_status === 'paid';
@@ -20,8 +21,16 @@ export default function TakeawayCard({ transaction, role }: TakeawayCardProps) {
 
   return (
     <div 
-      onClick={() => router.push(`${baseUrl}/${transaction.id}?type=takeaway`)}
-      className={`group relative p-5 rounded-2xl border-2 cursor-pointer transition-all hover:scale-[1.02] active:scale-95 ${
+      onClick={() => {
+        if (isDepotOpen) {
+          router.push(`${baseUrl}/${transaction.id}?type=takeaway`);
+        }
+      }}
+      className={`group relative p-5 rounded-2xl border-2 transition-all ${
+        isDepotOpen 
+          ? "cursor-pointer hover:scale-[1.02] active:scale-95" 
+          : "opacity-60 cursor-not-allowed"
+      } ${
         isPaid 
           ? "bg-blue-50 border-blue-200" 
           : "bg-yellow-50 border-yellow-200"

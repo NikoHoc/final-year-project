@@ -35,7 +35,7 @@ export default function KasirTablesPage() {
           fetchTables(user.depot_id);
         }
       } catch (error) {
-        console.error("Gagal membaca cookie user", error);
+        console.error("Error Client Side - gagal mendapatkan user cookies:", error);
       }
     }
   }, [fetchTables]);

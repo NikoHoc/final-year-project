@@ -7,9 +7,9 @@ import OrderItemList from "./OrderItemList";
 import PaymentActionForm from "./PaymentActionForm";
 import ReceiptPreview, { PaidSegment } from "./ReceiptPreview";
 import { usePaymentMethods } from "@/hooks/usePaymentMethods";
-import { transactionService } from "@/services/transactionService";
 import { TransactionPayment, CartItem } from "@/types";
 import { useRouter } from "next/navigation";
+import { useTransaction } from "@/hooks/useTransaction";
 
 export interface CheckoutItem {
   id: string;
@@ -35,6 +35,8 @@ interface CheckoutPaymentModalProps {
 export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, transactionId, tableId, existingPayments, customerName, onSuccess }: CheckoutPaymentModalProps) {
   const router = useRouter()
   const receiptRef = useRef<HTMLDivElement>(null);
+
+  const { processPayment, updateTransactionStatus } = useTransaction();
 
   const { methods, isLoading: isLoadingMethods, fetchMethods } = usePaymentMethods();
   const activeMethods = methods.filter(m => m.is_active);
@@ -210,7 +212,7 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
         })),
       };
 
-      await transactionService.processPayment(transactionId, payload);
+      await processPayment(transactionId, payload);
 
       toast.success("Pembayaran Segmen Berhasil!");
       setCustomerMoney("");
@@ -219,30 +221,30 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
       onSuccess(); 
 
     } catch (error) {
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err?.response?.data?.message || "Gagal memproses pembayaran");
+      console.error("Error Client Side - Gagal memproses pembayaran: ", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleFinalizeTransaction = async () => {
-  try {
-    setIsSubmitting(true);
+    try {
+      setIsSubmitting(true);
 
-    await transactionService.updateStatus(transactionId, { 
-      order_status: 'completed' 
-    });
-    
-    toast.success(`Transaksi Selesai!`);
-    onClose();
-    router.push("/kasir");
-  } catch (error) {
-    toast.error("Gagal menyelesaikan transaksi");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      await updateTransactionStatus(transactionId, { 
+        payment_status: "paid", 
+        order_status: "completed" 
+      });
+      
+      toast.success(`Transaksi Selesai!`);
+      onClose();
+      router.push("/kasir");
+    } catch (error) {
+      console.error("Error Client Side - Gagal menyelesaikan transaksi: ", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // --- LOGIKA DATA NOTA YANG DITAMPILKAN ---
   const unpaidItems = items.filter((item) => item.qtyTotal > item.qtyPaid);

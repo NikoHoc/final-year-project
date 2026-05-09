@@ -2,22 +2,11 @@ import { useState, useCallback } from "react";
 import { paymentMethodService } from "@/services/paymentMethodService";
 import { PaymentMethod } from "@/types";
 import toast from "react-hot-toast";
+import { handleApiError } from "@/utils/errorHandler";
 
 export const usePaymentMethods = () => {
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  const getErrorMessage = (error: unknown, defaultMsg: string) => {
-    if (typeof error === "object" && error !== null) {
-      const err = error as Record<string, unknown>;
-      const response = err.response as Record<string, unknown> | undefined;
-      const data = response?.data as Record<string, unknown> | undefined;
-      
-      return (data?.message as string) || (err.message as string) || defaultMsg;
-    }
-    if (error instanceof Error) return error.message;
-    return defaultMsg;
-  };
 
   const fetchMethods = useCallback(async () => {
     setIsLoading(true);
@@ -25,7 +14,8 @@ export const usePaymentMethods = () => {
       const data = await paymentMethodService.getAll();
       setMethods(data || []);
     } catch (error) {
-      toast.error(getErrorMessage(error, "Gagal mengambil data metode pembayaran"));
+      handleApiError(error, "Gagal mengambil data metode pembayaran");
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -38,8 +28,8 @@ export const usePaymentMethods = () => {
       toast.success("Metode pembayaran berhasil ditambahkan");
       return true;
     } catch (error) {
-      toast.error(getErrorMessage(error, "Gagal menambah metode pembayaran"));
-      return false;
+      handleApiError(error, "Gagal menambah metode pembayaran");
+      throw error;
     }
   };
 
@@ -50,8 +40,8 @@ export const usePaymentMethods = () => {
       toast.success("Metode pembayaran diperbarui");
       return true;
     } catch (error) {
-      toast.error(getErrorMessage(error, "Gagal memperbarui metode pembayaran"));
-      return false;
+      handleApiError(error, "Gagal memperbarui metode pembayaran");
+      throw error;
     }
   };
 
@@ -62,8 +52,8 @@ export const usePaymentMethods = () => {
       toast.success("Metode pembayaran dihapus");
       return true;
     } catch (error) {
-      toast.error(getErrorMessage(error, "Gagal menghapus metode pembayaran"));
-      return false;
+      handleApiError(error, "Gagal menghapus metode pembayaran");
+      throw error;
     }
   };
 

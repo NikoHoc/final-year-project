@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { tableService } from "@/services/tableService";
 import { Table } from "@/types";
 import toast from "react-hot-toast";
+import { handleApiError } from "@/utils/errorHandler";
 
 export const useTables = () => {
   const [tables, setTables] = useState<Table[]>([]);
@@ -14,8 +15,8 @@ export const useTables = () => {
       const data = await tableService.getAll(depotId);
       setTables(data);
     } catch (error) {
-      console.error("Gagal mengambil data meja:", error);
-      toast.error("Gagal memuat daftar meja");
+      handleApiError(error, "Gagal memuat daftar meja");
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -27,10 +28,9 @@ export const useTables = () => {
       toast.success(`Meja ${tableNumber} berhasil ditambahkan!`);
       await fetchTables(depotId);
       return true;
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || "Gagal menambah meja");
-      return false;
+    } catch (error) {
+      handleApiError(error, "Gagal menambah meja");
+      throw error;
     }
   };
 
@@ -44,10 +44,9 @@ export const useTables = () => {
       toast.success("Meja berhasil diperbarui!");
       await fetchTables(depotId);
       return true;
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || "Gagal memperbarui meja");
-      return false;
+    } catch (error) {
+      handleApiError(error, "Gagal memperbarui meja");
+      throw error;
     }
   };
 
@@ -57,10 +56,9 @@ export const useTables = () => {
       toast.success("Meja berhasil dihapus!");
       await fetchTables(depotId);
       return true;
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || "Gagal menghapus meja");
-      return false;
+    } catch (error) {
+      handleApiError(error, "Gagal menghapus meja");
+      throw error;
     }
   };
 

@@ -6,25 +6,19 @@ import Cookies from "js-cookie";
 import { ArrowLeft, UserRoundPlus } from "lucide-react";
 import { useDepots } from "@/hooks/useDepot";
 import { useCart } from "@/hooks/useCart";
-import { transactionService } from "@/services/transactionService";
-
-import {
-  User,
-  Menu,
-  TransactionItem,
-  Category,
-  DepotMenuResponse,
-  AddItemsPayload,
-} from "@/types";
+import { User, Menu, TransactionItem, Category, DepotMenuResponse, AddItemsPayload } from "@/types";
 import toast from "react-hot-toast";
 import MenuCategorySection from "@/components/menus/MenuCategorySection";
 import OrderCart from "@/components/orders/OrderCart";
 import CheckoutOrderModal from "@/components/orders/waiter/CheckoutOrderModal";
+import { useTransaction } from "@/hooks/useTransaction";
 
 export default function PelayanPesananPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
+
+  const { fetchTransactionById, createTransaction, addItems } = useTransaction();
 
   const transactionId = params.id as string;
   const initialType = searchParams.get("type") || "onsite";
@@ -84,8 +78,7 @@ export default function PelayanPesananPage() {
         });
         setLocalCategories(uniqueCats);
       } catch (error) {
-        toast.error("Gagal memuat daftar menu");
-        console.error("Gagal memuat menu:", error);
+        console.error("Error Client Side - Gagal memuat menu:", error);
       }
     };
     loadData();
@@ -95,7 +88,7 @@ export default function PelayanPesananPage() {
     if (transactionId === "new") return;
 
     try {
-      const transaction = await transactionService.getById(transactionId);
+      const transaction = await fetchTransactionById(transactionId);
       if (transaction) {
         setOrderType(transaction.type || "onsite");
         setTableId(transaction.table_id ? transaction.table_id.toString() : null);
@@ -126,10 +119,9 @@ export default function PelayanPesananPage() {
         setCartItems(loadedCart);
       }
     } catch (error) {
-      console.error("Error:", error);
-      toast.error("Gagal memuat detail pesanan");
+      console.error("Error Client Side - Gagal memuat detail transaksi:", error);
     }
-  }, [transactionId, setCartItems]);
+  }, [transactionId, fetchTransactionById, setCartItems]);
 
   useEffect(() => {
     loadExistingTransaction();
@@ -157,7 +149,7 @@ export default function PelayanPesananPage() {
           batch_number: 1,
         }));
 
-        const response = await transactionService.create({
+        const response = await createTransaction({
           user_id: userId,
           depot_id: depotId,
           type: orderType as "onsite" | "online" | "takeaway",
@@ -176,7 +168,7 @@ export default function PelayanPesananPage() {
         }
       } else {
         const newItemsOnly = cartItems.filter((item) => !item.is_saved);
-         if (newItemsOnly.length > 0) {
+        if (newItemsOnly.length > 0) {
           const newPayload : AddItemsPayload = {
             customer_name: customerName,
             items: newItemsOnly.map((item) => ({
@@ -188,8 +180,8 @@ export default function PelayanPesananPage() {
             })),
           };
 
-          await transactionService.addItems(transactionId, newPayload);
-          
+          await addItems(transactionId, newPayload);
+            
           toast.success("Pesanan tambahan dikirim!");
           setTimeout(() => {
             loadExistingTransaction();
@@ -197,8 +189,7 @@ export default function PelayanPesananPage() {
         }
       }
     } catch (error) {
-      toast.error("Gagal memproses pesanan");
-      console.error("Gagal memproses pesanan: ", error);
+      console.error("Error Client Side - Gagal memproses pesanan: ", error);
     } finally {
       setIsProcessing(false);
     }

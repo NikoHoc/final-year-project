@@ -22,7 +22,7 @@ export const transactionService = {
     return response.data;
   },
 
-  updateStatus: async (
+  updateTransactionStatus: async (
     id: string,
     data: { order_status?: string; payment_status?: string },
   ) => {
@@ -40,7 +40,7 @@ export const transactionService = {
     return response.data;
   },
 
-  updateServeStatus: async (transactionId: string, itemId: string, status: 'cooking' | 'served') => {
+  updateTransactionItemStatus: async (transactionId: string, itemId: string, status: 'cooking' | 'served') => {
     const response = await api.put(`/transactions/${transactionId}/items/${itemId}/serve-status`, {
       serve_status: status
     });

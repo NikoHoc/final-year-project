@@ -31,12 +31,12 @@ export default function AdminMenusPage() {
   }, [fetchCategories, fetchMenus]);
 
   const handleSaveCategory = async (data: { name: string; type: "food" | "drink" | "other" }) => {
-  if (editingCategory) {
-    return await updateCategory(editingCategory.id, data);
-  } else {
-    return await createCategory(data);
-  }
-};
+    if (editingCategory) {
+      return await updateCategory(editingCategory.id, data);
+    } else {
+      return await createCategory(data);
+    }
+  };
 
   const handleDeleteCategory = async () => {
     if (!catToDelete) return;

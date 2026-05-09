@@ -6,25 +6,20 @@ import Cookies from "js-cookie";
 import { ArrowLeft, UserRoundPlus } from "lucide-react";
 import { useDepots } from "@/hooks/useDepot";
 import { useCart } from "@/hooks/useCart";
-import { transactionService } from "@/services/transactionService";
-import {
-  User,
-  TransactionItem,
-  Category,
-  DepotMenuResponse,
-  AddItemsPayload,
-  Menu,
-} from "@/types";
+import { User, TransactionItem, Category, DepotMenuResponse, AddItemsPayload, Menu } from "@/types";
 import toast from "react-hot-toast";
 import CheckoutPaymentModal from "@/components/orders/cashier/CheckoutPaymentModal";
 import MenuCategorySection from "@/components/menus/MenuCategorySection";
 import OrderCart from "@/components/orders/OrderCart";
 import { TransactionPayment } from "@/types";
+import { useTransaction } from "@/hooks/useTransaction";
 
 export default function PosPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
+
+  const { fetchTransactionById, createTransaction, addItems } = useTransaction();
 
   const transactionId = params.id as string;
   const initialType = searchParams.get("type") || "onsite";
@@ -43,17 +38,7 @@ export default function PosPage() {
   const [existingPayments, setExistingPayments] = useState<TransactionPayment[]>([]);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
-  const {
-    cartItems,
-    setCartItems,
-    setUseTax,
-    addItem,
-    removeItem,
-    updateQuantity,
-    updateNote,
-    toggleHalfPortion,
-    totals,
-  } = useCart();
+  const { cartItems, setCartItems, setUseTax, addItem, removeItem, updateQuantity, updateNote, toggleHalfPortion, totals } = useCart();
 
   useEffect(() => {
     setUseTax(true);
@@ -94,8 +79,7 @@ export default function PosPage() {
 
         setLocalCategories(uniqueCats);
       } catch (error) {
-        toast.error("Gagal memuat daftar menu");
-        console.error("Gagal memuat menu:", error);
+        console.error("Error Client Side - gagal memuat menu:", error);
       }
     };
 
@@ -107,7 +91,7 @@ export default function PosPage() {
     if (transactionId === "new") return;
 
     try {
-      const transaction = await transactionService.getById(transactionId);
+      const transaction = await fetchTransactionById(transactionId);
       if (transaction) {
         setOrderType(transaction.type || "onsite");
         setCustomerName(transaction.customer_name || ""); 
@@ -138,10 +122,9 @@ export default function PosPage() {
         setExistingPayments(transaction.transaction_payments || []);
       }
     } catch (error) {
-      console.error("Gagal memuat transaksi:", error);
-      toast.error("Gagal memuat detail pesanan");
+      console.error("Error Client Side - gagal memuat detail transaksi:", error);
     }
-  }, [transactionId, setCartItems]);
+  }, [transactionId, fetchTransactionById, setCartItems]);
 
   useEffect(() => {
     loadExistingTransaction();
@@ -174,7 +157,7 @@ export default function PosPage() {
           batch_number: 1,
         }));
 
-        const response = await transactionService.create({
+        const response = await createTransaction({
           user_id: userId,
           depot_id: depotId,
           type: orderType as "onsite" | "online" | "takeaway",
@@ -208,7 +191,7 @@ export default function PosPage() {
             })),
           };
 
-          await transactionService.addItems(transactionId, newPayload);
+          await addItems(transactionId, newPayload);
           
           toast.success("Pesanan tambahan dikirim!");
           setTimeout(() => {
@@ -217,8 +200,7 @@ export default function PosPage() {
         }
       }
     } catch (error) {
-      toast.error("Gagal memproses pesanan");
-      console.error("Gagal memproses pesanan: ", error);
+      console.error("Error Client Side - gagal menyimpan pesanan:", error);
     } finally {
       setIsProcessing(false);
     }

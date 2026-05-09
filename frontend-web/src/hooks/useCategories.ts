@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { categoryService } from "@/services/categoryService";
 import { Category } from "@/types";
 import toast from "react-hot-toast";
+import { handleApiError } from "@/utils/errorHandler";
 
 export const useCategories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -13,8 +14,8 @@ export const useCategories = () => {
       const data = await categoryService.getAll();
       setCategories(data);
     } catch (error) {
-      console.error("Gagal mengambil kategori:", error);
-      toast.error("Gagal memuat daftar kategori");
+      handleApiError(error, "Gagal memuat daftar kategori");
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -27,9 +28,8 @@ export const useCategories = () => {
       await fetchCategories();
       return true;
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || "Gagal menambah kategori");
-      return false;
+      handleApiError(error, "Gagal menambah kategori");
+      throw error;
     }
   };
 
@@ -40,9 +40,8 @@ export const useCategories = () => {
       await fetchCategories();
       return true;
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || "Gagal memperbarui kategori");
-      return false;
+      handleApiError(error, "Gagal memperbarui kategori");
+      throw error;
     }
   };
 
@@ -53,12 +52,8 @@ export const useCategories = () => {
       await fetchCategories();
       return true;
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(
-        err.response?.data?.message ||
-          "Kategori tidak bisa dihapus (Mungkin sedang dipakai Menu)",
-      );
-      return false;
+      handleApiError(error, "Kategori tidak bisa dihapus (Mungkin sedang dipakai Menu)");
+      throw error;
     }
   };
 
