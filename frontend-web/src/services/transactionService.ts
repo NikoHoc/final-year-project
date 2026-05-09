@@ -18,9 +18,9 @@ export const transactionService = {
   },
 
   addItems: async (id: string, payload: AddItemsPayload) => {
-  const response = await api.post(`/transactions/${id}/items`, payload);
-  return response.data;
-},
+    const response = await api.post(`/transactions/${id}/items`, payload);
+    return response.data;
+  },
 
   updateStatus: async (
     id: string,

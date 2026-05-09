@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Banknote, ChefHat, ScrollText, Settings, CheckCircle2, Minus, Plus, Trash2 } from "lucide-react";
 import { formatRupiah } from "@/utils/format";
-import { CartItem } from "@/hooks/useCart";
+import { CartItem } from "@/types";
 import EditOrderItemModal from "./EditOrderItemModal"; 
 import { transactionService } from "@/services/transactionService";
 import { useParams } from "next/navigation";

@@ -8,8 +8,7 @@ import PaymentActionForm from "./PaymentActionForm";
 import ReceiptPreview, { PaidSegment } from "./ReceiptPreview";
 import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { transactionService } from "@/services/transactionService";
-import { CartItem } from "@/hooks/useCart"; 
-import { TransactionPayment } from "@/types";
+import { TransactionPayment, CartItem } from "@/types";
 import { useRouter } from "next/navigation";
 
 export interface CheckoutItem {
@@ -32,6 +31,7 @@ interface CheckoutPaymentModalProps {
   customerName: string | null;
   onSuccess: () => void;
 }
+
 export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, transactionId, tableId, existingPayments, customerName, onSuccess }: CheckoutPaymentModalProps) {
   const router = useRouter()
   const receiptRef = useRef<HTMLDivElement>(null);

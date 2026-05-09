@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Printer, CheckCircle2, ArrowLeftCircle, Receipt } from "lucide-react";
+import { formatRupiah } from "@/utils/format";
 
 export interface ReceiptItem {
   id: string;
@@ -120,24 +121,23 @@ export default function ReceiptPreview({
           {rcp.items.length === 0 ? (
             <div className="text-center py-4 text-gray-400 italic">Belum ada pesanan</div>
           ) : (
-            rcp.items.map((item: ReceiptItem) => (
-              <div key={item.id} className="flex flex-col item-row mb-2">
-                <div className="flex items-start justify-between">
-                  <div className="flex gap-2">
-                    <span className="w-4">{item.qty}x</span>
-                    <span>
-                      {item.name}
-                      {item.is_half_portion && <span className="ml-1 text-[9px] font-bold uppercase tracking-wider">[1/2 porsi]</span>}
-                    </span>
+            rcp.items.map((item: ReceiptItem, index: number) => (
+              <div key={index} className="flex justify-between items-start mb-2 text-[11px] leading-tight text-black">
+                <div className="flex-1 pr-2">
+                  <div className="flex">
+                    <span className="font-bold w-5 shrink-0">{item.qty}x</span>
+                    <span className="font-bold uppercase">{item.name}</span>
                   </div>
-                  <span>{(item.price * item.qty).toLocaleString("id-ID")}</span>
+                  {item.is_half_portion && (
+                    <div className="pl-5 italic opacity-90"># 1/2 Porsi</div>
+                  )}
+                  {item.note && (
+                    <div className="pl-5 italic opacity-90 break-words"># {item.note}</div>
+                  )}
                 </div>
-                {/* CATATAN (NOTE) DI NOTA */}
-                {item.note && (
-                  <div className="pl-6 text-[10px] italic text-gray-600 mt-1">
-                    # {item.note}
-                  </div>
-                )}
+                <div className="text-right whitespace-nowrap">
+                  {formatRupiah(item.price * item.qty)}
+                </div>
               </div>
             ))
           )}

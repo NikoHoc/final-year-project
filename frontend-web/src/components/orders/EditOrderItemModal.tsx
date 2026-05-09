@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
-import { CartItem } from "@/hooks/useCart";
+import { CartItem } from "@/types";
 import { transactionService } from "@/services/transactionService";
 import { Minus, Plus, Trash2, AlertTriangle } from "lucide-react";
 import toast from "react-hot-toast";

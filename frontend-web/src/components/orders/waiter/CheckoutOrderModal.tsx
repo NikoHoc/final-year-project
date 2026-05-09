@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef } from "react";
 import { Printer, ClipboardList, Filter } from "lucide-react";
 import Modal from "@/components/ui/Modal";
-import { CartItem } from "@/hooks/useCart";
+import { CartItem } from "@/types";
 
 interface CheckoutOrderModalProps {
   isOpen: boolean;

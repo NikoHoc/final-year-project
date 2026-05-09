@@ -1,15 +1,5 @@
 import { useState, useMemo } from "react";
-import { Menu, CartItemPayload } from "@/types";
-
-export interface CartItem extends CartItemPayload {
-  id?: number;
-  unique_id: string;
-  menu: Menu;
-  is_saved?: boolean;
-  quantity_paid: number;
-  price_at_time: number;
-  serve_status?: 'cooking' | 'served';
-}
+import { Menu, CartItem } from "@/types";
 
 export const useCart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);

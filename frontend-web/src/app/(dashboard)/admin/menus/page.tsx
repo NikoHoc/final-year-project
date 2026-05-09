@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Edit2, Trash2 } from "lucide-react";
+import { Plus, Edit2, Trash2, Search } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import { useMenus } from "@/hooks/useMenus";
 import { Category, Menu } from "@/types";
@@ -15,6 +15,7 @@ export default function AdminMenusPage() {
   const { menus, fetchMenus, createMenu, updateMenu, deleteMenu } = useMenus();
 
   const [selectedCategory, setSelectedCategory] = useState<number | "all">("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   
   const [isCatModalOpen, setIsCatModalOpen] = useState(false);
   const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
@@ -57,9 +58,11 @@ export default function AdminMenusPage() {
     if (success) setMenuToDelete(null);
   };
 
-  const filteredMenus = selectedCategory === "all"
-    ? menus
-    : menus.filter((m) => m.category_id === selectedCategory);
+  const filteredMenus = menus.filter((m) => {
+    const matchCategory = selectedCategory === "all" || m.category_id === selectedCategory;
+    const matchSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchCategory && matchSearch;
+  });
 
   return (
     <div className="space-y-6">
@@ -115,25 +118,37 @@ export default function AdminMenusPage() {
         <div className="lg:col-span-3 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-800">Daftar Menu</h2>
-            <button
-              onClick={() => { 
-                if (categories.length === 0) {
-                  import("react-hot-toast").then((toast) => toast.default.error("Buat kategori terlebih dahulu!"));
-                  return;
-                }
-                setEditingMenu(null); 
-                setIsMenuModalOpen(true); 
-              }}
-              className={`flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors ${
-                categories.length === 0 
-                  ? "bg-gray-400 cursor-not-allowed" 
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
-              disabled={categories.length === 0}
-              title={categories.length === 0 ? "Buat kategori terlebih dahulu" : "Tambah Menu Baru"}
-            >
-              <Plus className="h-4 w-4" /> Tambah Menu
-            </button>
+            <div className="flex gap-4 items-center">
+              <div className="relative w-full md:w-64 shrink-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Cari nama menu..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                />
+              </div>
+              <button
+                onClick={() => { 
+                  if (categories.length === 0) {
+                    import("react-hot-toast").then((toast) => toast.default.error("Buat kategori terlebih dahulu!"));
+                    return;
+                  }
+                  setEditingMenu(null); 
+                  setIsMenuModalOpen(true); 
+                }}
+                className={`flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors ${
+                  categories.length === 0 
+                    ? "bg-gray-400 cursor-not-allowed" 
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
+                disabled={categories.length === 0}
+                title={categories.length === 0 ? "Buat kategori terlebih dahulu" : "Tambah Menu Baru"}
+              >
+                <Plus className="h-4 w-4" /> Tambah Menu
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

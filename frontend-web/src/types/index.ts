@@ -75,6 +75,11 @@ export interface Menu {
   };
 }
 
+export interface DepotMenuResponse extends Menu {
+  is_available: boolean;
+  categories: Category | { id: number; name: string }; 
+}
+
 export interface Table {
   id: number;
   depot_id: number;
@@ -124,6 +129,13 @@ export interface Transaction {
   transaction_payments?: TransactionPayment[];
 }
 
+export interface TransactionPaymentItem {
+  id: number;
+  transaction_payment_id: number;
+  transaction_item_id: number;
+  quantity: number;
+  price_at_time: number;
+}
 export interface TransactionPayment {
   id: number;
   transaction_id: string;
@@ -135,14 +147,6 @@ export interface TransactionPayment {
   transaction_payment_items?: TransactionPaymentItem[];
 }
 
-export interface TransactionPaymentItem {
-  id: number;
-  transaction_payment_id: number;
-  transaction_item_id: number;
-  quantity: number;
-  price_at_time: number;
-}
-
 export interface CartItemPayload {
   menu_id: number;
   quantity: number;
@@ -150,6 +154,16 @@ export interface CartItemPayload {
   note?: string;
   batch_number?: number;
   created_at?: string;
+}
+
+export interface CartItem extends CartItemPayload {
+  id?: number;
+  unique_id: string;
+  menu: Menu;
+  is_saved?: boolean;
+  quantity_paid: number;
+  price_at_time: number;
+  serve_status?: 'cooking' | 'served';
 }
 
 export interface AddItemsPayload {
@@ -167,9 +181,4 @@ export interface CreateTransactionPayload {
   pickup_method?: "dine_in" | "pickup_self" | "driver" | null;
   use_tax?: boolean;
   items: CartItemPayload[];
-}
-
-export interface DepotMenuResponse extends Menu {
-  is_available: boolean;
-  categories: Category | { id: number; name: string }; 
 }
