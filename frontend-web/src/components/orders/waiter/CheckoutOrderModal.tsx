@@ -171,7 +171,7 @@ export default function CheckoutOrderModal({
                     {items.map((item, idx) => (
                       <div key={idx} className="p-3">
                         <h4 className="font-bold text-gray-800 text-sm leading-tight">
-                          {item.quantity}x {item.menu.name}
+                          {item.quantity} x {item.menu.name}
                         </h4>
                         {item.is_half_portion && <p className="text-[10px] font-bold text-purple-600 mt-1 uppercase"># 1/2 Porsi</p>}
                         {item.note && <p className="text-[10px] text-orange-500 mt-1 uppercase"># {item.note}</p>}
@@ -232,7 +232,7 @@ export default function CheckoutOrderModal({
                 previewItems.map((item, idx) => (
                   <div key={idx} className="text-sm leading-tight text-gray-900">
                     <div className="flex items-start">
-                      <span className="w-6 font-bold">{item.quantity}x</span>
+                      <span className="w-6 font-bold">{item.quantity}</span>
                       <span className="font-bold">{item.menu.name}</span>
                     </div>
                     {item.is_half_portion && <div className="pl-8 font-bold mt-1"># 1/2 PORSI</div>}

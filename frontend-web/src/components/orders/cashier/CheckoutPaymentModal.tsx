@@ -7,7 +7,7 @@ import OrderItemList from "./OrderItemList";
 import PaymentActionForm from "./PaymentActionForm";
 import ReceiptPreview, { PaidSegment } from "./ReceiptPreview";
 import { usePaymentMethods } from "@/hooks/usePaymentMethods";
-import { TransactionPayment, CartItem } from "@/types";
+import { TransactionPayment, CartItem, Depot } from "@/types";
 import { useRouter } from "next/navigation";
 import { useTransaction } from "@/hooks/useTransaction";
 
@@ -30,9 +30,10 @@ interface CheckoutPaymentModalProps {
   existingPayments: TransactionPayment[]; 
   customerName: string | null;
   onSuccess: () => void;
+  depot?: Depot | null;
 }
 
-export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, transactionId, tableId, existingPayments, customerName, onSuccess }: CheckoutPaymentModalProps) {
+export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, transactionId, tableId, existingPayments, customerName, onSuccess, depot }: CheckoutPaymentModalProps) {
   const router = useRouter()
   const receiptRef = useRef<HTMLDivElement>(null);
 
@@ -60,10 +61,12 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
 
       const updateTime = () => {
         const now = new Date();
-        setCurrentTime(now.toLocaleString("id-ID", {
-          day: "numeric", month: "long", year: "numeric",
-          hour: "2-digit", minute: "2-digit"
-        }));
+        const dd = String(now.getDate()).padStart(2, "0");
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const yyyy = now.getFullYear();
+        const hh = String(now.getHours()).padStart(2, "0");
+        const min = String(now.getMinutes()).padStart(2, "0");
+        setCurrentTime(`${dd}-${mm}-${yyyy} ${hh}:${min}`);
       };
       
       updateTime();
@@ -314,7 +317,6 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
             @page { margin: 0; size: 80mm auto; }
             body { 
               font-family: 'Courier New', Courier, monospace; 
-              /* Lebar dikurangi menjadi 60mm untuk margin kanan-kiri yang lebih luas */
               width: 65mm; 
               margin: 0 auto; 
               padding: 10px 0;
@@ -325,20 +327,50 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
             p, h2, h4 { margin: 0; }
 
             .text-center { text-align: center; }
-            .flex { display: flex; }
-            .justify-between { justify-content: space-between; }
-            .items-start { align-items: flex-start; }
-            .gap-2 { gap: 8px; }
-            .w-4 { width: 16px; display: inline-block; }
+
+            /* Item row: qty + name side by side with proper gap */
+            .item-row {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              width: 100%;
+            }
+            .item-left {
+              display: flex;
+              flex: 1;
+              gap: 6px;
+            }
+            .item-qty {
+              display: inline-block;
+              min-width: 14px;
+              flex-shrink: 0;
+            }
+            .item-name {
+              font-weight: bold;
+              text-transform: uppercase;
+              word-break: break-word;
+            }
+            .item-price {
+              white-space: nowrap;
+              margin-left: 8px;
+            }
+
+            /* Indent for notes/half portion */
+            .item-detail {
+              padding-left: 20px;
+              font-style: italic;
+              font-size: 10px;
+              opacity: 0.9;
+            }
 
             .font-bold { font-weight: bold; }
+            .font-black { font-weight: 900; }
             .uppercase { text-transform: uppercase; }
             .italic { font-style: italic; }
             .text-\\[10px\\] { font-size: 10px; }
             .text-\\[11px\\] { font-size: 11px; }
             .text-xs { font-size: 12px; }
             .text-sm { font-size: 14px; }
-            .text-lg { font-size: 18px; }
 
             .border-b { border-bottom: 1px dashed #000; }
             .border-t { border-top: 1px dashed #000; }
@@ -356,6 +388,43 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
 
             .space-y-2 > * + * { margin-top: 8px; }
             .space-y-3 > * + * { margin-top: 12px; }
+
+            /* Totals section: indented to the right (mirroring web preview) */
+            .totals-section {
+              width: 100%;
+              margin-top: 4px;
+            }
+            .total-row {
+              display: flex;
+              justify-content: space-between;
+              margin-left: auto;
+              width: 60%;
+            }
+            .total-row.grand {
+              font-weight: 900;
+              font-size: 12px;
+              border-top: 1px solid #000 !important;
+              padding-top: 4px;
+              padding-bottom: 4px;
+            }
+            .total-row.grand.has-payment {
+              border-bottom: 1px solid #000 !important;
+            }
+
+            /* Payment section (CASH / KEMBALI) */
+            .payment-section {
+              margin-top: 2px;
+            }
+            .payment-row {
+              display: flex;
+              justify-content: space-between;
+              margin-left: auto;
+              width: 60%;
+              font-weight: bold;
+            }
+            .payment-row.bold {
+              font-weight: bold;
+            }
 
             .hide-on-print { display: none !important; }
           </style>
@@ -425,6 +494,7 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
           hasPaidSegments={paidSegments.length > 0}
           handlePrintReceipt={handlePrintReceipt}
           handleFinalizeTransaction={handleFinalizeTransaction}
+          depot={depot}
         />
       </div>
     </Modal>

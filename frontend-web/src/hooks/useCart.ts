@@ -3,7 +3,7 @@ import { Menu, CartItem } from "@/types";
 
 export const useCart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [useTax, setUseTax] = useState(false);
+  const [useTax, setUseTax] = useState(true);
 
   const addItem = (menu: Menu, isHalfPortion: boolean = false) => {
     setCartItems((prev) => {

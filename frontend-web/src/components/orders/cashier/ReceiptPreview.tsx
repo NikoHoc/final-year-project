@@ -53,6 +53,11 @@ interface ReceiptPreviewProps {
   hasPaidSegments: boolean;
   handlePrintReceipt: () => void;
   handleFinalizeTransaction: () => void;
+  depot?: {
+    name: string;
+    address: string;
+    phone_number: string;
+  } | null;
 }
 
 export default function ReceiptPreview({
@@ -69,6 +74,7 @@ export default function ReceiptPreview({
   hasPaidSegments,
   handlePrintReceipt,
   handleFinalizeTransaction,
+  depot
 }: ReceiptPreviewProps) {
   return (
     <div className="w-full lg:w-[45%] bg-gray-100 p-6 flex flex-col items-center overflow-y-auto relative">
@@ -91,28 +97,34 @@ export default function ReceiptPreview({
         }`}
       >
         <div className="text-center section-gap border-b border-gray-300 pb-6">
-          <h2 className="font-bold text-lg uppercase mb-1">Bakso Sapi Asli</h2>
-          <p className="text-xs">Jl. Balikpapan No. 1, Kaltim</p>
-          <p className="text-xs">Telp: 0812-3456-7890</p>
+          <h2 className="font-black text-sm uppercase">
+            {depot?.name || "DEPOT POS"}
+          </h2>
+          <p className="text-[10px] uppercase">
+            {depot?.address || "Alamat belum diatur"}
+          </p>
+          <p className="text-[10px]">
+            {depot?.phone_number ? `Telp: ${depot.phone_number}` : "08"}
+          </p>
         </div>
 
         <div className="space-y-2 section-gap text-[11px] mt-4">
-          <div className="flex justify-between">
+          <div className="flex justify-between" style={{display:"flex",justifyContent:"space-between",width:"100%"}}>
             <span>Transaksi:</span> 
-            <span className="font-bold">TRX-{transactionId.slice(-6).toUpperCase()}</span>
+            <span className="font-bold" style={{fontWeight:"bold"}}> TRX-{transactionId.slice(-6).toUpperCase()}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between" style={{display:"flex",justifyContent:"space-between",width:"100%"}}>
             <span>Waktu:</span> 
             <span>{rcp.time}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between" style={{display:"flex",justifyContent:"space-between",width:"100%"}}>
             <span>Meja:</span> 
-            <span className="font-bold">{tableId ? tableId : "BUNGKUS"}</span>
+            <span className="font-bold" style={{fontWeight:"bold"}}>{tableId ? tableId : "BUNGKUS"}</span>
           </div>
           {customerName && (
-            <div className="flex justify-between">
+            <div className="flex justify-between" style={{display:"flex",justifyContent:"space-between",width:"100%"}}>
               <span>Pelanggan:</span> 
-              <span className="font-bold uppercase">{customerName}</span>
+              <span className="font-bold uppercase" style={{fontWeight:"bold",textTransform:"uppercase"}}>{customerName}</span>
             </div>
           )}
         </div>
@@ -121,54 +133,69 @@ export default function ReceiptPreview({
           {rcp.items.length === 0 ? (
             <div className="text-center py-4 text-gray-400 italic">Belum ada pesanan</div>
           ) : (
-            rcp.items.map((item: ReceiptItem, index: number) => (
-              <div key={index} className="flex justify-between items-start mb-2 text-[11px] leading-tight text-black">
-                <div className="flex-1 pr-2">
-                  <div className="flex">
-                    <span className="font-bold w-5 shrink-0">{item.qty}x</span>
-                    <span className="font-bold uppercase">{item.name}</span>
+            rcp.items.map((item, index) => (
+              <div key={index} className="mb-2">
+                <div className="item-row flex justify-between items-start">
+                  <div className="item-left flex flex-1" style={{gap: "6px"}}>
+                    <span className="item-qty inline-block shrink-0" style={{minWidth: "14px"}}>{item.qty}</span>
+                    <span className="item-name font-bold uppercase wrap-break-words">{item.name}</span>
                   </div>
+                  <div className="item-price whitespace-nowrap ml-2">
+                    {formatRupiah(item.price * item.qty)}
+                  </div>
+                </div>
+
+                {/* Detail 1/2 porsi & Note dengan indentasi satu tab (pl-10) */}
+                <div className="item-detail pl-5 opacity-90 italic text-[10px] space-y-0.5">
                   {item.is_half_portion && (
-                    <div className="pl-5 italic opacity-90"># 1/2 Porsi</div>
+                    <div># 1/2 PORSI</div>
                   )}
                   {item.note && (
-                    <div className="pl-5 italic opacity-90 break-words"># {item.note}</div>
+                    <div className="wrap-break-words"># {item.note}</div>
                   )}
-                </div>
-                <div className="text-right whitespace-nowrap">
-                  {formatRupiah(item.price * item.qty)}
                 </div>
               </div>
             ))
           )}
         </div>
 
-        <div className="space-y-3 section-gap text-xs mt-4">
-          <div className="flex justify-between text-gray-600 mb-2"><span>Total Item:</span> <span>{rcp.totalItems} items</span></div>
-          <div className="flex justify-between"><span>Subtotal:</span> <span>{rcp.subtotal.toLocaleString("id-ID")}</span></div>
-          <div className="flex justify-between"><span>Pajak 10%:</span> <span>{rcp.tax.toLocaleString("id-ID")}</span></div>
-
-          <div className="border-t border-dashed border-gray-400 pt-4 mt-4">
-            <div className="flex justify-between font-bold text-sm">
-              <span>TOTAL BAYAR</span>
-              <span>{rcp.total.toLocaleString("id-ID")}</span>
-            </div>
-
-            {rcp.status !== "NOT PAID" && rcp.method && (
-              <div className="mt-4 space-y-2 border-t border-gray-100 pt-4">
-                <div className="flex justify-between">
-                  <span className="uppercase">{rcp.method}</span>
-                  <span>{rcp.paid.toLocaleString("id-ID")}</span>
-                </div>
-                <div className="flex justify-between font-bold">
-                  <span>KEMBALI</span>
-                  <span>{rcp.change.toLocaleString("id-ID")}</span>
-                </div>
-              </div>
-            )}
+        <div className="text-[11px] text-black">
+          <div className="flex justify-between font-bold pt-4 ">
+            <span>{rcp.totalItems} ITEMS</span>
           </div>
-        </div>
 
+          <div className="space-y-1 mt-2 totals-section">
+            <div className="total-row flex justify-between ml-auto w-[60%]">
+              <span>SUBTOTAL</span>
+              <span>{formatRupiah(rcp.subtotal)}</span>
+            </div>
+            <div className="total-row flex justify-between ml-auto w-[60%]">
+              <span>PAJAK (10%)</span>
+              <span>{formatRupiah(rcp.tax)}</span>
+            </div>
+            <div className={`total-row grand flex justify-between ml-auto w-[60%] font-black text-xs border-t border-black pt-2 pb-2 ${
+                (rcp.status === "PAID" || rcp.paid > 0) ? "has-payment border-b border-black" : ""
+              }`}>
+              <span>GRAND TOTAL</span>
+              <span>{formatRupiah(rcp.total)}</span>
+            </div>
+          </div>
+
+          {(rcp.status === "PAID" || rcp.paid > 0) && (
+            <div className="payment-section pt-2 space-y-1">
+              <div className="payment-row flex justify-between ml-auto w-[60%] uppercase font-bold">
+                <span>{rcp.method || "CASH"}</span>
+                <span>{formatRupiah(rcp.paid)}</span>
+              </div>
+              {rcp.change > 0 && (
+                <div className="payment-row bold flex justify-between ml-auto w-[60%] font-bold">
+                  <span>KEMBALI</span>
+                  <span>{formatRupiah(rcp.change)}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <div className="text-center mt-12 pt-6 border-t border-dashed border-gray-300">
           <p className="font-bold text-sm mb-3 uppercase">
             *** {rcp.status === "NOT PAID" ? "BELUM BAYAR" : rcp.status === "REKAP" ? "REKAP TRANSAKSI" : "LUNAS"} ***

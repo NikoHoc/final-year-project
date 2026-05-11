@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 import { ArrowLeft, UserRoundPlus } from "lucide-react";
 import { useDepots } from "@/hooks/useDepot";
 import { useCart } from "@/hooks/useCart";
-import { User, TransactionItem, Category, DepotMenuResponse, AddItemsPayload, Menu } from "@/types";
+import { User, TransactionItem, Category, DepotMenuResponse, AddItemsPayload, Menu, Depot } from "@/types";
 import toast from "react-hot-toast";
 import CheckoutPaymentModal from "@/components/orders/cashier/CheckoutPaymentModal";
 import MenuCategorySection from "@/components/menus/MenuCategorySection";
@@ -18,6 +18,9 @@ export default function PosPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
+
+  const { fetchDepotById } = useDepots();
+  const [depot, setDepot] = useState<Depot | null>(null);
 
   const { fetchTransactionById, createTransaction, addItems } = useTransaction();
 
@@ -38,17 +41,22 @@ export default function PosPage() {
   const [existingPayments, setExistingPayments] = useState<TransactionPayment[]>([]);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
-  const { cartItems, setCartItems, setUseTax, addItem, removeItem, updateQuantity, updateNote, toggleHalfPortion, totals } = useCart();
+  const { cartItems, setCartItems, addItem, removeItem, updateQuantity, updateNote, toggleHalfPortion, totals } = useCart();
 
   useEffect(() => {
-    setUseTax(true);
     const userCookie = Cookies.get("user");
     if (userCookie) {
       const user: User = JSON.parse(userCookie);
-      setDepotId(user.depot_id || null);
-      setUserId(user.id || null);
+      if (user.depot_id) {
+        setDepotId(user.depot_id);
+        setUserId(user.id);
+
+        fetchDepotById(user.depot_id).then(data => {
+          setDepot(data);
+        });
+      }
     }
-  }, [setUseTax]);
+  }, [fetchDepotById]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -271,6 +279,7 @@ export default function PosPage() {
         cartItems={cartItems}
         existingPayments={existingPayments}
         onSuccess={handlePaymentSuccess}
+        depot={depot}
       />
     </div>
   );
