@@ -182,3 +182,56 @@ export interface CreateTransactionPayload {
   use_tax?: boolean;
   items: CartItemPayload[];
 }
+
+export interface Expense {
+  id: number;
+  depot_id: number;
+  created_by: string;
+  item_name: string;
+  amount: number;
+  quantity: number;
+  unit: string;
+  expense_date: string;
+  note?: string;
+  created_at: string;
+  profiles?: {
+    full_name: string;
+  };
+}
+
+export interface ExpensePayload {
+  depot_id: number;
+  item_name: string;
+  amount: number;
+  quantity: number;
+  unit: string;
+  expense_date: string;
+  note?: string;
+}
+
+export interface StockMutation {
+  id: number;
+  created_by: string;
+  requester_id: number; 
+  provider_id: number;  
+  item_name: string;
+  requested_quantity: number;
+  sent_quantity?: number | null;
+  unit: string;
+  status: 'pending' | 'completed' | 'rejected' | 'cancelled';
+  requester_notes?: string;
+  rejection_reason?: string;
+  created_at: string;
+  // Relasi
+  requester?: { name: string };
+  provider?: { name: string };
+  creator?: { full_name: string };
+}
+export interface MutationPayload {
+  requester_id: number;
+  provider_id: number;
+  item_name: string;
+  requested_quantity: number;
+  unit: string;
+  requester_notes?: string;
+}

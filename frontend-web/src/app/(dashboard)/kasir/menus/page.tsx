@@ -100,12 +100,12 @@ export default function KasirMenusPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] gap-4">
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">
+          <h1 className="text-2xl font-bold text-gray-800">
             Manajemen Stok Menu
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-gray-500 text-sm mt-1">
             Atur ketersediaan menu di depot Anda hari ini
           </p>
         </div>

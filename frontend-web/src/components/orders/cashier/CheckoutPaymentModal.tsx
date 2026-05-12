@@ -10,6 +10,7 @@ import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { TransactionPayment, CartItem, Depot } from "@/types";
 import { useRouter } from "next/navigation";
 import { useTransaction } from "@/hooks/useTransaction";
+import { formatDate } from "@/utils/format";
 
 export interface CheckoutItem {
   id: string;
@@ -60,13 +61,7 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
       fetchMethods();
 
       const updateTime = () => {
-        const now = new Date();
-        const dd = String(now.getDate()).padStart(2, "0");
-        const mm = String(now.getMonth() + 1).padStart(2, "0");
-        const yyyy = now.getFullYear();
-        const hh = String(now.getHours()).padStart(2, "0");
-        const min = String(now.getMinutes()).padStart(2, "0");
-        setCurrentTime(`${dd}-${mm}-${yyyy} ${hh}:${min}`);
+        setCurrentTime(formatDate(new Date()));
       };
       
       updateTime();

@@ -9,7 +9,7 @@ router.use(authMiddleware);
 
 router.get("/:depot_id", stockController.getMutations);
 router.post("/", roleMiddleware(["admin", "kasir"]), stockController.createMutation);
-router.put("/:id/status", roleMiddleware(["admin", "kasir"]), stockController.updateMutationStatus);
+router.put("/:id/process", roleMiddleware(["admin", "kasir"]), stockController.processMutation);
 router.put("/:id", roleMiddleware(["admin", "kasir"]), stockController.updateMutation);
 router.delete("/:id", roleMiddleware(["admin", "kasir"]), stockController.deleteMutation);
 

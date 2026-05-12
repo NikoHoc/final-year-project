@@ -9,7 +9,7 @@ router.use(authMiddleware);
 
 router.get("/:depot_id", expenseController.getExpenses);
 router.post("/", roleMiddleware(["admin", "kasir"]), expenseController.createExpense);
-router.put("/:id", roleMiddleware(["admin"]), expenseController.updateExpense);
-router.delete("/:id", roleMiddleware(["admin"]), expenseController.deleteExpense);
+router.put("/:id", roleMiddleware(["admin", "kasir"]), expenseController.updateExpense);
+router.delete("/:id", roleMiddleware(["admin", "kasir"]), expenseController.deleteExpense);
 
 module.exports = router;

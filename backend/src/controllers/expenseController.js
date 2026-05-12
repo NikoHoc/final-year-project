@@ -19,7 +19,7 @@ exports.getExpenses = async (req, res) => {
 };
 
 exports.createExpense = async (req, res) => {
-  const { depot_id, item_name, amount, expense_date, note } = req.body;
+  const { depot_id, item_name, amount, quantity, unit, expense_date, note } = req.body;
   const created_by = req.user.id;
 
   if (!depot_id || !item_name || !amount || !expense_date) {
@@ -33,18 +33,8 @@ exports.createExpense = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("operational_expenses")
-      .insert([
-        {
-          depot_id,
-          created_by,
-          item_name,
-          amount,
-          expense_date,
-          note,
-        },
-      ])
-      .select()
-      .single();
+      .insert([{ depot_id, created_by, item_name, amount, quantity, unit, expense_date, note }])
+      .select("*, profiles(full_name)");
 
     if (error) throw error;
 
@@ -60,12 +50,14 @@ exports.createExpense = async (req, res) => {
 
 exports.deleteExpense = async (req, res) => {
   const { id } = req.params;
+  const { item_name, amount, quantity, unit, expense_date, note } = req.body;
 
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("operational_expenses")
-      .delete()
-      .eq("id", id);
+      .update({ item_name, amount, quantity, unit, expense_date, note })
+      .eq("id", id)
+      .select("*, profiles(full_name)");
 
     if (error) throw error;
 
