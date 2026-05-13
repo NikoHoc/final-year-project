@@ -117,6 +117,8 @@ export interface Transaction {
   subtotal: number;
   tax_amount: number;
   grand_total: number;
+  total_paid?: number;
+  change_amount?: number;
   pickup_method?: PickupMethod;
   pickup_notes?: string;
   midtrans_order_id?: string;
@@ -234,4 +236,44 @@ export interface MutationPayload {
   requested_quantity: number;
   unit: string;
   requester_notes?: string;
+}
+
+export interface DailySettlement {
+  id: string;
+  depot_id: number;
+  created_by: string | null;
+  settlement_date: string;
+  total_transactions: number;
+  subtotal_amount: number;
+  tax_amount: number;
+  grand_total: number;
+  cash_income: number;
+  total_change_amount: number;
+  net_cash_income: number;
+  non_cash_income: number;
+  total_expenses: number;
+  net_income: number;
+  created_at?: string;
+  creator?: {
+    full_name: string;
+  };
+}
+
+export interface SettlementSummary {
+  total_transactions: number;
+  subtotal_amount: number;
+  tax_amount: number;
+  grand_total: number;
+  cash_income: number;
+  total_change_amount: number;
+  net_cash_income: number;
+  non_cash_income: number;
+  total_expenses: number;
+  net_income: number;
+}
+
+export interface TodaySettlementResponse {
+  summary: SettlementSummary;
+  transactions: Transaction[]; 
+  expenses: Expense[];
 }

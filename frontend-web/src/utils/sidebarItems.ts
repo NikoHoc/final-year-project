@@ -9,7 +9,8 @@ import {
   CreditCard,
   Warehouse,
   BanknoteArrowDown,
-  ShoppingCart
+  ShoppingCart,
+  ScrollText
 } from "lucide-react";
 import { Role } from "@/types";
 
@@ -35,7 +36,8 @@ export const SIDEBAR_ITEMS: Record<Role, SidebarItem[]> = {
     { title: "Transaksi Online", path: "/kasir/online", icon: Receipt },
     { title: "Manajemen Meja", path: "/kasir/tables", icon: TableCellsMerge},
     { title: "Manajemen Menu", path: "/kasir/menus", icon: UtensilsCrossed},
-    { title: "Laporan Transaksi", path: "/kasir/transactions", icon: BanknoteArrowDown },
+    { title: "Settlement Harian", path: "/kasir/settlement", icon: BanknoteArrowDown},
+    { title: "Laporan Transaksi", path: "/kasir/reports", icon: ScrollText},
     { title: "Pengeluaran Operasional", path: "/kasir/expenses", icon: ShoppingCart},
     { title: "Mutasi Stok", path: "/kasir/mutations", icon: Warehouse},
   ],
