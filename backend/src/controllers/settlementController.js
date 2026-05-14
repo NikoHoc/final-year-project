@@ -9,7 +9,7 @@ exports.getTodaySummary = async (req, res) => {
       .select(
         `
         id, customer_name, subtotal, tax_amount, grand_total, type, payment_method, created_at,
-        transaction_payments(paid_amount, payment_methods(name))
+        transaction_payments(paid_amount, change_amount, payment_methods(name))
       `,
       )
       .eq("depot_id", depot_id)
@@ -35,28 +35,30 @@ exports.getTodaySummary = async (req, res) => {
     const transactionsWithTotal = transactions.map((tx) => {
       subtotal_all += Number(tx.subtotal || 0);
       tax_all += Number(tx.tax_amount || 0);
-      const tx_grand_total = Number(tx.grand_total || 0);
-      grand_total_all += tx_grand_total;
-
-      const total_paid = tx.transaction_payments?.reduce((acc, curr) => acc + Number(curr.paid_amount || 0), 0) || 0;
-      const change_amount = Math.max(0, total_paid - tx_grand_total);
+      grand_total_all += Number(tx.grand_total || 0);
 
       if (tx.transaction_payments) {
         tx.transaction_payments.forEach((p) => {
           const methodName = p.payment_methods?.name || "Lainnya";
           const paid = Number(p.paid_amount || 0);
-          const isCash = methodName.toLowerCase().includes("cash") || methodName.toLowerCase().includes("tunai");
+          const change = Number(p.change_amount || 0);
+          
+          const net = paid - change;
 
           if (!methods_map[methodName]) {
-            methods_map[methodName] = { method_name: methodName, transaction_count: 0, total_net_amount: 0 };
+            methods_map[methodName] = { 
+              method_name: methodName, 
+              transaction_count: 0, 
+              total_net_amount: 0 
+            };
           }
 
           methods_map[methodName].transaction_count += 1;
-          methods_map[methodName].total_net_amount += isCash ? (paid - change_amount) : paid;
+          methods_map[methodName].total_net_amount += net;
         });
       }
 
-      return { ...tx, total_paid, change_amount };
+      return { ...tx };
     });
 
     let total_expenses = 0;
@@ -92,6 +94,14 @@ exports.processSettlement = async (req, res) => {
   const created_by = req.user.id;
 
   try {
+    const cash_income = summary_data.payment_methods
+      .filter(m => m.method_name.toLowerCase().includes('cash') || m.method_name.toLowerCase().includes('tunai'))
+      .reduce((acc, curr) => acc + curr.total_net_amount, 0);
+    
+    const non_cash_income = summary_data.payment_methods
+      .filter(m => !m.method_name.toLowerCase().includes('cash') && !m.method_name.toLowerCase().includes('tunai'))
+      .reduce((acc, curr) => acc + curr.total_net_amount, 0);
+
     const { data: newSettlement, error: errInsert } = await supabase
       .from("daily_settlements")
       .insert([
@@ -102,10 +112,8 @@ exports.processSettlement = async (req, res) => {
           subtotal_amount: summary_data.subtotal_amount,
           tax_amount: summary_data.tax_amount,
           grand_total: summary_data.grand_total,
-          cash_income: summary_data.cash_income,
-          total_change_amount: summary_data.total_change_amount,
-          net_cash_income: summary_data.net_cash_income,
-          non_cash_income: summary_data.non_cash_income,
+          cash_income: cash_income,
+          non_cash_income: non_cash_income,
           total_expenses: summary_data.total_expenses,
           net_income: summary_data.net_income,
         },

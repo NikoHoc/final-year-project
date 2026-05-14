@@ -117,8 +117,6 @@ export interface Transaction {
   subtotal: number;
   tax_amount: number;
   grand_total: number;
-  total_paid?: number;
-  change_amount?: number;
   pickup_method?: PickupMethod;
   pickup_notes?: string;
   midtrans_order_id?: string;

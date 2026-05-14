@@ -62,6 +62,14 @@ export default function SettlementPage() {
   const hasExpenses = expenses.length > 0;
   const hasDataToSettle = hasTransactions || hasExpenses;
 
+  const cashIncome = summary?.payment_methods?.find(
+    (m) => m.method_name.toLowerCase().includes("cash") || m.method_name.toLowerCase().includes("tunai")
+  )?.total_net_amount || 0;
+
+  const nonCashIncome = summary?.payment_methods?.filter(
+    (m) => !(m.method_name.toLowerCase().includes("cash") || m.method_name.toLowerCase().includes("tunai"))
+  ).reduce((sum, m) => sum + m.total_net_amount, 0) || 0;
+
   return (
     <div className="space-y-8 pb-10">
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -167,9 +175,24 @@ export default function SettlementPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
             <div className="lg:col-span-5 bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
-              <div className="p-5 border-b border-gray-50 bg-gray-50/50 font-bold text-gray-800 flex justify-between">
-                <span>Breakdown Pemasukan</span>
-                <span className="text-blue-600">{formatRupiah(summary?.grand_total || 0)}</span>
+              <div className="p-5 border-b border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <span className="font-bold text-gray-800">Breakdown Pemasukan</span>
+                <div className="flex flex-wrap items-center gap-2 text-[10px] sm:text-xs justify-end">
+                  <div className="flex items-center gap-1 bg-green-50 text-green-700 px-2.5 py-1.5 rounded-lg border border-green-100 font-semibold">
+                    <span>Tunai:</span>
+                    <span>{formatRupiah(cashIncome)}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-1 bg-purple-50 text-purple-700 px-2.5 py-1.5 rounded-lg border border-purple-100 font-semibold">
+                    <span>Digital:</span>
+                    <span>{formatRupiah(nonCashIncome)}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200 ml-1 shadow-sm">
+                    <span className="font-bold">TOTAL:</span>
+                    <span className="text-sm font-black">{formatRupiah(summary?.grand_total || 0)}</span>
+                  </div>
+                </div>
               </div>
               <table className="w-full text-left text-xs">
                 <thead className="bg-white border-b border-gray-100 text-gray-400 uppercase font-black">
