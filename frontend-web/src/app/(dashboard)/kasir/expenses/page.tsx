@@ -109,6 +109,7 @@ export default function ExpensesPage() {
                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase">Jumlah</th>
                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase">Nominal</th>
                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase">Catatan</th>
+                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase">Status</th>
                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase text-right">Aksi</th>
               </tr>
             </thead>
@@ -139,18 +140,24 @@ export default function ExpensesPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 font-black text-gray-900">{formatRupiah(expense.amount)}</td>
-                    <td className="px-6 py-4 text-gray-500 text-sm italic">{expense.note || "-"}</td>
+                    <td className="px-6 py-4 italic">{expense.note || "-"}</td>
+                    <td className="px-6 py-4">
+                      <span className={`text-sm font-black uppercase px-2 py-1 rounded-md 
+                        ${expense.is_settled === true ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                        {expense.is_settled === true ? 'SUDAH DIREKAP' : 'BELUM DIREKAP'}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
                         <button 
                           onClick={() => handleEdit(expense)}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
                         >
                           <Pencil size={18} />
                         </button>
                         <button 
                           onClick={() => setExpenseToDelete(expense)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                          className="p-2 text-red-600  hover:bg-red-50 rounded-xl transition-all"
                         >
                           <Trash2 size={18} />
                         </button>

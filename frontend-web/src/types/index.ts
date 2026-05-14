@@ -127,6 +127,7 @@ export interface Transaction {
   midtrans_url?: string;
   rejection_reason?: string;
   created_at: string;
+  is_settled?: boolean;
   transaction_items?: TransactionItem[];
   transaction_payments?: TransactionPayment[];
 }
@@ -196,6 +197,7 @@ export interface Expense {
   expense_date: string;
   note?: string;
   created_at: string;
+  is_settled?: boolean;
   profiles?: {
     full_name: string;
   };
@@ -248,8 +250,6 @@ export interface DailySettlement {
   tax_amount: number;
   grand_total: number;
   cash_income: number;
-  total_change_amount: number;
-  net_cash_income: number;
   non_cash_income: number;
   total_expenses: number;
   net_income: number;
@@ -259,19 +259,21 @@ export interface DailySettlement {
   };
 }
 
+export interface PaymentMethodSummary {
+  method_name: string;
+  transaction_count: number;
+  total_net_amount: number;
+}
+
 export interface SettlementSummary {
   total_transactions: number;
   subtotal_amount: number;
   tax_amount: number;
   grand_total: number;
-  cash_income: number;
-  total_change_amount: number;
-  net_cash_income: number;
-  non_cash_income: number;
   total_expenses: number;
   net_income: number;
+  payment_methods: PaymentMethodSummary[];
 }
-
 export interface TodaySettlementResponse {
   summary: SettlementSummary;
   transactions: Transaction[]; 

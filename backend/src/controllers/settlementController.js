@@ -27,41 +27,36 @@ exports.getTodaySummary = async (req, res) => {
 
     if (errExp) throw errExp;
 
-    let subtotal_amount = 0;
-    let tax_amount = 0;
-    let grand_total = 0;
-    let cash_income = 0;
-    let non_cash_income = 0;
-    let total_change_amount = 0;
+    let subtotal_all = 0;
+    let tax_all = 0;
+    let grand_total_all = 0;
+    let methods_map = {};
 
     const transactionsWithTotal = transactions.map((tx) => {
-      subtotal_amount += Number(tx.subtotal || 0);
-      tax_amount += Number(tx.tax_amount || 0);
-      grand_total += Number(tx.grand_total || 0);
+      subtotal_all += Number(tx.subtotal || 0);
+      tax_all += Number(tx.tax_amount || 0);
+      const tx_grand_total = Number(tx.grand_total || 0);
+      grand_total_all += tx_grand_total;
+
+      const total_paid = tx.transaction_payments?.reduce((acc, curr) => acc + Number(curr.paid_amount || 0), 0) || 0;
+      const change_amount = Math.max(0, total_paid - tx_grand_total);
 
       if (tx.transaction_payments) {
         tx.transaction_payments.forEach((p) => {
-          const amount = Number(p.paid_amount || 0);
-          const method = p.payment_methods?.name?.toLowerCase() || "";
+          const methodName = p.payment_methods?.name || "Lainnya";
+          const paid = Number(p.paid_amount || 0);
+          const isCash = methodName.toLowerCase().includes("cash") || methodName.toLowerCase().includes("tunai");
 
-          if (method.includes("cash") || method.includes("tunai")) {
-            cash_income += amount;
-          } else {
-            non_cash_income += amount;
+          if (!methods_map[methodName]) {
+            methods_map[methodName] = { method_name: methodName, transaction_count: 0, total_net_amount: 0 };
           }
+
+          methods_map[methodName].transaction_count += 1;
+          methods_map[methodName].total_net_amount += isCash ? (paid - change_amount) : paid;
         });
       }
 
-      const total_paid = tx.transaction_payments ? tx.transaction_payments.reduce((acc, curr) => acc + Number(curr.paid_amount || 0), 0): 0;
-
-      const change_amount = Math.max(0, total_paid - tx.grand_total);
-      total_change_amount += change_amount;
-      
-      return {
-        ...tx,
-        total_paid,
-        change_amount
-      };
+      return { ...tx, total_paid, change_amount };
     });
 
     let total_expenses = 0;
@@ -69,23 +64,19 @@ exports.getTodaySummary = async (req, res) => {
       total_expenses += Number(exp.amount || 0);
     });
 
-    const net_cash_income = cash_income - total_change_amount;
-    const net_income = subtotal_amount - total_expenses;
+    const net_income = subtotal_all - total_expenses;
 
     return res.status(200).json({
       status: true,
       data: {
         summary: {
           total_transactions: transactions.length,
-          subtotal_amount,
-          tax_amount,
-          grand_total,
-          cash_income,
-          total_change_amount,
-          net_cash_income,
-          non_cash_income,
+          subtotal_amount: subtotal_all,
+          tax_amount: tax_all,
+          grand_total: grand_total_all,
           total_expenses,
           net_income,
+          payment_methods: Object.values(methods_map)
         },
         transactions: transactionsWithTotal,
         expenses,
