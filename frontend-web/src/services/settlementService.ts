@@ -15,8 +15,19 @@ export const settlementService = {
     return response.data;
   },
 
-  getSettlements: async (depotId: number) => {
-    const response = await api.get(`/settlements/${depotId}`);
+  getSettlements: async (depotId: number, startDate?: string, endDate?: string) => {
+    let url = `/settlements/depot/${depotId}`;
+    
+    if (startDate && endDate) {
+      url += `?startDate=${startDate}&endDate=${endDate}`;
+    }
+    
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  getSettlementDetail: async (id: string) => {
+    const response = await api.get(`/settlements/detail/${id}`);
     return response.data;
   },
 

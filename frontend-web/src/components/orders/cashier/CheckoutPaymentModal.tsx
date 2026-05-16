@@ -11,6 +11,7 @@ import { TransactionPayment, CartItem, Depot } from "@/types";
 import { useRouter } from "next/navigation";
 import { useTransaction } from "@/hooks/useTransaction";
 import { formatDate } from "@/utils/format";
+import { printReceiptHTML } from "@/utils/printHandler";
 
 export interface CheckoutItem {
   id: string;
@@ -110,7 +111,7 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
           tax: segmentTax, 
           grandTotal: segmentGrandTotal,
           method: payment.payment_methods?.name || "Unknown",
-          time: new Date(payment.created_at).toLocaleString("id-ID"),
+          time: formatDate(payment.created_at),
           paidAmount: payment.paid_amount,
           changeAmount: payment.change_amount,
         };
@@ -295,148 +296,9 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
 
   const handlePrintReceipt = () => {
     const printContent = receiptRef.current?.innerHTML;
-    if (!printContent) return;
-
-    const iframe = document.createElement("iframe");
-    iframe.style.display = "none";
-    document.body.appendChild(iframe);
-
-    const iframeDoc = iframe.contentWindow?.document;
-    if (!iframeDoc) return;
-
-    iframeDoc.write(`
-      <html>
-        <head>
-          <title>Cetak Nota</title>
-          <style>
-            @page { margin: 0; size: 80mm auto; }
-            body { 
-              font-family: 'Courier New', Courier, monospace; 
-              width: 65mm; 
-              margin: 0 auto; 
-              padding: 10px 0;
-              color: #000;
-              line-height: 1.5;
-            }
-            
-            p, h2, h4 { margin: 0; }
-
-            .text-center { text-align: center; }
-
-            /* Item row: qty + name side by side with proper gap */
-            .item-row {
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-start;
-              width: 100%;
-            }
-            .item-left {
-              display: flex;
-              flex: 1;
-              gap: 6px;
-            }
-            .item-qty {
-              display: inline-block;
-              min-width: 14px;
-              flex-shrink: 0;
-            }
-            .item-name {
-              font-weight: bold;
-              text-transform: uppercase;
-              word-break: break-word;
-            }
-            .item-price {
-              white-space: nowrap;
-              margin-left: 8px;
-            }
-
-            /* Indent for notes/half portion */
-            .item-detail {
-              padding-left: 20px;
-              font-style: italic;
-              font-size: 10px;
-              opacity: 0.9;
-            }
-
-            .font-bold { font-weight: bold; }
-            .font-black { font-weight: 900; }
-            .uppercase { text-transform: uppercase; }
-            .italic { font-style: italic; }
-            .text-\\[10px\\] { font-size: 10px; }
-            .text-\\[11px\\] { font-size: 11px; }
-            .text-xs { font-size: 12px; }
-            .text-sm { font-size: 14px; }
-
-            .border-b { border-bottom: 1px dashed #000; }
-            .border-t { border-top: 1px dashed #000; }
-
-            .mt-4 { margin-top: 16px; }
-            .mt-12 { margin-top: 48px; }
-            .mb-1 { margin-bottom: 4px; }
-            .mb-2 { margin-bottom: 8px; }
-            .mb-3 { margin-bottom: 12px; }
-            
-            .pt-4 { padding-top: 16px; }
-            .pt-6 { padding-top: 24px; }
-            .pb-6 { padding-bottom: 24px; }
-            .py-4 { padding-top: 16px; padding-bottom: 16px; }
-
-            .space-y-2 > * + * { margin-top: 8px; }
-            .space-y-3 > * + * { margin-top: 12px; }
-
-            /* Totals section: indented to the right (mirroring web preview) */
-            .totals-section {
-              width: 100%;
-              margin-top: 4px;
-            }
-            .total-row {
-              display: flex;
-              justify-content: space-between;
-              margin-left: auto;
-              width: 60%;
-            }
-            .total-row.grand {
-              font-weight: 900;
-              font-size: 12px;
-              border-top: 1px solid #000 !important;
-              padding-top: 4px;
-              padding-bottom: 4px;
-            }
-            .total-row.grand.has-payment {
-              border-bottom: 1px solid #000 !important;
-            }
-
-            /* Payment section (CASH / KEMBALI) */
-            .payment-section {
-              margin-top: 2px;
-            }
-            .payment-row {
-              display: flex;
-              justify-content: space-between;
-              margin-left: auto;
-              width: 60%;
-              font-weight: bold;
-            }
-            .payment-row.bold {
-              font-weight: bold;
-            }
-
-            .hide-on-print { display: none !important; }
-          </style>
-        </head>
-        <body>
-          ${printContent}
-        </body>
-      </html>
-    `);
-
-    iframeDoc.close();
-    iframe.contentWindow?.focus();
-
-    setTimeout(() => {
-      iframe.contentWindow?.print();
-      document.body.removeChild(iframe);
-    }, 500);
+    if (printContent) {
+      printReceiptHTML(printContent, `Cetak Nota - ${transactionId}`);
+    }
   };
 
   return (

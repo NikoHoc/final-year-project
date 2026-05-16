@@ -9,7 +9,8 @@ router.use(authMiddleware);
 router.get("/today/:depot_id", roleMiddleware(["admin", "kasir"]), settlementController.getTodaySummary);
 router.post("/process", roleMiddleware(["admin", "kasir"]), settlementController.processSettlement);
 
-router.get("/:depot_id", roleMiddleware(["admin", "kasir"]), settlementController.getSettlements);
+router.get("/depot/:depot_id", authMiddleware, roleMiddleware(["admin", "kasir"]), settlementController.getSettlements);
+router.get("/detail/:id", authMiddleware, roleMiddleware(["admin", "kasir"]), settlementController.getSettlementDetail);
 router.get("/detail/:id/transactions", roleMiddleware(["admin", "kasir"]), settlementController.getSettlementTransactions);
 
 module.exports = router;

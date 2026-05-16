@@ -272,7 +272,8 @@ export interface SettlementSummary {
   net_income: number;
   payment_methods: PaymentMethodSummary[];
 }
-export interface TodaySettlementResponse {
+export interface SettlementResponse {
+  settlement?: DailySettlement;
   summary: SettlementSummary;
   transactions: Transaction[]; 
   expenses: Expense[];

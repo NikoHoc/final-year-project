@@ -131,7 +131,7 @@ export default function KasirMenusPage() {
             <button
               key={category.id}
               onClick={() => setActiveCategoryId(category.id)}
-              className={`whitespace-nowrap px-5 py-2 rounded-xl text-sm font-medium transition-all ${
+              className={`cursor-pointer whitespace-nowrap px-5 py-2 rounded-xl text-sm font-medium transition-all ${
                 activeCategoryId === category.id
                   ? "bg-blue-600 text-white shadow-md shadow-blue-200"
                   : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
@@ -189,7 +189,7 @@ export default function KasirMenusPage() {
 
               <button
                 onClick={() => handleToggleStatus(menu.id, menu.is_available)}
-                className={`w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+                className={`cursor-pointer w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
                   menu.is_available
                     ? "bg-green-100 text-green-700 hover:bg-green-200"
                     : "bg-red-600 text-white hover:bg-red-700 shadow-md shadow-red-100"

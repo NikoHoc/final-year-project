@@ -12,6 +12,7 @@ interface ConfirmModalProps {
   confirmText?: string;
   cancelText?: string;
   type?: "success" | "danger" | "warning";
+  isLoading?: boolean;
 }
 
 export default function ConfirmModal({
@@ -23,6 +24,7 @@ export default function ConfirmModal({
   confirmText = "Ya, Lanjutkan",
   cancelText = "Batal",
   type = "warning",
+  isLoading
 }: ConfirmModalProps) {
   const isDanger = type === "danger";
   const isSuccess = type === "success";
@@ -61,7 +63,7 @@ export default function ConfirmModal({
             onClick={onConfirm}
             className={`flex-1 px-4 py-2.5 rounded-lg text-white font-medium transition-colors ${buttonColorClass}`}
           >
-            {confirmText}
+            {isLoading ? "Memproses..." : confirmText}
           </button>
         </div>
       </div>

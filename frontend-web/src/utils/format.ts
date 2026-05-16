@@ -20,3 +20,29 @@ export const formatDate = (date: string | Date) => {
   
   return `${dd}-${mm}-${yyyy} ${hh}:${min}`;
 };
+
+export const formatDateFull = (dateString: string) => {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+};
+
+export const getTodayStr = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+export const getFirstDayOfMonthStr = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+};
+
+export const getSevenDaysAgoStr = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 7);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};

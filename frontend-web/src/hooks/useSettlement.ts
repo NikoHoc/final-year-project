@@ -1,12 +1,13 @@
 import { useState, useCallback } from "react";
 import { settlementService } from "@/services/settlementService";
-import { DailySettlement, TodaySettlementResponse, SettlementSummary } from "@/types";
+import { DailySettlement, SettlementResponse, SettlementSummary } from "@/types";
 import { handleApiError } from "@/utils/errorHandler";
 import toast from "react-hot-toast";
 
 export const useSettlement = () => {
   const [settlements, setSettlements] = useState<DailySettlement[]>([]);
-  const [todayData, setTodayData] = useState<TodaySettlementResponse | null>(null);
+  const [settlementDetail, setSettlementDetail] = useState<SettlementResponse | null>(null);
+  const [todayData, setTodayData] = useState<SettlementResponse | null>(null);
   
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -19,7 +20,7 @@ export const useSettlement = () => {
       return res.data;
     } catch (error) {
       handleApiError(error, "Gagal memuat ringkasan hari ini");
-      return null;
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -39,15 +40,38 @@ export const useSettlement = () => {
     }
   };
 
-  const fetchSettlements = useCallback(async (depotId: number) => {
+  const fetchSettlements = useCallback(
+    async (depotId: number, startDate?: string, endDate?: string) => {
+      setIsLoading(true);
+      try {
+        const response = await settlementService.getSettlements(depotId, startDate, endDate);
+        if (response.status) {
+          setSettlements(response.data);
+        } else {
+          throw new Error(response.message || "Failed to fetch settlements");
+        }
+      } catch (error) {
+        handleApiError(error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  const fetchSettlementDetail = useCallback(async (id: string) => {
     setIsLoading(true);
     try {
-      const res = await settlementService.getSettlements(depotId);
-      setSettlements(res.data || []);
-      return res.data;
+      const response = await settlementService.getSettlementDetail(id);
+      if (response.status) {
+        setSettlementDetail(response.data);
+      } else {
+        throw new Error(response.message || "Gagal mengambil detail settlement");
+      }
     } catch (error) {
-      handleApiError(error, "Gagal memuat riwayat laporan");
-      return [];
+      handleApiError(error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -55,11 +79,13 @@ export const useSettlement = () => {
 
   return {
     settlements,
+    settlementDetail,
     todayData,
     isLoading,
     isProcessing,
     fetchTodaySummary,
     processSettlement,
     fetchSettlements,
+    fetchSettlementDetail
   };
 };

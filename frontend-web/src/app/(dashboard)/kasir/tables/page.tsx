@@ -81,7 +81,7 @@ export default function KasirTablesPage() {
             setSelectedTable(null);
             setIsModalOpen(true);
           }}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors shadow-sm"
+          className="cursor-pointer flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors shadow-sm"
         >
           <Plus size={18} /> Tambah Meja
         </button>

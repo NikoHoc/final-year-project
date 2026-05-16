@@ -42,7 +42,7 @@ export interface ReceiptData {
 interface ReceiptPreviewProps {
   receiptRef: React.RefObject<HTMLDivElement | null>;
   rcp: ReceiptData;
-  tableId: string;
+  tableId: string | number;
   transactionId: string;
   customerName: string | null;
   activeSegmentToView: PaidSegment | null;
@@ -52,12 +52,13 @@ interface ReceiptPreviewProps {
   isAllFullyPaid: boolean;
   hasPaidSegments: boolean;
   handlePrintReceipt: () => void;
-  handleFinalizeTransaction: () => void;
+  handleFinalizeTransaction?: () => void;
   depot?: {
     name: string;
     address: string;
     phone_number: string;
   } | null;
+  isReadOnly?: boolean;
 }
 
 export default function ReceiptPreview({
@@ -74,11 +75,15 @@ export default function ReceiptPreview({
   hasPaidSegments,
   handlePrintReceipt,
   handleFinalizeTransaction,
-  depot
+  depot,
+  isReadOnly = false
 }: ReceiptPreviewProps) {
   return (
-    <div className="w-full lg:w-[45%] bg-gray-100 p-6 flex flex-col items-center overflow-y-auto relative">
-      {(activeSegmentToView || showMasterReceipt) && (
+    <div className="w-full lg:w-[45%] bg-gray-100 p-6 flex flex-col items-center overflow-y-auto custom-scrollbar relative border-l border-gray-200">
+      <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6">
+        {isReadOnly ? "Preview Nota Laporan" : "Preview Nota Transaksi"}
+      </h3>
+      {((activeSegmentToView || showMasterReceipt) && !isReadOnly) && (
         <button
           onClick={() => {
             setViewingSegmentId(null);
@@ -86,16 +91,21 @@ export default function ReceiptPreview({
           }}
           className="absolute top-4 left-4 flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm font-bold text-sm text-gray-700 hover:text-blue-600 z-10 border"
         >
-          <ArrowLeftCircle size={16} /> Kembali ke Nota Aktif
+          <ArrowLeftCircle size={16} /> Reset
         </button>
       )}
 
       <div
         ref={receiptRef}
         className={`w-full max-w-[320px] bg-white p-6 shadow-sm relative text-gray-800 ${
-          rcp.status === "NOT PAID" ? "border-t-8 border-gray-800" : "border-t-8 border-green-500 mt-10"
+          rcp.status === "NOT PAID" ? "border-t-8 border-gray-800" : "border-t-8 border-green-500 shrink-0"
         }`}
       >
+        {isReadOnly && (
+          <div className="absolute -top-3 -right-3 bg-gray-800 text-white text-[9px] font-black px-3 py-1.5 rounded-lg rotate-12 z-20 shadow-xl border-2 border-white">
+            Copy
+          </div>
+        )}
         <div className="text-center section-gap border-b border-gray-300 pb-6">
           <h2 className="font-black text-sm uppercase">
             {depot?.name || "DEPOT POS"}
@@ -197,17 +207,17 @@ export default function ReceiptPreview({
           )}
         </div>
         <div className="text-center mt-12 pt-6 border-t border-dashed border-gray-300">
-          <p className="font-bold text-sm mb-3 uppercase">
+          <p className="font-black text-sm mb-3 uppercase tracking-widest">
             *** {rcp.status === "NOT PAID" ? "BELUM BAYAR" : rcp.status === "REKAP" ? "REKAP TRANSAKSI" : "LUNAS"} ***
           </p>
-          <p className="text-[10px]">
+          <p className="text-[10px] font-medium text-gray-500 uppercase">
             {rcp.status === "NOT PAID" ? "SILAHKAN CEK KEMBALI PESANAN ANDA" : "TERIMA KASIH ATAS KUNJUNGAN ANDA"}
           </p>
         </div>
       </div>
 
       <div className="w-full max-w-sm mt-6 space-y-2">
-        {isAllFullyPaid && hasPaidSegments && !showMasterReceipt && (
+        {isAllFullyPaid && hasPaidSegments && !showMasterReceipt && !isReadOnly && (
           <button
             onClick={() => {
               setShowMasterReceipt(true);
@@ -215,18 +225,20 @@ export default function ReceiptPreview({
             }}
             className="w-full py-2.5 bg-white border-2 border-gray-800 text-gray-800 rounded-xl font-bold text-sm hover:bg-gray-100 flex items-center justify-center gap-2 mb-2"
           >
-            <Receipt size={16} /> Lihat Rekap Full (Semua Segmen)
+            <Receipt size={16} /> Lihat Rekap Full
           </button>
         )}
 
-        <button
-          onClick={handlePrintReceipt}
-          className="w-full py-3 bg-gray-800 text-white rounded-xl font-bold text-sm hover:bg-gray-700 flex items-center justify-center gap-2"
-        >
-          <Printer size={16} /> Cetak Nota Ini
-        </button>
+        {rcp.items && rcp.items.length > 0 && (
+          <button
+            onClick={handlePrintReceipt}
+            className="cursor-pointer w-full py-3 bg-gray-800 text-white rounded-xl font-bold text-sm hover:bg-gray-700 flex items-center justify-center gap-2"
+          >
+            <Printer size={16} /> Cetak Nota Ini
+          </button>
+        )}
 
-        {isAllFullyPaid && (
+        {isAllFullyPaid && !isReadOnly && handleFinalizeTransaction && (
           <button
             onClick={handleFinalizeTransaction}
             className="w-full py-4 bg-green-600 text-white rounded-xl font-black text-base hover:bg-green-700 shadow-lg shadow-green-200 flex items-center justify-center gap-2 mt-4 animate-bounce"
