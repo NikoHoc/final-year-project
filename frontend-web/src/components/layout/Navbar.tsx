@@ -2,22 +2,14 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { LogOut, User as UserIcon } from "lucide-react";
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { User } from "@/types";
 import { SIDEBAR_ITEMS } from "@/utils/sidebarItems"; 
-import { getUserData } from "@/utils/auth";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function Navbar() {
   const { logout } = useAuth();
+  const { user: userData } = useSession();
   const pathname = usePathname();
-  const [userData, setUserData] = useState<User | null>(null);
-
-  useEffect(() => {
-    const user = getUserData();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (user) setUserData(user);
-  }, []);
 
   let pageTitle = "Dashboard";
   if (userData && userData.role !== "pelanggan") {

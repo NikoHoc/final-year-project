@@ -2,12 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Role, User } from "@/types";
+import { Role } from "@/types";
 import { SIDEBAR_ITEMS } from "@/utils/sidebarItems";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { getUserData } from "@/utils/auth";
-import { useDepot } from "@/hooks/useDepot";
+import { useSession } from "@/contexts/SessionContext";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -16,18 +14,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
   const pathname = usePathname();
-  const [userData, setUserData] = useState<User | null>(null);
-
-  useEffect(() => {
-    const user = getUserData();
-
-    if (user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setUserData(user);
-    }
-  }, []);
-
-  const { depotName, isLoadingDepot } = useDepot(userData?.depot_id);
+  const { user: userData, depot, isLoadingSession } = useSession();
 
   if (!userData || userData.role === "pelanggan") return null;
 
@@ -36,8 +23,8 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
   const getSidebarTitle = () => {
     if (role === "admin") return "Admin - DBS";
-    if (isLoadingDepot) return "Memuat...";
-    if (depotName) return depotName;
+    if (isLoadingSession) return "Memuat...";
+    if (depot?.name) return depot.name;
     return "Depot POS";
   };
 

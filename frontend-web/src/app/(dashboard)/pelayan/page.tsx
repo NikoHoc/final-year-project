@@ -1,52 +1,47 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
 import { ShoppingBag, AlertCircle } from "lucide-react";
 import { useTables } from "@/hooks/useTables";
-import { User, Transaction, Depot } from "@/types";
+import { Transaction } from "@/types";
 import TableList from "@/components/tables/TableList";
 import TakeawayCard from "@/components/orders/TakeawayCard";
-import { useDepots } from "@/hooks/useDepot";
 import { useTransaction } from "@/hooks/useTransaction";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function PelayanDashboard() {
   const router = useRouter();
   const { tables, fetchTables } = useTables();
-  const { fetchDepotById } = useDepots();
   const { fetchAllTransactions } = useTransaction();
+  const { user, depot, isLoadingSession } = useSession();
   
-  const [depot, setDepot] = useState<Depot | null>(null);
   const [activeTransactions, setActiveTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadDashboardData = useCallback(async () => {
-    setIsLoading(true);
-    const userCookie = Cookies.get("user");
-    if (userCookie) {
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      if (!user?.depot_id) return;
+      
+      setIsLoading(true);
       try {
-        const user: User = JSON.parse(userCookie);
-        if (user.depot_id) {
-          const depotData = await fetchDepotById(user.depot_id);
-          setDepot(depotData);
-
-          await fetchTables(user.depot_id);
-
-          const allTransactions = await fetchAllTransactions(user.depot_id);
-          setActiveTransactions(allTransactions.filter(t => t.order_status !== 'completed'));
-        }
+        await fetchTables(user.depot_id, true); 
+        
+        const allTransactions = await fetchAllTransactions(user.depot_id);
+        setActiveTransactions(allTransactions.filter(t => t.order_status !== 'completed'));
       } catch (error) {
         console.error("Error Client Side - Gagal memuat data dashboard pelayan", error);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
-  }, [fetchDepotById, fetchAllTransactions, fetchTables]);
+    };
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadDashboardData();
-  }, [loadDashboardData]);
+    if (!isLoadingSession && user?.depot_id) {
+      loadDashboardData();
+    } else if (!isLoadingSession && !user?.depot_id) {
+      setIsLoading(false);
+    }
+  }, [isLoadingSession, user?.depot_id, fetchTables, fetchAllTransactions]);
 
   const onsiteTransactions = activeTransactions.filter((t) => t.type === "onsite");
   const takeawayTransactions = activeTransactions.filter((t) => t.type === "takeaway");
@@ -61,8 +56,12 @@ export default function PelayanDashboard() {
     }
   };
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-64 animate-pulse text-gray-400">Memuat Radar Meja Pelayan...</div>;
+  if (isLoadingSession || isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64 animate-pulse text-gray-400 font-bold">
+        Memuat Radar Meja Pelayan...
+      </div>
+    );
   }
 
   if (!depot) {

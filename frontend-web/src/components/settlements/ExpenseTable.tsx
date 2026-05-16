@@ -8,15 +8,22 @@ interface Props {
 export default function ExpenseTable({ expenses }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm flex flex-col h-full">
-      <div className="p-5 border-b border-gray-50 bg-gray-50/50 font-bold text-gray-800">
-        Daftar Pengeluaran
+      <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+        <h3 className="font-bold text-gray-800">Daftar Pengeluaran</h3>
+        <span className="text-xs font-bold text-gray-400 uppercase">Total: {expenses.length}</span>
       </div>
       <div className="overflow-y-auto max-h-75 custom-scrollbar flex-1">
         <table className="w-full text-left text-xs">
+          <thead className="bg-white border-b border-gray-100 text-gray-400 uppercase font-black">
+            <tr>
+              <th className="px-4 py-4">Detail Pengeluaran</th>
+              <th className="px-4 py-4 text-right">Nominal</th>
+            </tr>
+          </thead>
           <tbody className="divide-y divide-gray-50">
             {expenses && expenses.length > 0 ? (
               expenses.map((exp) => (
-                <tr key={exp.id} className="hover:bg-gray-50/50">
+                <tr key={exp.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-4 py-4">
                     <div className="font-bold text-gray-800">{exp.item_name}</div>
                     <div className="text-[10px] text-gray-400">{formatDate(exp.expense_date)}</div>
@@ -28,7 +35,9 @@ export default function ExpenseTable({ expenses }: Props) {
               ))
             ) : (
               <tr>
-                <td colSpan={2} className="px-4 py-12 text-center text-gray-400 italic">Tidak ada pengeluaran</td>
+                <td colSpan={2} className="px-4 py-8 text-center text-gray-400 font-medium italic">
+                  Tidak ada pengeluaran yang tercatat.
+                </td>
               </tr>
             )}
           </tbody>

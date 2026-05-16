@@ -1,75 +1,52 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import Cookies from "js-cookie";
 import Link from "next/link";
-import {
-  Calendar,
-  Filter,
-  Receipt,
-  TrendingDown,
-  Wallet,
-  Activity,
-  Percent,
-  Banknote,
-  Eye
-} from "lucide-react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import { Calendar, Filter, Receipt, TrendingDown, Wallet, Activity, Percent, Banknote, Eye } from "lucide-react";
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useSettlement } from "@/hooks/useSettlement";
-import { User } from "@/types";
 import { formatDate, formatRupiah, formatDateFull, getTodayStr, getFirstDayOfMonthStr, getSevenDaysAgoStr } from "@/utils/format";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function ReportsPage() {
   const { settlements, isLoading, fetchSettlements } = useSettlement();
-  const [depotId, setDepotId] = useState<number | null>(null);
+  const { user, isLoadingSession } = useSession();
 
   const [startDate, setStartDate] = useState(getFirstDayOfMonthStr());
   const [endDate, setEndDate] = useState(getTodayStr());
-  const [activeShortcut, setActiveShortcut] = useState<"bulan_ini" | "7_hari" | "semua" | "kustom">("bulan_ini");
+  const [activeShortcut, setActiveShortcut] = useState<"bulan_ini" | "7_hari" | "semua" | "custom">("bulan_ini");
+
+  const endOfToday = `${getTodayStr()}T23:59:59.999Z`;
 
   useEffect(() => {
-    const userCookie = Cookies.get("user");
-    if (userCookie) {
-      const user: User = JSON.parse(userCookie);
-      if (user.depot_id) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setDepotId(user.depot_id);
-        fetchSettlements(user.depot_id, getFirstDayOfMonthStr(), getTodayStr());
-      }
-    }
-  }, [fetchSettlements]);
+  if (!isLoadingSession && user?.depot_id) {
+    fetchSettlements(user.depot_id, getFirstDayOfMonthStr(), endOfToday);
+  }
+}, [isLoadingSession, user?.depot_id, fetchSettlements, endOfToday]);
 
   const handleApplyFilter = () => {
-    if (!depotId) return;
-    setActiveShortcut("kustom");
-    fetchSettlements(depotId, startDate, endDate);
+    if (!user?.depot_id) return;
+    setActiveShortcut("custom");
+    const adjustedEndDate = endDate ? `${endDate}T23:59:59.999Z` : "";
+    fetchSettlements(user.depot_id, startDate, adjustedEndDate);
   };
 
   const handleFilterShortcut = (type: "bulan_ini" | "7_hari" | "semua") => {
-    if (!depotId) return;
+    if (!user?.depot_id) return;
     setActiveShortcut(type);
-    
+
     if (type === "bulan_ini") {
       setStartDate(getFirstDayOfMonthStr());
       setEndDate(getTodayStr());
-      fetchSettlements(depotId, getFirstDayOfMonthStr(), getTodayStr());
+      fetchSettlements(user.depot_id, getFirstDayOfMonthStr(), endOfToday);
     } else if (type === "7_hari") {
       setStartDate(getSevenDaysAgoStr());
       setEndDate(getTodayStr());
-      fetchSettlements(depotId, getSevenDaysAgoStr(), getTodayStr());
+      fetchSettlements(user.depot_id, getSevenDaysAgoStr(), endOfToday);
     } else if (type === "semua") {
       setStartDate("");
       setEndDate("");
-      fetchSettlements(depotId); 
+      fetchSettlements(user.depot_id); 
     }
   };
 
@@ -98,12 +75,16 @@ export default function ReportsPage() {
       transaksi: Number(item.total_transactions || 0),
     }));
   }, [settlements]);
+
+  if (isLoadingSession) {
+    return <div className="p-8 text-center animate-pulse text-gray-400 font-bold">Mempersiapkan Laporan Keuangan...</div>;
+  }
   
   return (
     <div className="space-y-8 pb-10">
       <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Laporan Keuangan</h1>
+          <h1 className="text-2xl font-black text-gray-800">Laporan Keuangan</h1>
           <p className="text-sm text-gray-500 mt-1 font-medium">
             {activeShortcut === "semua" 
               ? "Menampilkan semua riwayat settlement yang tercatat." 
@@ -190,9 +171,14 @@ export default function ReportsPage() {
         ) : settlements && settlements.length > 0 ? (
           <div className="w-full h-87.5">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 20, bottom: 5 }}>
+              <ComposedChart data={chartData} margin={{ top: 20, right: 10, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 'bold' }} 
+                  axisLine={false} 
+                  tickLine={false} 
+                />
                 <YAxis 
                   yAxisId="left" 
                   tickFormatter={(val) => `Rp ${val / 1000}k`} 
@@ -211,15 +197,32 @@ export default function ReportsPage() {
                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontWeight: 'bold', fontSize: '12px' }}
                   formatter={(value, name) => {
                     const val = Number(value ?? 0);
-                    const label = String(name);
-
-                    return [label === "pendapatan" ? formatRupiah(val) : `${val} Trx`, label === "pendapatan" ? "Grand Total" : "Transaksi"];
+                    if (name === "Grand Total") return [formatRupiah(val), name];
+                    return [val, "Jumlah Transaksi"];
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 'bold', paddingTop: '20px' }} />
-                <Line yAxisId="left" type="monotone" dataKey="pendapatan" name="pendapatan" stroke="#10b981" strokeWidth={4} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                <Line yAxisId="right" type="monotone" dataKey="transaksi" name="transaksi" stroke="#3b82f6" strokeWidth={4} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-              </LineChart>
+
+                <Bar 
+                  yAxisId="right" 
+                  dataKey="transaksi" 
+                  name="Jumlah Transaksi" 
+                  fill="#619eff"
+                  barSize={60} 
+                  radius={[8, 8, 0, 0]}
+                />
+
+                <Line 
+                  yAxisId="left" 
+                  type="monotone" 
+                  dataKey="pendapatan" 
+                  name="Grand Total" 
+                  stroke="#10b981" 
+                  strokeWidth={4} 
+                  dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} 
+                  activeDot={{ r: 6 }} 
+                />
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         ) : (

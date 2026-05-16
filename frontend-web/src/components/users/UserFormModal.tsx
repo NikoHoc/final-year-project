@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
-import { Employee, Depot, Role } from "@/types";
+import { User, Depot, Role } from "@/types";
 import { UserFormData } from "@/services/userService";
 
 interface UserFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialData?: Employee | null;
+  initialData?: User | null;
   depotsList: Depot[];
   onSubmit: (data: UserFormData) => Promise<boolean>;
 }

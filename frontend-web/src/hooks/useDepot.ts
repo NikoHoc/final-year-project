@@ -1,39 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { depotService } from "@/services/depotService";
 import { Depot } from "@/types";
 import toast from "react-hot-toast";
 import { handleApiError } from "@/utils/errorHandler";
-
-export const useDepot = (depotId?: number | null) => {
-  const [depotName, setDepotName] = useState<string | null>(null);
-  const [isLoadingDepot, setIsLoadingDepot] = useState(false);
-
-  useEffect(() => {
-    if (!depotId) return;
-
-    const fetchDepotName = async () => {
-      setIsLoadingDepot(true);
-      try {
-        const res = await depotService.getById(depotId);
-
-        if (res.status && res.data) {
-          setDepotName(res.data.name); 
-        }
-      } catch (error) {
-        setDepotName("Depot POS");
-
-        handleApiError(error, "Gagal mengambil data depot");
-        throw error;
-      } finally {
-        setIsLoadingDepot(false);
-      }
-    };
-
-    fetchDepotName();
-  }, [depotId]);
-
-  return { depotName, isLoadingDepot };
-};
 
 export const useDepots = () => {
   const [depots, setDepots] = useState<Depot[]>([]);
@@ -53,10 +22,6 @@ export const useDepots = () => {
       setIsLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    fetchDepots();
-  }, [fetchDepots]);
 
   const fetchDepotById = useCallback(async (id: number) => {
     try {

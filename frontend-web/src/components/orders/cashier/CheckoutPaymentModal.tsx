@@ -151,6 +151,7 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
   )).join(" & ");
   const masterPaid = paidSegments.reduce((sum, seg) => sum + seg.paidAmount, 0);
   const masterChange = paidSegments.reduce((sum, seg) => sum + seg.changeAmount, 0);
+  const masterTime = paidSegments.length > 0 ? paidSegments[paidSegments.length - 1].time : currentTime;
 
   const handleAddToNota = (id: string) => {
     if (selectAll) return;
@@ -260,7 +261,7 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
         method: masterMethods,
         paid: masterPaid,      
         change: masterChange,
-        time: currentTime,
+        time: masterTime,
         status: "REKAP",
       };
     }

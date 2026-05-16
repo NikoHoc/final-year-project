@@ -1,40 +1,28 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import Cookies from "js-cookie";
+import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useExpense } from "@/hooks/useExpense";
-import { Expense, User } from "@/types";
+import { Expense } from "@/types";
 import { formatRupiah, formatDate } from "@/utils/format";
 import ExpenseFormModal from "@/components/expenses/ExpenseFormModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function ExpensesPage() {
   const { expenses, isLoading, fetchExpenses, deleteExpense } = useExpense();
-  const [depotId, setDepotId] = useState<number | null>(null);
+  const { user, isLoadingSession } = useSession();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-  
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null); 
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
-
   const [searchQuery, setSearchQuery] = useState("");
 
-  const loadData = useCallback(async () => {
-    const userCookie = Cookies.get("user");
-    if (userCookie) {
-      const user: User = JSON.parse(userCookie);
-      if (user.depot_id) {
-        setDepotId(user.depot_id);
-        await fetchExpenses(user.depot_id);
-      }
-    }
-  }, [fetchExpenses]);
-
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadData();
-  }, [loadData]);
+    if (!isLoadingSession && user?.depot_id) {
+      fetchExpenses(user.depot_id);
+    }
+  }, [isLoadingSession, user, fetchExpenses]);
 
   const handleEdit = (expense: Expense) => {
     setSelectedExpense(expense);
@@ -46,9 +34,8 @@ export default function ExpensesPage() {
       try {
         await deleteExpense(expenseToDelete.id);
         setExpenseToDelete(null);
-        if (depotId) fetchExpenses(depotId);
+        if (user?.depot_id) fetchExpenses(user.depot_id);
       } catch {
-        // Error dihandle oleh hook
       }
     }
   };
@@ -61,11 +48,15 @@ export default function ExpensesPage() {
     );
   });
 
+  if (isLoadingSession) {
+    return <div className="p-8 text-center animate-pulse text-gray-400">Memuat Sesi Kasir...</div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Pengeluaran Operasional</h1>
+          <h1 className="text-2xl font-black text-gray-800">Pengeluaran Operasional</h1>
           <p className="text-gray-500 text-sm mt-1">
             Catat dan pantau pengeluaran stok serta operasional depot.
           </p>
@@ -174,9 +165,11 @@ export default function ExpensesPage() {
       <ExpenseFormModal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
-        depotId={depotId}
+        depotId={user?.depot_id || 0}
         initialData={selectedExpense}
-        onSuccess={loadData}
+        onSuccess={() => {
+          if (user?.depot_id) fetchExpenses(user.depot_id);
+        }}
       />
 
       <ConfirmModal

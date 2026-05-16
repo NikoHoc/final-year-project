@@ -358,6 +358,7 @@ exports.getTransactions = async (req, res) => {
       .from("transactions")
       .select(`
         *,
+        tables(table_number),
         transaction_items (*) 
       `)
       .eq("depot_id", depot_id)
@@ -373,7 +374,12 @@ exports.getTransactions = async (req, res) => {
     const { data, error } = await query;
     if (error) throw error;
 
-    return res.status(200).json({ status: true, data });
+    const mappedData = {
+      ...data,
+      table_number: data.tables?.table_number || null
+    };
+
+    return res.status(200).json({ status: true, data: mappedData });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
   }
@@ -387,6 +393,7 @@ exports.getTransactionDetail = async (req, res) => {
       .from("transactions")
       .select(`
         *,
+        tables(table_number),
         transaction_items (
           *,
           menus (name, image_url, categories (id, name, type))
@@ -400,8 +407,12 @@ exports.getTransactionDetail = async (req, res) => {
       .eq("id", id)
       .single();
 
+    const mappedData = {
+      ...data,
+      table_number: data.tables?.table_number || null
+    };
     if (error) throw error;
-    return res.status(200).json({ status: true, data });
+    return res.status(200).json({ status: true, data: mappedData });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
   }

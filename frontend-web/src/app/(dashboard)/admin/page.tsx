@@ -1,21 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { User } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
-import Cookies from "js-cookie";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function AdminPage() {
-  const [userData, setUserData] = useState<User | null>(null);
+  const { user: userData } = useSession();
   const { logout } = useAuth();
-
-  useEffect(() => {
-    const storedUser = Cookies.get("user");
-    if (storedUser) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setUserData(JSON.parse(storedUser));
-    }
-  }, []);
 
   return (
     <div className="font-poppins min-h-screen bg-gray-100">

@@ -1,37 +1,31 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import Cookies from "js-cookie";
+import { useState, useEffect } from "react";
 import { useStock } from "@/hooks/useStock";
-import { StockMutation, User } from "@/types";
+import { StockMutation } from "@/types";
 import ActiveMutationsTable from "@/components/mutations/ActiveMutationsTable";
 import HistoryMutationsTable from "@/components/mutations/HistoryMutationsTable";
 import MutationFormModal from "@/components/mutations/MutationFormModal";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function MutationsPage() {
   const { mutations, isLoading, fetchMutations } = useStock();
-  const [depotId, setDepotId] = useState<number | null>(null);
+  const { user, isLoadingSession } = useSession();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedMutation, setSelectedMutation] = useState<StockMutation | null>(null);
 
-  const loadData = useCallback(async () => {
-    const userCookie = Cookies.get("user");
-    if (userCookie) {
-      const user: User = JSON.parse(userCookie);
-      if (user.depot_id) {
-        setDepotId(user.depot_id);
-        await fetchMutations(user.depot_id);
-      }
-    }
-  }, [fetchMutations]);
-
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadData();
-  }, [loadData]);
+    if (!isLoadingSession && user?.depot_id) {
+      fetchMutations(user.depot_id);
+    }
+  }, [isLoadingSession, user, fetchMutations]);
 
   const activeData = mutations.filter((m) => m.status === "pending");
   const historyData = mutations.filter((m) => m.status !== "pending");
+
+  if (isLoadingSession) {
+    return <div className="p-8 text-center animate-pulse text-gray-400">Memuat Sesi Kasir...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -56,8 +50,10 @@ export default function MutationsPage() {
       <ActiveMutationsTable 
         data={activeData} 
         isLoading={isLoading} 
-        depotId={depotId}
-        onRefresh={loadData}
+        depotId={user?.depot_id || 0}
+        onRefresh={() => {
+          if (user?.depot_id) fetchMutations(user.depot_id);
+        }}
         onEdit={(m) => {
           setSelectedMutation(m);
           setIsFormOpen(true);
@@ -72,9 +68,11 @@ export default function MutationsPage() {
       <MutationFormModal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
-        depotId={depotId}
+        depotId={user?.depot_id || 0}
         initialData={selectedMutation}
-        onSuccess={loadData}
+        onSuccess={() => {
+          if (user?.depot_id) fetchMutations(user.depot_id);
+        }}
       />
     </div>
   );

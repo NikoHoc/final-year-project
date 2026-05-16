@@ -9,6 +9,7 @@ exports.getTodaySummary = async (req, res) => {
       .select(
         `
         id, customer_name, subtotal, tax_amount, grand_total, type, payment_method, created_at,
+        table_id, tables(table_number),
         transaction_payments(paid_amount, change_amount, payment_methods(name))
       `,
       )
@@ -32,7 +33,7 @@ exports.getTodaySummary = async (req, res) => {
     let grand_total_all = 0;
     let methods_map = {};
 
-    transactions.map((tx) => {
+    const mappedTransactions =  transactions.map((tx) => {
       subtotal_all += Number(tx.subtotal || 0);
       tax_all += Number(tx.tax_amount || 0);
       grand_total_all += Number(tx.grand_total || 0);
@@ -57,7 +58,7 @@ exports.getTodaySummary = async (req, res) => {
         });
       }
 
-      return { ...tx };
+      return { ...tx, table_number: tx.tables?.table_number || null };
     });
 
     let total_expenses = 0;
@@ -79,7 +80,7 @@ exports.getTodaySummary = async (req, res) => {
           net_income,
           payment_methods: Object.values(methods_map)
         },
-        transactions,
+        transactions: mappedTransactions,
         expenses,
       },
     });
@@ -194,6 +195,7 @@ exports.getSettlementDetail = async (req, res) => {
       .from("transactions")
       .select(`
         id, customer_name, subtotal, tax_amount, grand_total, type, payment_method, created_at,
+        table_id, tables(table_number),
         transaction_payments(paid_amount, change_amount, payment_methods(name))
       `)
       .eq("settlement_id", id);
@@ -208,7 +210,7 @@ exports.getSettlementDetail = async (req, res) => {
     if (errExp) throw errExp;
 
     let methods_map = {};
-    transactions.map((tx) => {
+    const mappedTransactions = transactions.map((tx) => {
       let total_paid = 0;
       let change_amount = 0;
 
@@ -227,7 +229,7 @@ exports.getSettlementDetail = async (req, res) => {
           methods_map[methodName].total_net_amount += net;
         });
       }
-      return { ...tx };
+      return { ...tx, table_number: tx.tables?.table_number || null };
     });
 
     return res.status(200).json({
@@ -243,7 +245,7 @@ exports.getSettlementDetail = async (req, res) => {
           net_income: settlement.net_income,
           payment_methods: Object.values(methods_map)
         },
-        transactions,
+        transactions: mappedTransactions,
         expenses
       }
     });

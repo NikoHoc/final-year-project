@@ -128,7 +128,7 @@ export default function MutationFormModal({ isOpen, onClose, depotId, initialDat
           <textarea
             value={formData.requester_notes}
             onChange={(e) => setFormData({ ...formData, requester_notes: e.target.value })}
-            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 min-h-[80px]"
+            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 min-h-20"
             placeholder="Contoh: Stok menipis untuk event akhir pekan"
           />
         </div>

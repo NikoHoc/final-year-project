@@ -13,40 +13,25 @@ import { formatDateFull } from "@/utils/format";
 import { Transaction } from "@/types";
 import ReportTransactionModal from "@/components/settlements/ReportTransactionModal";
 import ReportSettlementPrintModal from "@/components/settlements/ReportSettlementPrintModal";
-import Cookies from "js-cookie";
-import { useDepots } from "@/hooks/useDepot";
-import { Depot } from "@/types";
+import { useSession } from "@/contexts/SessionContext"
 
 export default function SettlementDetailPage() {
   const { id } = useParams();
-  const { settlementDetail, isLoading, fetchSettlementDetail } =
-    useSettlement();
+  const { settlementDetail, isLoading, fetchSettlementDetail } = useSettlement();
+  const { depot, isLoadingSession } = useSession();
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
-
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
-  const [depot, setDepot] = useState<Depot | null>(null);
-  const { fetchDepotById } = useDepots();
 
   useEffect(() => {
     if (id) fetchSettlementDetail(id as string);
   }, [id, fetchSettlementDetail]);
 
-  useEffect(() => {
-    const userCookie = Cookies.get("user");
-    if (userCookie) {
-      const user = JSON.parse(userCookie);
-      if (user.depot_id) {
-        fetchDepotById(user.depot_id).then((data) => setDepot(data));
-      }
-    }
-  }, [fetchDepotById]);
-
-  if (isLoading) {
+  if (isLoadingSession || isLoading) {
     return (
       <div className="h-screen flex flex-col items-center justify-center gap-4">
         <Loader2 className="animate-spin text-blue-600" size={40} />
         <p className="text-sm font-bold text-gray-500 animate-pulse">
-          Mengambil data settlement...
+          {isLoadingSession ? "Memuat Sesi Kasir..." : "Mengambil data detail settlement..."}
         </p>
       </div>
     );
@@ -57,7 +42,6 @@ export default function SettlementDetailPage() {
 
   return (
     <div className="space-y-8 pb-10">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link
@@ -99,7 +83,6 @@ export default function SettlementDetailPage() {
 
       <SettlementTransactionTable
         transactions={transactions || []}
-        showAction={true}
         onViewReceipt={(tx) => setSelectedTx(tx)}
       />
 
@@ -107,6 +90,7 @@ export default function SettlementDetailPage() {
         isOpen={!!selectedTx}
         onClose={() => setSelectedTx(null)}
         transaction={selectedTx}
+        depot={depot}
       />
 
       <ReportSettlementPrintModal

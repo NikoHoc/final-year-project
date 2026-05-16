@@ -3,24 +3,21 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Tag, CheckCircle2, Loader2, CircleUser, Calendar, MapPin } from "lucide-react";
 import { formatRupiah, formatDate } from "@/utils/format";
-import { Depot, Transaction, TransactionItem, TransactionPayment, TransactionPaymentItem, User } from "@/types";
+import { Depot, Transaction, TransactionItem, TransactionPayment, TransactionPaymentItem } from "@/types";
 import ReceiptPreview, { ReceiptData } from "@/components/orders/cashier/ReceiptPreview";
 import { useTransaction } from "@/hooks/useTransaction";
-import Cookies from "js-cookie";
-import { useDepots } from "@/hooks/useDepot";
 import { printReceiptHTML } from "@/utils/printHandler";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   transaction: Transaction | null;
+  depot: Depot | null;
 }
 
-export default function ReportTransactionModal({ isOpen, onClose, transaction }: Props) {
+export default function ReportTransactionModal({ isOpen, onClose, transaction, depot }: Props) {
   const [transactionDetail, setTransactonDetail] = useState<Transaction | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
-  const [depot, setDepot] = useState<Depot | null>(null);
-  const { fetchDepotById } = useDepots();
   
   const receiptRef = useRef<HTMLDivElement>(null);
   const { fetchTransactionById } = useTransaction(); 
@@ -31,19 +28,6 @@ export default function ReportTransactionModal({ isOpen, onClose, transaction }:
         printReceiptHTML(printContent, `Cetak Ulang - ${transaction?.id}`);
     }
   };
-
-  useEffect(() => {
-    const userCookie = Cookies.get("user");
-    if (userCookie) {
-      const user: User = JSON.parse(userCookie);
-      if (user.depot_id) {
-
-        fetchDepotById(user.depot_id).then(data => {
-          setDepot(data);
-        });
-      }
-    }
-  }, [fetchDepotById]);
 
   useEffect(() => {
     if (isOpen && transaction?.id) {
@@ -144,7 +128,11 @@ export default function ReportTransactionModal({ isOpen, onClose, transaction }:
                 <div className="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center"><MapPin size={20} /></div>
                 <div>
                   <div className="text-[10px] font-bold text-gray-400 uppercase">Meja</div>
-                  <div className="text-sm font-black text-gray-800">{transactionDetail?.table_id || "BUNGKUS"}</div>
+                  <div className="text-sm font-black text-gray-800">
+                    {(transactionDetail?.type === 'onsite' || transaction?.type === 'onsite') 
+                      ? (transactionDetail?.table_number || transactionDetail?.table_id || "-") 
+                      : "BUNGKUS"}
+                  </div>
                 </div>
               </div>
             </div>
@@ -242,7 +230,7 @@ export default function ReportTransactionModal({ isOpen, onClose, transaction }:
             <ReceiptPreview 
               receiptRef={receiptRef}
               rcp={rcp}
-              tableId={transactionDetail?.table_id?.toString() || '-'}
+              tableId={transactionDetail?.table_number || transactionDetail?.table_id?.toString() || '-'}
               transactionId={transaction.id}
               customerName={transaction.customer_name || 'Pelanggan'}
               activeSegmentToView={null}

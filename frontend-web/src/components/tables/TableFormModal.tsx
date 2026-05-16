@@ -25,6 +25,7 @@ export default function TableFormModal({
   useEffect(() => {
     if (isOpen) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsSubmitting(false);
       setTableNumber(initialData?.table_number || "");
     }
   }, [isOpen, initialData]);
@@ -34,10 +35,15 @@ export default function TableFormModal({
     if (!tableNumber.trim()) return;
 
     setIsSubmitting(true);
-    const success = await onSubmit(tableNumber);
-    setIsSubmitting(false);
+    try {
+      const res = await onSubmit(tableNumber); 
 
-    if (success) onClose();
+      if (!res) {
+        setIsSubmitting(false);
+      }
+    } catch {
+      setIsSubmitting(false);
+    }
   };
 
   return (

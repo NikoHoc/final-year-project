@@ -17,6 +17,24 @@ exports.getTables = async (req, res) => {
   }
 };
 
+exports.getTableById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { data, error } = await supabase
+      .from("tables")
+      .select("id, table_number, is_active")
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+    if (!data) return res.status(404).json({ status: false, message: "Meja tidak ditemukan" });
+
+    return res.status(200).json({ status: true, data });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
 exports.createTable = async (req, res) => {
   const { depot_id, table_number } = req.body;
 
@@ -43,16 +61,13 @@ exports.createTable = async (req, res) => {
     }
 
     const { data, error } = await supabase
-      .from("tables")
-      .insert([
-        {
-          depot_id,
-          table_number,
-          status: "Available",
-        },
-      ])
-      .select()
-      .single();
+      .from('tables')
+      .insert([{ 
+        depot_id: parseInt(depot_id), 
+        table_number: table_number.trim(), 
+        is_active: true
+      }])
+      .select();
 
     if (error) throw error;
 
@@ -67,26 +82,28 @@ exports.createTable = async (req, res) => {
 };
 
 exports.updateTable = async (req, res) => {
-  const { id } = req.params;
-  const { table_number, status } = req.body;
-
   try {
+    const { id } = req.params;
+    const { table_number, is_active } = req.body;
+
+    const updateData = {};
+    if (table_number !== undefined) updateData.table_number = table_number.trim();
+    if (is_active !== undefined) updateData.is_active = is_active;
     const { data, error } = await supabase
-      .from("tables")
-      .update({ table_number, status })
-      .eq("id", id)
-      .select()
-      .single();
+      .from('tables')
+      .update(updateData)
+      .eq('id', id)
+      .select();
 
     if (error) throw error;
 
-    return res.status(200).json({
-      status: true,
-      message: "Data meja diperbarui",
-      data,
-    });
-  } catch (err) {
-    return res.status(500).json({ status: false, message: err.message });
+    if (data.length === 0) {
+      return res.status(404).json({ status: 'error', message: 'Data meja tidak ditemukan' });
+    }
+
+    return res.status(200).json({ status: 'success', data: data[0] });
+  } catch (error) {
+    return res.status(500).json({ status: 'error', message: error.message });
   }
 };
 

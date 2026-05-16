@@ -2,51 +2,45 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
 import { ShoppingBag, Power, AlertCircle } from "lucide-react";
 import { useTables } from "@/hooks/useTables";
-import { User, Transaction, Depot } from "@/types";
+import { Transaction } from "@/types";
 import TableList from "@/components/tables/TableList";
 import TakeawayCard from "@/components/orders/TakeawayCard";
 import { useDepots } from "@/hooks/useDepot";
 import { useTransaction } from "@/hooks/useTransaction";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function KasirDashboard() {
   const router = useRouter();
   const { tables, fetchTables } = useTables();
-  const { fetchDepotById, toggleDepotStatus } = useDepots();
+  const { toggleDepotStatus } = useDepots();
   const { fetchAllTransactions } = useTransaction();
   
-  const [depot, setDepot] = useState<Depot | null>(null);
+  const { user, depot, isLoadingSession } = useSession();
   const [activeTransactions, setActiveTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadDashboardData = useCallback(async () => {
+    if (!user?.depot_id) return;
+    
     setIsLoading(true);
-    const userCookie = Cookies.get("user");
-    if (userCookie) {
-      try {
-        const user: User = JSON.parse(userCookie);
-        if (user.depot_id) {
-          const depotData = await fetchDepotById(user.depot_id);
-          setDepot(depotData);
-
-          await fetchTables(user.depot_id);
-
-          const allTransactions = await fetchAllTransactions(user.depot_id);
-          setActiveTransactions(allTransactions.filter(t => t.order_status !== 'completed'));
-        }
-      } catch (error) {
-        console.error("Error Client Side - Gagal memuat data dashboard", error);
-      }
+    try {
+      await fetchTables(user.depot_id);
+      const allTransactions = await fetchAllTransactions(user.depot_id);
+      setActiveTransactions(allTransactions.filter(transaction => transaction.order_status !== 'completed'));
+    } catch (error) {
+      console.error("Gagal memuat data dashboard", error);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, [fetchDepotById, fetchAllTransactions, fetchTables]);
+  }, [user?.depot_id, fetchAllTransactions, fetchTables]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadDashboardData();
-  }, [loadDashboardData]);
+    if (!isLoadingSession && user) {
+      loadDashboardData();
+    }
+  }, [isLoadingSession, user, loadDashboardData]);
 
   const onsiteTransactions = activeTransactions.filter((t) => t.type === "onsite");
   const takeawayTransactions = activeTransactions.filter((t) => t.type === "takeaway");
@@ -59,7 +53,7 @@ export default function KasirDashboard() {
     try {
       await toggleDepotStatus(depot.id, newStatus);
 
-      await loadDashboardData();
+      window.location.reload();
     } catch (error) {
       console.error("Error Client Side - Gagal mengubah status depot:", error);       
     }
@@ -75,7 +69,7 @@ export default function KasirDashboard() {
     }
   };
 
-  if (isLoading) {
+  if (isLoadingSession || isLoading) {
     return <div className="flex justify-center items-center h-64 animate-pulse text-gray-400">Memuat Dashboard Kasir...</div>;
   }
 
@@ -93,7 +87,7 @@ export default function KasirDashboard() {
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard POS - Kasir</h1>
+          <h1 className="text-2xl font-black text-gray-800">Dashboard POS - Kasir</h1>
           <p className="text-gray-500 text-sm mt-1">Pilih meja untuk Dine-in, atau klik Takeaway.</p>
         </div>
         

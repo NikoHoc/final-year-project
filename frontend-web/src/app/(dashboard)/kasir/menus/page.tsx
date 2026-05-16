@@ -2,16 +2,16 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import Cookies from "js-cookie";
 import { Search, CheckCircle2, XCircle, Info } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { useDepots } from "@/hooks/useDepot";
-import { User, DepotMenuResponse, Category } from "@/types";
+import { DepotMenuResponse, Category } from "@/types";
 import { formatRupiah } from "@/utils/format";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function KasirMenusPage() {
-  const [depotId, setDepotId] = useState<number | null>(null);
+  const { user, isLoadingSession } = useSession();
   const { getDepotMenus, updateMenuStatus } = useDepots();
 
   const [localMenus, setLocalMenus] = useState<DepotMenuResponse[]>([]);
@@ -20,19 +20,10 @@ export default function KasirMenusPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    const userCookie = Cookies.get("user");
-    if (userCookie) {
-      const user: User = JSON.parse(userCookie);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setDepotId(user.depot_id || null);
-    }
-  }, []);
-
-  useEffect(() => {
     const loadData = async () => {
-      if (!depotId) return;
+      if (!user?.depot_id) return;
       try {
-        const data: DepotMenuResponse[] = await getDepotMenus(depotId);
+        const data: DepotMenuResponse[] = await getDepotMenus(user.depot_id);
         if (!data || data.length === 0) return;
 
         setLocalMenus(data);
@@ -54,12 +45,15 @@ export default function KasirMenusPage() {
       } catch (error) {
         console.error("Error Client Side - gagal fetching depot menus:", error);
       }
+      
     };
-    loadData();
-  }, [depotId, getDepotMenus]);
+    if (!isLoadingSession && user?.depot_id) {
+      loadData();
+    }
+  }, [isLoadingSession, user?.depot_id, getDepotMenus]);
 
   const handleToggleStatus = async (menuId: number, currentStatus: boolean) => {
-    if (!depotId) return;
+    if (!user?.depot_id) return;
     const newStatus = !currentStatus;
 
     setLocalMenus((prev) =>
@@ -69,7 +63,7 @@ export default function KasirMenusPage() {
     );
 
     try {
-      await updateMenuStatus(depotId, menuId, newStatus);
+      await updateMenuStatus(user.depot_id, menuId, newStatus);
       toast.success(newStatus ? "Menu diaktifkan" : "Menu ditandai habis");
     } catch (error) {
       setLocalMenus((prev) =>
@@ -98,11 +92,15 @@ export default function KasirMenusPage() {
     });
   }, [localMenus, activeCategoryId, searchQuery, localCategories]);
 
+  if (isLoadingSession) {
+    return <div className="p-8 text-center animate-pulse text-gray-400">Memuat Sesi Kasir...</div>;
+  }
+
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] gap-4">
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-2xl font-black text-gray-800">
             Manajemen Stok Menu
           </h1>
           <p className="text-gray-500 text-sm mt-1">

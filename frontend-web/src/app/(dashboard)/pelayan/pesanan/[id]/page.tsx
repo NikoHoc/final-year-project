@@ -2,35 +2,38 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import Cookies from "js-cookie";
 import { ArrowLeft, UserRoundPlus } from "lucide-react";
 import { useDepots } from "@/hooks/useDepot";
 import { useCart } from "@/hooks/useCart";
-import { User, Menu, TransactionItem, Category, DepotMenuResponse, AddItemsPayload } from "@/types";
+import { Menu, TransactionItem, Category, DepotMenuResponse, AddItemsPayload } from "@/types";
 import toast from "react-hot-toast";
 import MenuCategorySection from "@/components/menus/MenuCategorySection";
 import OrderCart from "@/components/orders/OrderCart";
 import CheckoutOrderModal from "@/components/orders/waiter/CheckoutOrderModal";
 import { useTransaction } from "@/hooks/useTransaction";
+import { useSession } from "@/contexts/SessionContext";
+import { useTables } from "@/hooks/useTables";
 
 export default function PelayanPesananPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
 
+  const { user, isLoadingSession } = useSession();
+  const { getDepotMenus } = useDepots();
   const { fetchTransactionById, createTransaction, addItems } = useTransaction();
+  const { fetchTableById } = useTables();
 
   const transactionId = params.id as string;
   const initialType = searchParams.get("type") || "onsite";
   const [orderType, setOrderType] = useState<string>(initialType);
   const [tableId, setTableId] = useState<string | null>(searchParams.get("table_id"));
+  const [tableNumber, setTableNumber] = useState<string | null>(null); // Tambahkan state ini
   const [customerName, setCustomerName] = useState<string>("");
 
-  const [depotId, setDepotId] = useState<number | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoadingMenus, setIsLoadingMenus] = useState(true)
 
-  const { getDepotMenus, isLoading } = useDepots();
   const [localCategories, setLocalCategories] = useState<Category[]>([]);
   const [localMenus, setLocalMenus] = useState<DepotMenuResponse[]>([]);
 
@@ -46,21 +49,19 @@ export default function PelayanPesananPage() {
     toggleHalfPortion,
   } = useCart();
 
-  useEffect(() => {
-    const userCookie = Cookies.get("user");
-    if (userCookie) {
-      const user: User = JSON.parse(userCookie);
-      setDepotId(user.depot_id || null);
-      setUserId(user.id || null);
-    }
-  }, []);
-
-  // Load Menu dan kategori
-  useEffect(() => {
+ useEffect(() => {
     const loadData = async () => {
-      if (!depotId) return;
+      if (!user?.depot_id) return;
+      
+      setIsLoadingMenus(true);
+      
       try {
-        const data: DepotMenuResponse[] = await getDepotMenus(depotId);
+        if (transactionId === "new" && tableId) {
+          const tableData = await fetchTableById(tableId);
+          if (tableData) setTableNumber(tableData.table_number);
+        }
+
+        const data: DepotMenuResponse[] = await getDepotMenus(user.depot_id);
         if (!data || data.length === 0) return;
 
         setLocalMenus(data);
@@ -79,10 +80,15 @@ export default function PelayanPesananPage() {
         setLocalCategories(uniqueCats);
       } catch (error) {
         console.error("Error Client Side - Gagal memuat menu:", error);
+      } finally {
+        setIsLoadingMenus(false);
       }
     };
-    loadData();
-  }, [depotId, getDepotMenus]);
+
+    if (!isLoadingSession && user?.depot_id) {
+      loadData();
+    }
+  }, [isLoadingSession, user?.depot_id, getDepotMenus, tableId, fetchTableById, transactionId]);
 
   const loadExistingTransaction = useCallback(async () => {
     if (transactionId === "new") return;
@@ -93,6 +99,7 @@ export default function PelayanPesananPage() {
         setOrderType(transaction.type || "onsite");
         setTableId(transaction.table_id ? transaction.table_id.toString() : null);
         setCustomerName(transaction.customer_name || "");
+        setTableNumber(transaction.table_number || transaction.table_id?.toString() || null);
 
         const loadedCart =
           transaction.transaction_items?.map((item: TransactionItem) => ({
@@ -128,7 +135,7 @@ export default function PelayanPesananPage() {
   }, [loadExistingTransaction]);
 
   const handleSimpanPesanan = async () => {
-    if (!depotId || cartItems.length === 0) return;
+    if (!user?.depot_id || cartItems.length === 0) return;
     setIsProcessing(true);
 
     try {
@@ -150,8 +157,8 @@ export default function PelayanPesananPage() {
         }));
 
         const response = await createTransaction({
-          user_id: userId,
-          depot_id: depotId,
+          user_id: user.id,
+          depot_id: user.depot_id,
           type: orderType as "onsite" | "online" | "takeaway",
           table_id: tableId ? parseInt(tableId) : null,
           use_tax: true,
@@ -195,6 +202,10 @@ export default function PelayanPesananPage() {
     }
   };
 
+  if (isLoadingSession) {
+    return <div className="p-8 text-center animate-pulse text-gray-400 font-bold">Mempersiapkan Mesin Pesanan...</div>;
+  }
+
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-6rem)] gap-4">
       <div className="flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -208,7 +219,7 @@ export default function PelayanPesananPage() {
             </button>
             <div>
               <h1 className="text-xl font-bold text-gray-800">
-                {tableId ? `Meja ${tableId} - ${orderType.toUpperCase()}` : `${orderType.toUpperCase()}`}
+                {tableId ? `Meja ${tableNumber || tableId} - ${orderType.toUpperCase()}` : `${orderType.toUpperCase()}`}
               </h1>
             </div>
           </div>
@@ -229,7 +240,7 @@ export default function PelayanPesananPage() {
             menus={localMenus}
             categories={localCategories}
             onMenuItemClick={addItem}
-            isLoading={isLoading}
+            isLoading={isLoadingMenus}
           />
         </div>
       </div>
@@ -237,7 +248,6 @@ export default function PelayanPesananPage() {
       <OrderCart
         variant="pelayan"
         cartItems={cartItems}
-        tableId={tableId}
         isProcessing={isProcessing}
         onUpdateQuantity={updateQuantity}
         onUpdateNote={updateNote}
@@ -252,7 +262,7 @@ export default function PelayanPesananPage() {
         isOpen={isCheckoutOrderModalOpen}
         onClose={() => setCheckoutOrderModalOpen(false)}
         cartItems={cartItems}
-        tableId={tableId}
+        tableId={tableNumber || tableId || ""}
         customerName={customerName}
       />
     </div>

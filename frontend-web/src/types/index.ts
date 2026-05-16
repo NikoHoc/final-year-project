@@ -13,21 +13,10 @@ export interface User {
   email?: string;
   depot_id?: number | null; 
   created_at?: string;
-}
-
-export interface Employee {
-  id: string;
-  full_name: string;
-  username: string;
-  phone_number: string;
-  role: "admin" | "kasir" | "pelayan" | "pelanggan";
-  depot_id: number | null;
-  created_at: string;
   depots?: {
     name: string;
   } | null;
 }
-
 export interface Depot {
   id: number;
   name: string;
@@ -84,10 +73,9 @@ export interface Table {
   id: number;
   depot_id: number;
   table_number: string;
-  status: "Available" | "Occupied" | "Reserved";
+  is_active: boolean;
   created_at?: string;
 }
-
 export interface TransactionItem {
   id: number;
   transaction_id: string;
@@ -109,6 +97,7 @@ export interface Transaction {
   depot_id: number;
   user_id?: string | null; 
   table_id?: number | null; 
+  table_number?: string;
   customer_id?: string | null; 
   customer_name?: string | null;
   type: TransactionType;

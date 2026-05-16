@@ -26,7 +26,6 @@ export default function CheckoutOrderModal({
   const [filterType, setFilterType] = useState<FilterType>("all");
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Mengambil angka batch yang tersedia
   const { savedBatches, batchNumbers } = useMemo(() => {
     const saved = cartItems.filter((item) => item.is_saved);
     const batches = saved.reduce(

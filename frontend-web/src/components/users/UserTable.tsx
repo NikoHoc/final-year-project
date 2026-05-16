@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Employee } from "@/types";
+import { User } from "@/types";
 import { Pencil, Trash2, ArrowUpDown, Shield, Store, MonitorSmartphone } from "lucide-react";
 import {
   createColumnHelper,
@@ -13,15 +13,15 @@ import {
 } from "@tanstack/react-table";
 
 interface UserTableProps {
-  data: Employee[];
+  data: User[];
   isLoading: boolean;
-  onEditClick: (user: Employee) => void;
-  onDeleteClick: (user: Employee) => void;
+  onEditClick: (user: User) => void;
+  onDeleteClick: (user: User) => void;
 }
 
 export default function UserTable({ data, isLoading, onEditClick, onDeleteClick }: UserTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const columnHelper = createColumnHelper<Employee>();
+  const columnHelper = createColumnHelper<User>();
 
   const getRoleBadge = (role: string) => {
     switch (role) {

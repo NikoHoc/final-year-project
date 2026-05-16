@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Filter } from "lucide-react";
 import { useUsers } from "@/hooks/useUsers";
 import { useDepots } from "@/hooks/useDepot"; 
-import { Employee } from "@/types";
+import { User } from "@/types";
 import { UserFormData } from "@/services/userService";
 
 import UserTable from "@/components/users/UserTable";
@@ -13,12 +13,15 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 
 export default function EmployeesPage() {
   const { users, isLoading, fetchUsers, createUser, updateUser, deleteUser, currentDepotFilter, currentRoleFilter } = useUsers();
-  
   const { depots } = useDepots(); 
 
-  const [selectedUser, setSelectedUser] = useState<Employee | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [confirmType, setConfirmType] = useState<"delete" | null>(null);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleDepotFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     fetchUsers(e.target.value, currentRoleFilter);

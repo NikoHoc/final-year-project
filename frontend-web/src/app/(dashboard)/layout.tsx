@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
+import { SessionProvider } from "@/contexts/SessionContext";
 
 export default function DashboardLayout({
   children,
@@ -23,21 +24,23 @@ export default function DashboardLayout({
   }, [searchParams, router]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar 
-        isCollapsed={isSidebarCollapsed} 
-        setIsCollapsed={setIsSidebarCollapsed} 
-      />
-      <div 
-        className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${
-          isSidebarCollapsed ? "ml-20" : "ml-64"
-        }`}
-      >
-        <Navbar />
-        <main className="p-6 flex-1 overflow-y-auto">
-          {children}
-        </main>
+    <SessionProvider>
+      <div className="min-h-screen bg-gray-50 flex">
+        <Sidebar 
+          isCollapsed={isSidebarCollapsed} 
+          setIsCollapsed={setIsSidebarCollapsed} 
+        />
+        <div 
+          className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out ${
+            isSidebarCollapsed ? "ml-20" : "ml-64"
+          }`}
+        >
+          <Navbar />
+          <main className="p-6 flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </SessionProvider>
   )
 }

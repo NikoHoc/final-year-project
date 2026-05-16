@@ -8,34 +8,29 @@ import PaymentBreakdownTable from "@/components/settlements/PaymentBreakdownTabl
 import ExpenseTable from "@/components/settlements/ExpenseTable";
 import SettlementTransactionTable from "@/components/settlements/TransactionTable";
 import { formatDateFull } from "@/utils/format";
-import Cookies from "js-cookie";
-import { User, Transaction } from "@/types";
+import { Transaction } from "@/types";
 import toast from "react-hot-toast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import ReportTransactionModal from "@/components/settlements/ReportTransactionModal";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function CashierSettlementPage() {
   const { todayData, isLoading, fetchTodaySummary, processSettlement } = useSettlement();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [depotId, setDepotId] = useState<number | null>(null);
+  const { user: userData, depot, isLoadingSession } = useSession();
 
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
   useEffect(() => {
-    const userCookie = Cookies.get("user");
-    if (userCookie) {
-      const user: User = JSON.parse(userCookie);
-      if (user.depot_id) {
-        setDepotId(user.depot_id);
-        fetchTodaySummary(user.depot_id); 
-      }
+    if (!isLoadingSession && userData?.depot_id) {
+      fetchTodaySummary(userData.depot_id); 
     }
-  }, [fetchTodaySummary]);
+  }, [isLoadingSession, userData, fetchTodaySummary]);
 
   const handleProcessSettlement = async () => {
-    if (!depotId || !todayData) return;
+    if (!userData?.depot_id || !todayData) return;
     
     if (todayData.transactions.length === 0) {
       toast.error("Tidak ada transaksi aktif yang bisa di-settle hari ini.");
@@ -45,7 +40,7 @@ export default function CashierSettlementPage() {
 
     setIsSubmitting(true);
     try {
-      const success = await processSettlement(depotId, todayData.summary);
+      const success = await processSettlement(userData?.depot_id, todayData.summary);
       if (success) {
         toast.success("Settlement berhasil diproses! Kas hari ini telah ditutup.");
         setIsConfirmModalOpen(false);
@@ -101,7 +96,6 @@ export default function CashierSettlementPage() {
 
       <SettlementTransactionTable 
         transactions={transactions ?? []} 
-        showAction={true} 
         onViewReceipt={(tx) => setSelectedTx(tx)}
       />
 
@@ -120,6 +114,7 @@ export default function CashierSettlementPage() {
         isOpen={!!selectedTx}
         onClose={() => setSelectedTx(null)}
         transaction={selectedTx}
+        depot={depot}
       />
     </div>
   );

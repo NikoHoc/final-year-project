@@ -8,6 +8,7 @@ const roleMiddleware = require("../middlewares/roleMiddleware");
 router.use(authMiddleware);
 
 router.get("/:depot_id", tableController.getTables);
+router.get("/detail/:id", tableController.getTableById);
 
 router.post("/", roleMiddleware(["admin", "kasir"]), tableController.createTable);
 router.put("/:id", roleMiddleware(["admin", "kasir"]), tableController.updateTable);

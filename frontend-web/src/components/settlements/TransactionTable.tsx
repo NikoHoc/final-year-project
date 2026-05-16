@@ -4,11 +4,10 @@ import { Transaction } from "@/types";
 
 interface Props {
   transactions: Transaction[];
-  showAction?: boolean;
   onViewReceipt?: (transaction: Transaction) => void;
 }
 
-export default function TransactionTable({ transactions, showAction = false, onViewReceipt }: Props) {
+export default function TransactionTable({ transactions, onViewReceipt }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
       <div className="p-6 border-b border-gray-50 flex items-center justify-between">
@@ -21,12 +20,12 @@ export default function TransactionTable({ transactions, showAction = false, onV
             <tr>
               <th className="px-4 py-3 w-10">No</th>
               <th className="px-4 py-3">Waktu / Pelanggan</th>
-              <th className="px-4 py-3">Tipe</th>
+              <th className="px-4 py-3">Tipe / Meja</th>
               <th className="px-4 py-3">Metode</th>
               <th className="px-4 py-3 text-right">Subtotal</th>
               <th className="px-4 py-3 text-right">Pajak</th>
               <th className="px-4 py-3 text-right">Grand Total</th>
-              {showAction && <th className="px-4 py-3 text-center">Aksi</th>}
+              <th className="px-4 py-3 text-center">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -39,7 +38,18 @@ export default function TransactionTable({ transactions, showAction = false, onV
                     <div className="text-[10px] text-gray-400">{formatDate(tx.created_at)}</div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="capitalize font-medium text-gray-600 block">{tx.type}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase ${
+                        tx.type === 'onsite' ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'
+                      }`}>
+                        {tx.type}
+                      </span>
+                      <span className="text-xs font-bold text-gray-400">/</span>
+                      <span className="text-xs font-bold text-gray-700">
+                        {/* Fallback ke table_id jika table_number belum ada di DB */}
+                        {tx.type === 'onsite' ? (tx.table_number) : '-'}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-[10px] text-blue-500 font-bold uppercase">{tx.payment_method || "Split"}</span>
@@ -47,7 +57,6 @@ export default function TransactionTable({ transactions, showAction = false, onV
                   <td className="px-4 py-3 text-right font-medium text-gray-600">{formatRupiah(tx.subtotal)}</td>
                   <td className="px-4 py-3 text-right font-medium text-red-500">{formatRupiah(tx.tax_amount)}</td>
                   <td className="px-4 py-3 font-black text-gray-800 text-right">{formatRupiah(tx.grand_total)}</td>
-                  {showAction && (
                     <td className="px-4 py-3 text-center">
                       <button 
                         onClick={() => onViewReceipt?.(tx)}
@@ -57,12 +66,11 @@ export default function TransactionTable({ transactions, showAction = false, onV
                         <Eye size={16} />
                       </button>
                     </td>
-                  )}
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={showAction ? 8 : 7} className="px-4 py-12 text-center text-gray-400 italic font-medium">
+                <td colSpan={8} className="px-4 py-12 text-center text-gray-400 italic font-medium">
                   Tidak ada transaksi yang ditemukan.
                 </td>
               </tr>

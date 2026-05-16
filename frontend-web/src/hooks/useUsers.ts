@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { userService, UserFormData } from "@/services/userService";
-import { Employee } from "@/types";
+import { User } from "@/types";
 import toast from "react-hot-toast";
 import { handleApiError } from "@/utils/errorHandler";
 
 export const useUsers = () => {
-  const [users, setUsers] = useState<Employee[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [currentDepotFilter, setCurrentDepotFilter] = useState<string>("all");
@@ -25,10 +25,6 @@ export const useUsers = () => {
       setIsLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
 
   const createUser = async (data: UserFormData) => {
     try {

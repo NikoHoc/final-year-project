@@ -8,12 +8,20 @@ export const useTables = () => {
   const [tables, setTables] = useState<Table[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchTables = useCallback(async (depotId: number) => {
+  const fetchTables = useCallback(async (depotId: number, silent = false) => {
     if (!depotId) return;
-    setIsLoading(true);
+    if (!silent) setIsLoading(true);
+
     try {
       const data = await tableService.getAll(depotId);
-      setTables(data);
+      const sortedTables = data.sort((a: Table, b: Table) => {
+      return a.table_number.localeCompare(b.table_number, undefined, {
+        numeric: true,
+        sensitivity: 'base'
+      });
+    });
+
+    setTables(sortedTables);
     } catch (error) {
       handleApiError(error, "Gagal memuat daftar meja");
       throw error;
@@ -22,11 +30,24 @@ export const useTables = () => {
     }
   }, []);
 
-  const createTable = async (depotId: number, tableNumber: string) => {
+  const fetchTableById = useCallback(async (id: string | number) => {
+    setIsLoading(true);
     try {
-      await tableService.create(depotId, tableNumber);
-      toast.success(`Meja ${tableNumber} berhasil ditambahkan!`);
-      await fetchTables(depotId);
+      const data = await tableService.getById(id);
+      return data;
+    } catch (error) {
+      handleApiError(error, "Gagal memuat detail meja");
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const createTable = async (depotId: number, data: { table_number: string; is_active?: boolean }) => {
+    try {
+      await tableService.create(depotId, data);
+      toast.success("Meja berhasil ditambahkan");
+      await fetchTables(depotId, true);
       return true;
     } catch (error) {
       handleApiError(error, "Gagal menambah meja");
@@ -34,17 +55,18 @@ export const useTables = () => {
     }
   };
 
-  const updateTable = async (
-    id: number,
-    depotId: number,
-    data: { table_number?: string; status?: string },
-  ) => {
+  const updateTable = async (id: number, depotId: number, data: Partial<Table>) => {
+    let previousTables: Table[] = [];
+    setTables((prev) => {
+      previousTables = [...prev];
+      return prev.map((t) => (t.id === id ? { ...t, ...data } : t));
+    });
     try {
-      await tableService.update(id, data);
-      toast.success("Meja berhasil diperbarui!");
-      await fetchTables(depotId);
+      await tableService.update(id, depotId, data); 
+      fetchTables(depotId, true);
       return true;
     } catch (error) {
+      setTables(previousTables);
       handleApiError(error, "Gagal memperbarui meja");
       throw error;
     }
@@ -52,9 +74,9 @@ export const useTables = () => {
 
   const deleteTable = async (id: number, depotId: number) => {
     try {
-      await tableService.delete(id);
-      toast.success("Meja berhasil dihapus!");
-      await fetchTables(depotId);
+      await tableService.delete(id, depotId);
+      toast.success("Meja berhasil dihapus");
+      await fetchTables(depotId, true);
       return true;
     } catch (error) {
       handleApiError(error, "Gagal menghapus meja");
@@ -66,6 +88,7 @@ export const useTables = () => {
     tables,
     isLoading,
     fetchTables,
+    fetchTableById,
     createTable,
     updateTable,
     deleteTable,

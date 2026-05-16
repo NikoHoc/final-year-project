@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutGrid, Coffee } from "lucide-react";
+import { LayoutGrid, Soup } from "lucide-react";
 import { Table, Transaction } from "@/types";
 
 interface TableListProps {
@@ -20,6 +20,11 @@ export default function TableList({
   onTableClick,
   onManageTables,
 }: TableListProps) {
+  const activeTables = tables.filter((table) => {
+    const hasActiveTx = activeTransactions.some((t) => t.table_id === table.id);
+    return table.is_active || hasActiveTx;
+  });
+
   if (tables.length === 0) {
     return (
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 flex flex-col items-center justify-center text-center">
@@ -46,7 +51,7 @@ export default function TableList({
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-      {tables.map((table) => {
+      {activeTables.map((table) => {
         const activeTx = activeTransactions.find((t) => t.table_id === table.id);
         const isOccupied = !!activeTx;
 
@@ -68,7 +73,7 @@ export default function TableList({
                   : "bg-gray-50 text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-600"
               }`}
             >
-              <Coffee size={32} />
+              <Soup size={32} />
             </div>
             <span className="text-lg font-bold text-gray-800">
               {table.table_number}

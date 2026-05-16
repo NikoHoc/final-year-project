@@ -12,7 +12,6 @@ import { useTransaction } from "@/hooks/useTransaction";
 interface OrderCartProps {
   variant: "kasir" | "pelayan";
   cartItems: CartItem[];
-  tableId: string | null;
   orderType?: string;
   isProcessing: boolean;
   totals?: {

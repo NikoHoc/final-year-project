@@ -14,8 +14,9 @@ export const useTransaction = () => {
   const fetchAllTransactions = useCallback(async (depotId: number) => {
     setIsLoading(true);
     try {
-      const data = await transactionService.getAll(depotId);
-      return data as Transaction[];
+      const response = await transactionService.getAll(depotId) as Transaction[] | { data: Transaction[] };
+      const transactions = Array.isArray(response) ? response : (response.data || []);
+      return transactions;
     } catch (error) {
       handleApiError(error, "Gagal memuat daftar transaksi");
       throw error;
