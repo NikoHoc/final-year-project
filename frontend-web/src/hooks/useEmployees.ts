@@ -4,71 +4,70 @@ import { User } from "@/types";
 import toast from "react-hot-toast";
 import { handleApiError } from "@/utils/errorHandler";
 
-export const useUsers = () => {
-  const [users, setUsers] = useState<User[]>([]);
+export const useEmployees = () => {
+  const [employees, setEmployees] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [currentDepotFilter, setCurrentDepotFilter] = useState<string>("all");
   const [currentRoleFilter, setCurrentRoleFilter] = useState<string>("all");
 
-  const fetchUsers = useCallback(async (depotId: string = "all", role: string = "all") => {
+  const fetchEmployees = useCallback(async (depotId: string = "all", role: string = "all") => {
     setIsLoading(true);
     setCurrentDepotFilter(depotId); 
     setCurrentRoleFilter(role);
     try {
-      const data = await userService.getAll(depotId, role);
-      setUsers(data);
+      const data = await userService.getEmployees(depotId, role);
+      setEmployees(data);
     } catch (error) {
-      handleApiError(error, "Gagal memuat daftar user");
-      throw error;
+      handleApiError(error, "Gagal memuat daftar pegawai");
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const createUser = async (data: UserFormData) => {
+  const createEmployee = async (data: UserFormData) => {
     try {
-      await userService.create(data);
+      await userService.createEmployee(data);
       toast.success("Pegawai baru berhasil didaftarkan!");
-      fetchUsers(currentDepotFilter);
+      fetchEmployees(currentDepotFilter, currentRoleFilter);
       return true;
     } catch (error: unknown) {
-      handleApiError(error, "Gagal membuat user baru");
+      handleApiError(error, "Gagal membuat pegawai baru");
       throw error;
     }
   };
 
-  const updateUser = async (id: string, data: UserFormData) => {
+  const updateEmployee = async (id: string, data: UserFormData) => {
     try {
-      await userService.update(id, data);
+      await userService.updateEmployee(id, data);
       toast.success("Data pegawai berhasil diperbarui!");
-      fetchUsers(currentDepotFilter); 
+      fetchEmployees(currentDepotFilter, currentRoleFilter); 
       return true;
     } catch (error: unknown) {
-      handleApiError(error, "Gagal memperbarui data user");
+      handleApiError(error, "Gagal memperbarui data pegawai");
       throw error;
     }
   };
 
-  const deleteUser = async (id: string) => {
+  const deleteEmployee = async (id: string) => {
     try {
-      await userService.delete(id);
+      await userService.deleteEmployee(id);
       toast.success("Pegawai berhasil dihapus!");
-      fetchUsers(currentDepotFilter);
+      fetchEmployees(currentDepotFilter, currentRoleFilter);
     } catch (error: unknown) {
-      handleApiError(error, "Gagal menghapus user");
+      handleApiError(error, "Gagal menghapus pegawai");
       throw error;
     }
   };
 
   return { 
-    users, 
+    employees, 
     currentRoleFilter,
     currentDepotFilter,
     isLoading, 
-    fetchUsers,
-    createUser, 
-    updateUser, 
-    deleteUser 
+    fetchEmployees,
+    createEmployee, 
+    updateEmployee, 
+    deleteEmployee 
   };
 };

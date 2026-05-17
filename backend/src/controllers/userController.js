@@ -43,6 +43,30 @@ exports.updateMyProfile = async (req, res) => {
 };
 
 // --- ADMIN FEATURES: MANAJEMEN PEGAWAI ---
+exports.getEmployees = async (req, res) => {
+  const { depot_id, role } = req.query;
+
+  try {
+    let query = supabase.from("profiles").select("*, depots(name)");
+
+    if (depot_id && depot_id !== "all") {
+      query = query.eq("depot_id", depot_id);
+    }
+
+    if (role && role !== "all") {  
+      query = query.eq("role", role);
+    } else {
+      query = query.in("role", ["admin", "kasir", "pelayan"]);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return res.status(200).json({ status: true, data });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
 
 exports.createEmployee = async (req, res) => {
   const { email, password, full_name, username, phone_number, role, depot_id } =
@@ -53,6 +77,10 @@ exports.createEmployee = async (req, res) => {
       status: false,
       message: "Email, Password, dan Depot ID wajib diisi",
     });
+  }
+
+  if (role === "pelanggan") {
+    return res.status(400).json({ status: false, message: "Akses ditolak: Gunakan endpoint pelanggan." });
   }
 
   try {
@@ -70,8 +98,6 @@ exports.createEmployee = async (req, res) => {
       return res.status(400).json({ message: "Gagal membuat user auth" });
     }
 
-    // update role dan depot
-    // supabase trigger buat profiles saat user signup dengan role: pelanggan, depot_id: null
     const { data: profileData, error: profileError } = await supabase
       .from("profiles")
       .update({ role, depot_id })
@@ -86,33 +112,6 @@ exports.createEmployee = async (req, res) => {
       message: `Berhasil mendaftarkan ${role}`,
       data: profileData,
     });
-  } catch (err) {
-    return res.status(500).json({ status: false, message: err.message });
-  }
-};
-
-exports.getEmployees = async (req, res) => {
-  const { depot_id, role } = req.query;
-
-  try {
-    let query = supabase
-      .from("profiles")
-      .select("*, depots(name)")
-      .order("created_at", { ascending: false });
-
-    if (depot_id && depot_id !== "all") {
-      query = query.eq("depot_id", depot_id);
-    }
-
-    if (role && role !== "all") {  
-      query = query.eq("role", role);
-    }
-
-    const { data, error } = await query;
-
-    if (error) throw error;
-
-    return res.status(200).json({ status: true, data });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
   }
@@ -155,6 +154,82 @@ exports.deleteEmployee = async (req, res) => {
       status: true,
       message: "Data pegawai berhasil dihapus",
     });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+// --- ADMIN FEATURES: MANAJEMEN Customer ---
+exports.getCustomers = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, full_name, username, phone_number, email, created_at")
+      .eq("role", "pelanggan")
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return res.status(200).json({ status: true, data });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.createCustomer = async (req, res) => {
+  const { full_name, username, phone_number, email } = req.body;
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .insert([
+        { 
+          full_name, 
+          username, 
+          phone_number, 
+          email, 
+          role: "pelanggan", 
+          depot_id: null
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return res.status(201).json({ status: true, message: "Pelanggan berhasil ditambahkan!", data });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.updateCustomer = async (req, res) => {
+  const { id } = req.params;
+  const { full_name, username, phone_number, email } = req.body;
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ full_name, username, phone_number, email })
+      .eq("id", id)
+      .eq("role", "pelanggan")
+      .select()
+      .single();
+
+    if (error) throw error;
+    return res.status(200).json({ status: true, message: "Data pelanggan berhasil diperbarui!", data });
+  } catch (err) {
+    return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.deleteCustomer = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { error } = await supabase
+      .from("profiles")
+      .delete()
+      .eq("id", id)
+      .eq("role", "pelanggan");
+
+    if (error) throw error;
+    return res.status(200).json({ status: true, message: "Akun pelanggan berhasil dihapus!" });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
   }

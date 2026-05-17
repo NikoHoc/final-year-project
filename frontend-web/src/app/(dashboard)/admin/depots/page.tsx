@@ -71,21 +71,22 @@ export default function DepotsPage() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 font-poppins">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 font-montserrat">Manajemen Depot</h1>
-          <p className="text-sm text-gray-500 mt-1">Kelola data cabang dan konfigurasi pembayaran.</p>
+          <h1 className="text-2xl font-black text-gray-800">
+            Manajemen Depot
+          </h1>
+          <p className="text-sm text-gray-500 mt-1 font-medium">Kelola data depot, status operasional, payment-gateway, dan menu.</p>
         </div>
-        
-        <button 
+        <button
           onClick={() => { setSelectedDepot(null); setIsFormOpen(true); }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm"
+          className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
         >
-          <Plus size={20} />
-          Tambah Depot
+          <Plus size={20} /> Depot
         </button>
       </div>
+
 
       <DepotTable 
         data={depots} 

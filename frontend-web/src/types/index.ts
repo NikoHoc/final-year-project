@@ -1,5 +1,5 @@
 export type Role = 'admin' | 'kasir' | 'pelayan' | 'pelanggan';
-export type TransactionType = 'onsite' | 'online' | 'takeaway';
+export type TransactionType = 'dining' | 'online' | 'takeaway';
 export type OrderStatus = 'pending' | 'confirmed' | 'cooking' | 'ready' | 'completed' | 'cancelled';
 export type PaymentStatus = 'unpaid' | 'paid' | 'failed';
 export type PickupMethod = 'dine_in' | 'pickup_self' | 'driver';
@@ -164,11 +164,11 @@ export interface AddItemsPayload {
 export interface CreateTransactionPayload {
   depot_id: number;
   user_id?: string | null;
-  type: "onsite" | "online" | "takeaway";
+  type: "dining" | "online" | "takeaway";
   table_id?: number | null;
   customer_id?: string | null;
   customer_name?: string | null;
-  pickup_method?: "dine_in" | "pickup_self" | "driver" | null;
+  pickup_method?: "pickup_self" | "driver" | null;
   use_tax?: boolean;
   items: CartItemPayload[];
 }

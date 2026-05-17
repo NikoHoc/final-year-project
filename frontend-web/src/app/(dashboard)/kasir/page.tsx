@@ -42,7 +42,7 @@ export default function KasirDashboard() {
     }
   }, [isLoadingSession, user, loadDashboardData]);
 
-  const onsiteTransactions = activeTransactions.filter((t) => t.type === "onsite");
+  const diningTransactions = activeTransactions.filter((t) => t.type === "dining");
   const takeawayTransactions = activeTransactions.filter((t) => t.type === "takeaway");
 
   const handleToggleDepotStatus = async () => {
@@ -60,12 +60,12 @@ export default function KasirDashboard() {
   };
 
   const handleTableClick = (tableId: number) => {
-    const activeTx = onsiteTransactions.find(t => t.table_id === tableId);
+    const activeTx = diningTransactions.find(t => t.table_id === tableId);
     
     if (activeTx) {
-      router.push(`/kasir/pos/${activeTx.id}?type=onsite`);
+      router.push(`/kasir/pos/${activeTx.id}?type=dining`);
     } else {
-      router.push(`/kasir/pos/new?table_id=${tableId}&type=onsite`);
+      router.push(`/kasir/pos/new?table_id=${tableId}&type=dining`);
     }
   };
 
@@ -88,7 +88,7 @@ export default function KasirDashboard() {
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <h1 className="text-2xl font-black text-gray-800">Dashboard POS - Kasir</h1>
-          <p className="text-gray-500 text-sm mt-1">Pilih meja untuk Dine-in, atau klik Takeaway.</p>
+          <p className="text-sm text-gray-500 mt-1 font-medium">Pilih meja untuk Dine-in, atau klik Takeaway.</p>
         </div>
         
         <div className="flex gap-3 w-full md:w-auto">
@@ -126,7 +126,7 @@ export default function KasirDashboard() {
         </h3>
         <TableList 
           tables={tables} 
-          activeTransactions={onsiteTransactions} 
+          activeTransactions={diningTransactions} 
           isDepotOpen={!!depot?.is_open}
           role="kasir"
           onTableClick={handleTableClick}

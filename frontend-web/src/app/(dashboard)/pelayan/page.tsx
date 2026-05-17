@@ -43,16 +43,16 @@ export default function PelayanDashboard() {
     }
   }, [isLoadingSession, user?.depot_id, fetchTables, fetchAllTransactions]);
 
-  const onsiteTransactions = activeTransactions.filter((t) => t.type === "onsite");
+  const diningTransactions = activeTransactions.filter((t) => t.type === "dining");
   const takeawayTransactions = activeTransactions.filter((t) => t.type === "takeaway");
 
   const handleTableClick = (tableId: number) => {
-    const activeTx = onsiteTransactions.find(t => t.table_id === tableId);
+    const activeTx = diningTransactions.find(t => t.table_id === tableId);
     
     if (activeTx) {
-      router.push(`/pelayan/pesanan/${activeTx.id}?type=onsite`);
+      router.push(`/pelayan/pesanan/${activeTx.id}?type=dining`);
     } else {
-      router.push(`/pelayan/pesanan/new?table_id=${tableId}&type=onsite`);
+      router.push(`/pelayan/pesanan/new?table_id=${tableId}&type=dining`);
     }
   };
 
@@ -108,7 +108,7 @@ export default function PelayanDashboard() {
         </h3>
         <TableList 
           tables={tables} 
-          activeTransactions={onsiteTransactions} 
+          activeTransactions={diningTransactions} 
           isDepotOpen={!!depot?.is_open}
           role="pelayan"
           onTableClick={handleTableClick}

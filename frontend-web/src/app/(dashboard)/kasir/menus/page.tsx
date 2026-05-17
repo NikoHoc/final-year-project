@@ -103,7 +103,7 @@ export default function KasirMenusPage() {
           <h1 className="text-2xl font-black text-gray-800">
             Manajemen Stok Menu
           </h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-sm text-gray-500 mt-1 font-medium">
             Atur ketersediaan menu di depot Anda hari ini
           </p>
         </div>

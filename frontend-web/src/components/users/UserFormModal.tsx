@@ -4,221 +4,255 @@ import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import { User, Depot, Role } from "@/types";
 import { UserFormData } from "@/services/userService";
+import { Eye, EyeOff } from "lucide-react";
 
 interface UserFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialData?: User | null;
-  depotsList: Depot[];
+  depotsList?: Depot[];
   onSubmit: (data: UserFormData) => Promise<boolean>;
+  variant?: "employee" | "customer";
 }
 
 export default function UserFormModal({
   isOpen,
   onClose,
   initialData,
-  depotsList,
+  depotsList = [],
   onSubmit,
+  variant = "employee",
 }: UserFormModalProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [role, setRole] = useState<Role>("kasir");
+  
+  const [role, setRole] = useState<Role | "">(""); 
   const [depotId, setDepotId] = useState<number | "">("");
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const isEditMode = !!initialData;
 
   useEffect(() => {
     if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setEmail("");
-      setPassword("");
+      setEmail(initialData?.email || "");
+      setPassword(""); 
+      setConfirmPassword(""); 
       setFullName(initialData?.full_name || "");
       setUsername(initialData?.username || "");
       setPhoneNumber(initialData?.phone_number || "");
-      setRole(initialData?.role || "kasir");
+      setRole(initialData?.role || ""); 
       setDepotId(initialData?.depot_id || "");
+      setShowPassword(false);
+      setShowConfirmPassword(false);
     }
   }, [isOpen, initialData]);
 
+  const isPasswordMatch = password === confirmPassword;
+  const isPasswordValid = isEditMode
+    ? ((password === "" && confirmPassword === "") || (password.length >= 6 && isPasswordMatch))
+    : (password.length >= 6 && isPasswordMatch);
+
+  const isFormValid =
+    email.trim() !== "" &&
+    fullName.trim() !== "" &&
+    username.trim() !== "" &&
+    phoneNumber.trim() !== "" &&
+    isPasswordValid &&
+    (variant === "customer" ? true : (depotId !== "" && role !== ""));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isFormValid) return;
+
     setIsSubmitting(true);
 
-    const payload: UserFormData = {
-      full_name: fullName,
-      username,
-      phone_number: phoneNumber,
-      role,
-      depot_id: depotId as number,
+    const formData: UserFormData = {
+      email: email.trim(),
+      full_name: fullName.trim(),
+      username: username.trim(),
+      phone_number: phoneNumber.trim(),
+      role: variant === "employee" ? (role as Role) : "pelanggan",
+      depot_id: variant === "employee" ? Number(depotId) : null,
     };
 
-    if (!isEditMode) {
-      payload.email = email;
-      payload.password = password;
+    if (password.trim() !== "") {
+      formData.password = password;
     }
 
-    const success = await onSubmit(payload);
-    if (success) onClose();
-    setIsSubmitting(false);
+    try {
+      const success = await onSubmit(formData);
+      if (success) onClose();
+    } catch (error) {
+      console.error("Gagal menyimpan data user:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const isFormValid = isEditMode
-    ? fullName && username && phoneNumber && depotId !== ""
-    : email &&
-      password &&
-      fullName &&
-      username &&
-      phoneNumber &&
-      depotId !== "";
-
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={isEditMode ? "Edit Data User" : "Tambah User Baru"}
-      maxWidth="lg"
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      title={isEditMode ? `Edit Data ${variant === "employee" ? "Pegawai" : "Pelanggan"}` : `Tambah ${variant === "employee" ? "Pegawai Baru" : "Pelanggan Baru"}`}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {!isEditMode && (
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email (Untuk Login)
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-black"
-                placeholder="pegawai@depot.com"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-black"
-                placeholder="Minimal 6 karakter"
-              />
-            </div>
-          </div>
-        )}
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nama Lengkap
-            </label>
-            <input
-              type="text"
-              required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-black"
-              placeholder="Contoh: Budi Santoso"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Username
-            </label>
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-gray-500 uppercase">Email *</label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm outline-none text-black bg-white focus:ring-2 focus:ring-blue-500"
+            placeholder="contoh@email.com"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-gray-500 uppercase">Nama Lengkap *</label>
+          <input
+            type="text"
+            required
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm outline-none text-black bg-white focus:ring-2 focus:ring-blue-500"
+            placeholder="Masukkan nama lengkap"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-500 uppercase">Username *</label>
             <input
               type="text"
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-black"
-              placeholder="Contoh: budi123"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm outline-none text-black bg-white focus:ring-2 focus:ring-blue-500"
+              placeholder="Masukkan username"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-gray-500 uppercase">No. Telepon *</label>
+            <input
+              type="text"
+              required
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm outline-none text-black bg-white focus:ring-2 focus:ring-blue-500"
+              placeholder="081234xxxxxx"
             />
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Nomor Telepon (WA)
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-gray-500 uppercase">
+            Password {isEditMode && <span className="text-gray-400 font-normal lowercase">(kosongkan jika tidak diubah)</span>} *
           </label>
-          <input
-            type="text"
-            required
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm text-black"
-            placeholder="Contoh: 08123456789"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              required={!isEditMode}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg text-sm outline-none text-black bg-white focus:ring-2 focus:ring-blue-500"
+              placeholder={isEditMode ? "Masukkan password baru jika ingin diganti" : "Minimal 6 karakter"}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-bold text-gray-500 uppercase">
+            Konfirmasi Password {isEditMode && <span className="text-gray-400 font-normal lowercase">(kosongkan jika tidak diubah)</span>} *
+          </label>
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              required={!isEditMode || password.length > 0}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className={`w-full px-4 py-2 pr-10 border rounded-lg text-sm outline-none text-black bg-white focus:ring-2 ${
+                confirmPassword.length > 0 && !isPasswordMatch
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-blue-500"
+              }`}
+              placeholder="Ketik ulang password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+          {(password.length > 0 || confirmPassword.length > 0) && !isPasswordMatch && (
+            <p className="text-xs text-red-500 mt-1">Password tidak cocok!</p>
+          )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Peran (Role)
-            </label>
-            <select
-              value={role}
-              onChange={(e) =>
-                setRole(e.target.value as "kasir" | "pelayan" | "pelanggan")
-              }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white text-black"
-            >
-              <option value="kasir">Kasir</option>
-              <option value="pelayan">Pelayan</option>
-              <option value="pelanggan">Pelanggan</option>
-            </select>
-          </div>
+        {variant === "employee" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500 uppercase">Peran (Role) *</label>
+              <select
+                required
+                value={role}
+                onChange={(e) => setRole(e.target.value as Role)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white text-black focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="" disabled>-- Pilih Peran --</option>
+                <option value="kasir">Kasir</option>
+                <option value="pelayan">Pelayan</option>
+              </select>
+            </div>
 
-          {role !== "pelanggan" && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Penempatan Cabang
-              </label>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-500 uppercase">Penempatan Cabang *</label>
               <select
                 required
                 value={depotId}
                 onChange={(e) => setDepotId(Number(e.target.value))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white text-black"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white text-black focus:ring-2 focus:ring-blue-500"
               >
-                <option value="" disabled>
-                  -- Pilih Cabang --
-                </option>
+                <option value="" disabled>-- Pilih Cabang --</option>
                 {depotsList.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
+                  <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
             </div>
-          )}
-        </div>
-
-        <div className="flex gap-3 pt-6">
+          </div>
+        )}
+        <div className="flex gap-3 pt-4">
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
           >
             Batal
           </button>
           <button
             type="submit"
             disabled={isSubmitting || !isFormValid}
-            className={`flex-1 px-4 py-2 text-white rounded-lg font-medium transition-colors ${isSubmitting || !isFormValid ? "bg-blue-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
+            className={`flex-1 px-4 py-2 text-white rounded-lg font-medium transition-colors text-sm ${
+              isSubmitting || !isFormValid ? "bg-blue-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
-            {isSubmitting
-              ? "Menyimpan..."
-              : isEditMode
-                ? "Perbarui Data"
-                : "Daftarkan User"}
+            {isSubmitting ? "Menyimpan..." : "Simpan"}
           </button>
         </div>
       </form>

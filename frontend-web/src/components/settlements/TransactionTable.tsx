@@ -40,14 +40,14 @@ export default function TransactionTable({ transactions, onViewReceipt }: Props)
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
                       <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase ${
-                        tx.type === 'onsite' ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'
+                        tx.type === 'dining' ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'
                       }`}>
                         {tx.type}
                       </span>
                       <span className="text-xs font-bold text-gray-400">/</span>
                       <span className="text-xs font-bold text-gray-700">
                         {/* Fallback ke table_id jika table_number belum ada di DB */}
-                        {tx.type === 'onsite' ? (tx.table_number) : '-'}
+                        {tx.type === 'dining' ? (tx.table_number) : '-'}
                       </span>
                     </div>
                   </td>

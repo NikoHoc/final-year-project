@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Edit2, Trash2, Power } from "lucide-react";
+import { Plus, Edit2, Trash2, Power, Search } from "lucide-react";
 import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { PaymentMethod } from "@/types";
 import Modal from "@/components/ui/Modal";
@@ -14,6 +14,7 @@ export default function PaymentMethodsAdminPage() {
   
   const [name, setName] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchMethods();
@@ -44,39 +45,63 @@ export default function PaymentMethodsAdminPage() {
     if (success) setIsModalOpen(false);
   };
 
+  const filteredMethods = methods.filter((method) => 
+    method.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Metode Pembayaran</h1>
-          <p className="text-gray-500 text-sm">Kelola daftar metode pembayaran universal untuk semua cabang depot.</p>
+          <h1 className="text-2xl font-black text-gray-800">
+            Manajemen Metode Pembayaran
+          </h1>
+          <p className="text-sm text-gray-500 mt-1 font-medium">Kelola daftar metode pembayaran universal untuk semua cabang depot.</p>
         </div>
-        <button 
+        <button
           onClick={() => openModal()}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors"
+          className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
         >
-          <Plus size={18} /> Tambah Metode
+          <Plus size={18} /> Metode
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {isLoading ? (
-          <div className="p-8 text-center text-gray-500">Memuat data...</div>
-        ) : (
-          <table className="w-full text-left text-sm">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white">
+          <h2 className="text-lg font-bold text-gray-800">Daftar Metode Pembayaran</h2>
+          <div className="relative w-full sm:w-72">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <Search size={16} className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari metode pembayaran..."
+              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow shadow-sm"
+            />
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
             <thead className="bg-gray-50 border-b border-gray-100 text-gray-600">
               <tr>
+                <th className="p-4 font-semibold">No</th>
                 <th className="p-4 font-semibold">Nama Metode</th>
                 <th className="p-4 font-semibold text-center">Status</th>
                 <th className="p-4 font-semibold text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {methods.length === 0 ? (
-                <tr><td colSpan={3} className="p-6 text-center text-gray-400">Belum ada data</td></tr>
+            <tbody className="divide-y divide-gray-100 text-sm">
+              {isLoading ? (
+                <tr><td colSpan={4} className="px-6 py-12 text-center text-gray-400">Memuat data...</td></tr>
+              ) : filteredMethods.length === 0 ? ( 
+                <tr><td colSpan={4} className="px-6 py-12 text-center text-gray-400">Belum ada metode pembayaran ditemukan.</td></tr>
               ) : (
-                methods.map((method) => (
-                  <tr key={method.id} className="hover:bg-gray-50/50 transition-colors">
+                filteredMethods.map((method, index) => (
+                  <tr key={index} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="p-4 font-bold text-gray-800">{index+1}</td>
                     <td className="p-4 font-bold text-gray-800">{method.name}</td>
                     <td className="p-4 text-center">
                       <span className={`px-3 py-1 text-[11px] font-bold uppercase rounded-full ${method.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
@@ -101,7 +126,7 @@ export default function PaymentMethodsAdminPage() {
               )}
             </tbody>
           </table>
-        )}
+        </div>
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingMethod ? "Edit Metode" : "Tambah Metode"}>

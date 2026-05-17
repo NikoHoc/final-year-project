@@ -25,10 +25,10 @@ export default function PelayanPesananPage() {
   const { fetchTableById } = useTables();
 
   const transactionId = params.id as string;
-  const initialType = searchParams.get("type") || "onsite";
+  const initialType = searchParams.get("type") || "dining";
   const [orderType, setOrderType] = useState<string>(initialType);
   const [tableId, setTableId] = useState<string | null>(searchParams.get("table_id"));
-  const [tableNumber, setTableNumber] = useState<string | null>(null); // Tambahkan state ini
+  const [tableNumber, setTableNumber] = useState<string | null>(null);
   const [customerName, setCustomerName] = useState<string>("");
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -96,7 +96,7 @@ export default function PelayanPesananPage() {
     try {
       const transaction = await fetchTransactionById(transactionId);
       if (transaction) {
-        setOrderType(transaction.type || "onsite");
+        setOrderType(transaction.type || "dining");
         setTableId(transaction.table_id ? transaction.table_id.toString() : null);
         setCustomerName(transaction.customer_name || "");
         setTableNumber(transaction.table_number || transaction.table_id?.toString() || null);
@@ -159,7 +159,7 @@ export default function PelayanPesananPage() {
         const response = await createTransaction({
           user_id: user.id,
           depot_id: user.depot_id,
-          type: orderType as "onsite" | "online" | "takeaway",
+          type: orderType as "dining" | "online" | "takeaway",
           table_id: tableId ? parseInt(tableId) : null,
           use_tax: true,
           customer_name: customerName,

@@ -46,7 +46,7 @@ export default function Modal({
       <div 
         className={`bg-white rounded-2xl shadow-xl w-full ${maxWidthClasses[maxWidth]} animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]`}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-400">
           <h2 className="text-lg font-bold text-gray-800 font-montserrat">{title}</h2>
           <button 
             onClick={onClose}

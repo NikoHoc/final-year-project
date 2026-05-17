@@ -129,7 +129,7 @@ export default function ReportTransactionModal({ isOpen, onClose, transaction, d
                 <div>
                   <div className="text-[10px] font-bold text-gray-400 uppercase">Meja</div>
                   <div className="text-sm font-black text-gray-800">
-                    {(transactionDetail?.type === 'onsite' || transaction?.type === 'onsite') 
+                    {(transactionDetail?.type === 'dining' || transaction?.type === 'dining') 
                       ? (transactionDetail?.table_number || transactionDetail?.table_id || "-") 
                       : "BUNGKUS"}
                   </div>

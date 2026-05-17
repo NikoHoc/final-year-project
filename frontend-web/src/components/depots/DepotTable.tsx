@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Depot } from "@/types";
-import { Pencil, Trash2, CreditCard, AlertCircle, CheckCircle2, ArrowUpDown, Power, List } from "lucide-react";
+import { Search, Pencil, Trash2, CreditCard, AlertCircle, CheckCircle2, ArrowUpDown, Power, List } from "lucide-react";
 import {
   createColumnHelper,
   flexRender,
@@ -10,6 +10,7 @@ import {
   getSortedRowModel,
   SortingState,
   useReactTable,
+  getFilteredRowModel,
 } from "@tanstack/react-table";
 
 interface DepotTableProps {
@@ -24,6 +25,7 @@ interface DepotTableProps {
 
 export default function DepotTable({ data, isLoading, onOperasionalClick, onDeleteClick, onEditClick, onSetupPaymentClick, onAssignMenu }: DepotTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
 
   const columnHelper = createColumnHelper<Depot>();
 
@@ -150,14 +152,31 @@ export default function DepotTable({ data, isLoading, onOperasionalClick, onDele
   const table = useReactTable({
     data,
     columns,
-    state: { sorting },
+    state: { sorting, globalFilter },
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
   });
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="p-4 border-b border-gray-100 bg-white flex justify-between items-center">
+        <h2 className="text-lg font-bold text-gray-800">Daftar Depot</h2>
+        <div className="relative w-full sm:w-72">
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <Search size={16} className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            value={globalFilter ?? ""}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Cari data..."
+            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow shadow-sm"
+          />
+        </div>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>

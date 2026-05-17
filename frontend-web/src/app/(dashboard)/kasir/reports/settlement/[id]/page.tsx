@@ -54,7 +54,7 @@ export default function SettlementDetailPage() {
             <h1 className="text-2xl font-black text-gray-800">
               Detail Settlement
             </h1>
-            <p className="text-sm text-gray-500 font-medium">
+            <p className="text-sm text-gray-500 mt-1 font-medium">
               Laporan tanggal:{" "}
               {formatDateFull(settlement?.settlement_date || "")}
             </p>

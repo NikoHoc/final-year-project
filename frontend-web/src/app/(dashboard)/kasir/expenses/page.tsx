@@ -57,7 +57,7 @@ export default function ExpensesPage() {
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-gray-800">Pengeluaran Operasional</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-sm text-gray-500 mt-1 font-medium">
             Catat dan pantau pengeluaran stok serta operasional depot.
           </p>
         </div>

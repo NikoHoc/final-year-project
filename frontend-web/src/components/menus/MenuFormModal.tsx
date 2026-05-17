@@ -71,7 +71,7 @@ export default function MenuFormModal({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Nama Menu</label>
-            <input type="text" required className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+            <input type="text" placeholder="Mie ayam..." required className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Kategori</label>
@@ -85,16 +85,16 @@ export default function MenuFormModal({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Harga (Rp)</label>
-            <input type="number" required className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} />
+            <input type="number" placeholder="30000" required className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Harga 1/2 Porsi (Opsional)</label>
-            <input type="number" className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" value={formData.half_price} onChange={(e) => setFormData({ ...formData, half_price: e.target.value })} />
+            <input type="number" placeholder="27000" className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" value={formData.half_price} onChange={(e) => setFormData({ ...formData, half_price: e.target.value })} />
           </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Deskripsi (Opsional)</label>
-          <textarea className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" rows={2} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+          <textarea placeholder="Mie asin gurih dengan topping ayam.." className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2" rows={2} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Foto Menu</label>
