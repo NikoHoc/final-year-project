@@ -23,8 +23,11 @@ exports.getMutations = async (req, res) => {
     let query = supabase
       .from("stock_mutations")
       .select(selectQuery)
-      .or(`requester_id.eq.${depot_id},provider_id.eq.${depot_id}`)
       .order("created_at", { ascending: false });
+
+    if (depot_id && depot_id !== "null" && depot_id !== "undefined") {
+      query = query.or(`requester_id.eq.${depot_id},provider_id.eq.${depot_id}`);
+    }
 
     if (startDate && endDate) {
       query = query

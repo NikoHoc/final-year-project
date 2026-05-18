@@ -28,7 +28,7 @@ export const useStock = () => {
     }
   }, []);
 
-  const fetchActiveMutations = useCallback(async (depotId: number) => {
+  const fetchActiveMutations = useCallback(async (depotId: number | null) => {
     setIsActiveLoading(true);
     try {
       const res = await stockService.getActiveMutations(depotId);
@@ -42,7 +42,7 @@ export const useStock = () => {
     }
   }, []);
 
-  const fetchHistoryMutations = useCallback(async (depotId: number, startDate?: string, endDate?: string) => {
+  const fetchHistoryMutations = useCallback(async (depotId: number | null, startDate?: string, endDate?: string) => {
     setIsHistoryLoading(true);
     try {
       const res = await stockService.getHistoryMutations(depotId, startDate, endDate);

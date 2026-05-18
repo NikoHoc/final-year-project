@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, Search, TrendingDown, Filter } from "lucide-react";
+import { Filter } from "lucide-react";
 import { useExpense } from "@/hooks/useExpense";
 import { Expense } from "@/types";
 import ExpenseFormModal from "@/components/expenses/ExpenseFormModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { useSession } from "@/contexts/SessionContext";
-import { formatRupiah, formatDateFull, getTodayStr, getFirstDayOfMonthStr, formatDateTime } from "@/utils/format";
+import { formatDateFull, getTodayStr, getFirstDayOfMonthStr } from "@/utils/format";
 import ExpenseTable from "@/components/expenses/ExpenseTable";
 
 export default function ExpensesPage() {
@@ -17,7 +17,6 @@ export default function ExpensesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null); 
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
 
   const [startDate, setStartDate] = useState(getFirstDayOfMonthStr());
   const [endDate, setEndDate] = useState(getTodayStr());
@@ -53,11 +52,6 @@ export default function ExpensesPage() {
     }
   };
 
-  const handleEdit = (expense: Expense) => {
-    setSelectedExpense(expense);
-    setIsFormOpen(true);
-  };
-
   const handleDelete = async () => {
     if (expenseToDelete) {
       try {
@@ -68,14 +62,6 @@ export default function ExpensesPage() {
       }
     }
   };
-
-  const filteredExpenses = expenses.filter((expense) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      expense.item_name.toLowerCase().includes(query) ||
-      (expense.note && expense.note.toLowerCase().includes(query))
-    );
-  });
 
   if (isLoadingSession) {
     return <div className="p-8 text-center animate-pulse text-gray-400">Memuat Sesi Kasir...</div>;

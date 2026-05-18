@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSettlement } from "@/hooks/useSettlement";
 import { useDepots } from "@/hooks/useDepot";
 import { Filter, Building2, Coins, Activity } from "lucide-react";
-import { getTodayStr, getFirstDayOfMonthStr, getSevenDaysAgoStr, formatDateFull } from "@/utils/format";
+import { getTodayStr, getFirstDayOfMonthStr, formatDateFull } from "@/utils/format";
 import AccumulatedSummaryCards from "@/components/settlements/AccumulatedSummaryCards";
 import RevenueTrendChart from "@/components/charts/RevenueTrendChart";
 import PaymentMethodChart from "@/components/charts/PaymentMethodChart";
@@ -40,16 +40,14 @@ export default function AdminTransactionsPage() {
     }
   };
 
-  const handleFilterShortcut = (type: "7_hari" | "bulan_ini" | "semua") => {
+  const handleFilterShortcut = (type: "bulan_ini" | "semua") => {
     setActiveShortcut(type);
     if (!selectedDepotId) return;
 
     let start = "";
     let end = getTodayStr();
 
-    if (type === "7_hari") {
-      start = getSevenDaysAgoStr();
-    } else if (type === "bulan_ini") {
+    if (type === "bulan_ini") {
       start = getFirstDayOfMonthStr();
     } else if (type === "semua") {
       start = "";
@@ -102,12 +100,6 @@ export default function AdminTransactionsPage() {
         </div>
         <div className="flex flex-col lg:flex-row lg:items-center gap-3 w-full xl:w-auto">
           <div className="flex items-center gap-1.5 bg-gray-50 p-1 rounded-xl border border-gray-100 self-start lg:self-auto">
-            <button
-              onClick={() => handleFilterShortcut("7_hari")}
-              className={`cursor-pointer px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all ${activeShortcut === "7_hari" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-            >
-              7 Hari
-            </button>
             <button
               onClick={() => handleFilterShortcut("bulan_ini")}
               className={`cursor-pointer px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all ${activeShortcut === "bulan_ini" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Filter, Activity, Coins } from "lucide-react";
 import { useSettlement } from "@/hooks/useSettlement";
-import { formatDateFull, getTodayStr, getFirstDayOfMonthStr, getSevenDaysAgoStr } from "@/utils/format";
+import { formatDateFull, getTodayStr, getFirstDayOfMonthStr } from "@/utils/format";
 import { useSession } from "@/contexts/SessionContext";
 import AccumulatedSummaryCards from "@/components/settlements/AccumulatedSummaryCards";
 import RevenueTrendChart from "@/components/charts/RevenueTrendChart";
@@ -16,7 +16,7 @@ export default function ReportsPage() {
 
   const [startDate, setStartDate] = useState(getFirstDayOfMonthStr());
   const [endDate, setEndDate] = useState(getTodayStr());
-  const [activeShortcut, setActiveShortcut] = useState<"bulan_ini" | "7_hari" | "semua" | "custom">("bulan_ini");
+  const [activeShortcut, setActiveShortcut] = useState<"bulan_ini" | "semua" | "custom">("bulan_ini");
 
   const endOfToday = `${getTodayStr()}T23:59:59.999Z`;
 
@@ -33,7 +33,7 @@ export default function ReportsPage() {
     fetchSettlements(user.depot_id, startDate, adjustedEndDate);
   };
 
-  const handleFilterShortcut = (type: "bulan_ini" | "7_hari" | "semua") => {
+  const handleFilterShortcut = (type: "bulan_ini" | "semua") => {
     if (!user?.depot_id) return;
     setActiveShortcut(type);
 
@@ -41,10 +41,6 @@ export default function ReportsPage() {
       setStartDate(getFirstDayOfMonthStr());
       setEndDate(getTodayStr());
       fetchSettlements(user.depot_id, getFirstDayOfMonthStr(), endOfToday);
-    } else if (type === "7_hari") {
-      setStartDate(getSevenDaysAgoStr());
-      setEndDate(getTodayStr());
-      fetchSettlements(user.depot_id, getSevenDaysAgoStr(), endOfToday);
     } else if (type === "semua") {
       setStartDate("");
       setEndDate("");
@@ -71,12 +67,6 @@ export default function ReportsPage() {
 
         <div className="flex flex-col lg:flex-row items-start lg:items-end gap-4">
           <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
-            <button
-              onClick={() => handleFilterShortcut("7_hari")}
-              className={`cursor-pointer px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${activeShortcut === "7_hari" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-            >
-              7 Hari
-            </button>
             <button
               onClick={() => handleFilterShortcut("bulan_ini")}
               className={`cursor-pointer px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${activeShortcut === "bulan_ini" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Pencil, Trash2, CheckCircle, XCircle, Truck } from "lucide-react";
+import { Search, Pencil, Trash2, CheckCircle, XCircle, Truck, Clock } from "lucide-react";
 import { StockMutation } from "@/types";
 import { formatDateTime } from "@/utils/format";
 import { useStock } from "@/hooks/useStock";
@@ -13,10 +13,11 @@ interface Props {
   isLoading: boolean;
   depotId: number | null;
   onRefresh: () => void;
-  onEdit: (m: StockMutation) => void;
+  onEdit?: (m: StockMutation) => void;
+  readOnly?: boolean;
 }
 
-export default function ActiveMutationsTable({ data, isLoading, depotId, onRefresh, onEdit }: Props) {
+export default function ActiveMutationsTable({ data, isLoading, depotId, onRefresh, onEdit, readOnly }: Props) {
   const { deleteMutation, processMutation } = useStock();
   const [search, setSearch] = useState("");
   const [targetDelete, setTargetDelete] = useState<StockMutation | null>(null);
@@ -87,7 +88,7 @@ export default function ActiveMutationsTable({ data, isLoading, depotId, onRefre
               <th className="px-4 py-4">Jml Diminta</th>
               <th className="px-4 py-4">Keterangan</th>
               <th className="px-4 py-4">Penyedia</th>
-              <th className="px-4 py-4 text-right">Aksi</th>
+              {readOnly ? <th className="px-4 py-4">Status</th> : <th className="px-4 py-4 text-right">Aksi</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -109,21 +110,29 @@ export default function ActiveMutationsTable({ data, isLoading, depotId, onRefre
                   </td>
                   <td className="px-4 py-4 italic max-w-37.5">{m.requester_notes || "-"}</td>
                   <td className="px-4 py-4 font-medium">{m.provider?.name}</td>
-                  <td className="px-4 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      {m.requester_id === depotId ? (
-                        <>
-                          <button onClick={() => onEdit(m)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all"><Pencil size={18}/></button>
-                          <button onClick={() => setTargetDelete(m)} className="p-2 text-red-600  hover:bg-red-50 rounded-xl transition-all"><Trash2 size={18}/></button>
-                        </>
-                      ) : (
-                        <>
-                          <button onClick={() => { setTargetAccept(m); setSentQty(m.requested_quantity); }} className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-xl text-xs font-bold hover:bg-green-700 shadow-sm"><CheckCircle size={14}/> Terima</button>
-                          <button onClick={() => setTargetReject(m)} className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white hover:bg-red-700 rounded-xl text-xs font-bold border border-red-100"><XCircle size={14}/> Tolak</button>
-                        </>
-                      )}
-                    </div>
-                  </td>
+                  {readOnly ? (
+                    <td className="px-4 py-4">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-50 text-orange-600 text-[10px] font-black uppercase tracking-wider">
+                        <Clock size={12} /> Pending
+                      </span>
+                    </td>
+                  ) : (
+                    <td className="px-4 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        {m.requester_id === depotId ? (
+                          <>
+                            {onEdit && <button onClick={() => onEdit(m)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all"><Pencil size={18}/></button>}
+                            <button onClick={() => setTargetDelete(m)} className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={18}/></button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => { setTargetAccept(m); setSentQty(m.requested_quantity); }} className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-xl text-xs font-bold hover:bg-green-700 shadow-sm"><CheckCircle size={14}/> Terima</button>
+                            <button onClick={() => setTargetReject(m)} className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white hover:bg-red-700 rounded-xl text-xs font-bold border border-red-100"><XCircle size={14}/> Tolak</button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

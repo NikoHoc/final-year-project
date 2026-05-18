@@ -13,12 +13,12 @@ export const stockService = {
     return response.data;
   },
 
-  getActiveMutations: async (depotId: number) => {
+  getActiveMutations: async (depotId: number | null) => {
     const response = await api.get(`/stocks/${depotId}?status=active`);
     return response.data;
   },
 
-  getHistoryMutations: async (depotId: number, startDate?: string, endDate?: string) => {
+  getHistoryMutations: async (depotId: number | null, startDate?: string, endDate?: string) => {
     let url = `/stocks/${depotId}?status=history`;
     if (startDate && endDate) url += `&startDate=${startDate}&endDate=${endDate}`;
     const response = await api.get(url);
