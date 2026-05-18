@@ -5,10 +5,10 @@ import { useParams } from "next/navigation";
 import { Printer, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSettlement } from "@/hooks/useSettlement";
-import SettlementSummaryCards from "@/components/settlements/SettlementSummaryCards";
+import DailySummaryCards from "@/components/settlements/DailySummaryCards";
 import PaymentBreakdownTable from "@/components/settlements/PaymentBreakdownTable";
 import ExpenseTable from "@/components/settlements/ExpenseTable";
-import SettlementTransactionTable from "@/components/settlements/TransactionTable";
+import DailyTransactionTable from "@/components/settlements/DailyTransactionTable";
 import { formatDateFull } from "@/utils/format";
 import { Transaction } from "@/types";
 import ReportTransactionModal from "@/components/settlements/ReportTransactionModal";
@@ -70,7 +70,7 @@ export default function SettlementDetailPage() {
         </button>
       </div>
 
-      <SettlementSummaryCards summary={summary ?? null} />
+      <DailySummaryCards summary={summary ?? null} />
 
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
         <div className="lg:col-span-6">
@@ -81,7 +81,7 @@ export default function SettlementDetailPage() {
         </div>
       </div>
 
-      <SettlementTransactionTable
+      <DailyTransactionTable
         transactions={transactions || []}
         onViewReceipt={(tx) => setSelectedTx(tx)}
       />

@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { useSettlement } from "@/hooks/useSettlement";
-import SettlementSummaryCards from "@/components/settlements/SettlementSummaryCards";
+import DailySummaryCards from "@/components/settlements/DailySummaryCards";
 import PaymentBreakdownTable from "@/components/settlements/PaymentBreakdownTable";
 import ExpenseTable from "@/components/settlements/ExpenseTable";
-import SettlementTransactionTable from "@/components/settlements/TransactionTable";
+import DailyTransactionTable from "@/components/settlements/DailyTransactionTable";
 import { formatDateFull } from "@/utils/format";
 import { Transaction } from "@/types";
 import toast from "react-hot-toast";
@@ -83,7 +83,7 @@ export default function CashierSettlementPage() {
           Proses Settlement
         </button>
       </div>
-      <SettlementSummaryCards summary={summary ?? null} />
+      <DailySummaryCards summary={summary ?? null} />
 
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
         <div className="lg:col-span-6">
@@ -94,7 +94,7 @@ export default function CashierSettlementPage() {
         </div>
       </div>
 
-      <SettlementTransactionTable 
+      <DailyTransactionTable 
         transactions={transactions ?? []} 
         onViewReceipt={(tx) => setSelectedTx(tx)}
       />

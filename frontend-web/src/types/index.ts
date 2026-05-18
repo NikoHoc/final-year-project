@@ -263,6 +263,10 @@ export interface SettlementSummary {
   net_income: number;
   payment_methods: PaymentMethodSummary[];
 }
+export interface PaymentPieChartData {
+  name: string;
+  value: number;
+}
 export interface SettlementResponse {
   settlement?: DailySettlement;
   summary: SettlementSummary;

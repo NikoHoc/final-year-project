@@ -160,20 +160,66 @@ exports.getSettlements = async (req, res) => {
   try {
     let query = supabase
       .from("daily_settlements")
-      .select(`*, creator:profiles!created_by(full_name)`)
-      .eq("depot_id", depot_id)
-      .order("settlement_date", { ascending: false });
+      .select("*, creator:profiles(full_name)")
+      .eq("depot_id", depot_id);
 
     if (startDate && endDate) {
-      query = query
-        .gte("settlement_date", startDate)
-        .lte("settlement_date", endDate);
+      query = query.gte("settlement_date", startDate).lte("settlement_date", endDate);
     }
 
-    const { data, error } = await query;
-
+    const { data: settlements, error } = await query.order("settlement_date", { ascending: true });
+    
     if (error) throw error;
-    return res.status(200).json({ status: true, data });
+
+    if (!settlements || settlements.length === 0) {
+      return res.status(200).json({ 
+        status: true, 
+        data: { settlements: [], paymentSummary: [] } 
+      });
+    }
+
+    const settlementIds = settlements.map(settlement => settlement.id);
+
+    const { data: transactionsWithPayments, error: errPay } = await supabase
+      .from("transactions")
+      .select(`
+        id,
+        transaction_payments (
+          payment_methods ( name )
+        )
+      `)
+      .in("settlement_id", settlementIds)
+      .eq("payment_status", "paid");
+
+    if (errPay) throw errPay;
+
+    const methodsMap = {};
+
+    transactionsWithPayments.forEach(transaction => {
+      if (transaction.transaction_payments && transaction.transaction_payments.length > 0) {
+        transaction.transaction_payments.forEach(payment => {
+          const methodName = payment.payment_methods?.name || "Tunai";
+          
+          if (!methodsMap[methodName]) {
+            methodsMap[methodName] = { name: methodName, value: 0 };
+          }
+          methodsMap[methodName].value += 1;
+        });
+      } else {
+        if (!methodsMap["Tunai"]) {
+          methodsMap["Tunai"] = { name: "Tunai", value: 0 };
+        }
+        methodsMap["Tunai"].value += 1;
+      }
+    });
+
+    return res.status(200).json({
+      status: true,
+      data: {
+        settlements: settlements,
+        paymentSummary: Object.values(methodsMap)
+      }
+    });
   } catch (error) {
     return res.status(500).json({ status: false, message: error.message });
   }

@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { settlementService } from "@/services/settlementService";
-import { DailySettlement, SettlementResponse, SettlementSummary } from "@/types";
+import { DailySettlement, PaymentPieChartData, SettlementResponse, SettlementSummary } from "@/types";
 import { handleApiError } from "@/utils/errorHandler";
 import toast from "react-hot-toast";
 
@@ -8,6 +8,7 @@ export const useSettlement = () => {
   const [settlements, setSettlements] = useState<DailySettlement[]>([]);
   const [settlementDetail, setSettlementDetail] = useState<SettlementResponse | null>(null);
   const [todayData, setTodayData] = useState<SettlementResponse | null>(null);
+  const [paymentSummary, setPaymentSummary] = useState<PaymentPieChartData[]>([]);
   
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -46,10 +47,12 @@ export const useSettlement = () => {
       try {
         const response = await settlementService.getSettlements(depotId, startDate, endDate);
         if (response.status) {
-          setSettlements(response.data);
+          setSettlements(response.data.settlements || []);
+          setPaymentSummary(response.data?.paymentSummary || []);
         } else {
           throw new Error(response.message || "Failed to fetch settlements");
         }
+        console.log("Fetched settlements:", response.data);
       } catch (error) {
         handleApiError(error);
         throw error;
@@ -79,6 +82,7 @@ export const useSettlement = () => {
 
   return {
     settlements,
+    paymentSummary,
     settlementDetail,
     todayData,
     isLoading,

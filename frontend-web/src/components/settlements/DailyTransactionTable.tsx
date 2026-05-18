@@ -8,7 +8,7 @@ interface Props {
   onViewReceipt?: (transaction: Transaction) => void;
 }
 
-export default function TransactionTable({ transactions, onViewReceipt }: Props) {
+export default function DailyTransactionTable({ transactions, onViewReceipt }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
       <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
