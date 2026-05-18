@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Search, Pencil, Trash2, CheckCircle, XCircle, Truck } from "lucide-react";
 import { StockMutation } from "@/types";
-import { formatDate } from "@/utils/format";
+import { formatDateTime } from "@/utils/format";
 import { useStock } from "@/hooks/useStock";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import Modal from "@/components/ui/Modal";
@@ -58,9 +58,14 @@ export default function ActiveMutationsTable({ data, isLoading, depotId, onRefre
   return (
     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="text-lg font-black text-gray-800 uppercase flex items-center gap-2">
-          <Truck size={24} /> Permintaan Aktif
-        </h2>
+        <div>
+          <h2 className="text-lg font-black text-gray-800 uppercase flex items-center gap-2">
+            <Truck size={24} /> Permintaan Aktif
+          </h2>
+          <p className="text-xs text-gray-500 mt-1 font-semibold">
+            Daftar permintaan mutasi stok yang sedang berjalan
+          </p>
+        </div>
         <div className="relative w-full sm:w-64">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input 
@@ -94,16 +99,16 @@ export default function ActiveMutationsTable({ data, isLoading, depotId, onRefre
               filtered.map((m, idx) => (
                 <tr key={m.id} className="hover:bg-gray-50/50 transition-colors group text-sm">
                   <td className="px-4 py-4">{idx + 1}</td>
-                  <td className="px-4 py-4 font-medium">{formatDate(m.created_at)}</td>
-                  <td className="px-4 py-4 font-bold text-gray-800">{m.requester?.name}</td>
-                  <td className="px-4 py-4 font-black text-blue-700">{m.item_name}</td>
+                  <td className="px-4 py-4 font-medium">{formatDateTime(m.created_at)}</td>
+                  <td className="px-4 py-4 font-medium">{m.requester?.name}</td>
+                  <td className="px-4 py-4 font-bold text-blue-700">{m.item_name}</td>
                   <td className="px-4 py-4">
                     <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
                       {m.requested_quantity} {m.unit}
                     </span>
                   </td>
-                  <td className="px-4 py-4 italic max-w-37.5 truncate">{m.requester_notes || "-"}</td>
-                  <td className="px-4 py-4 font-bold text-gray-800">{m.provider?.name}</td>
+                  <td className="px-4 py-4 italic max-w-37.5">{m.requester_notes || "-"}</td>
+                  <td className="px-4 py-4 font-medium">{m.provider?.name}</td>
                   <td className="px-4 py-4 text-right">
                     <div className="flex justify-end gap-2">
                       {m.requester_id === depotId ? (

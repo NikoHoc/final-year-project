@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Calendar, Filter, Receipt, TrendingDown, Wallet, Activity, Percent, Banknote, Eye } from "lucide-react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useSettlement } from "@/hooks/useSettlement";
-import { formatDate, formatRupiah, formatDateFull, getTodayStr, getFirstDayOfMonthStr, getSevenDaysAgoStr } from "@/utils/format";
+import { formatDateTime, formatRupiah, formatDateFull, getTodayStr, getFirstDayOfMonthStr, getSevenDaysAgoStr } from "@/utils/format";
 import { useSession } from "@/contexts/SessionContext";
 
 export default function ReportsPage() {
@@ -19,10 +19,10 @@ export default function ReportsPage() {
   const endOfToday = `${getTodayStr()}T23:59:59.999Z`;
 
   useEffect(() => {
-  if (!isLoadingSession && user?.depot_id) {
-    fetchSettlements(user.depot_id, getFirstDayOfMonthStr(), endOfToday);
-  }
-}, [isLoadingSession, user?.depot_id, fetchSettlements, endOfToday]);
+    if (!isLoadingSession && user?.depot_id) {
+      fetchSettlements(user.depot_id, getFirstDayOfMonthStr(), endOfToday);
+    }
+  }, [isLoadingSession, user?.depot_id, fetchSettlements, endOfToday]);
 
   const handleApplyFilter = () => {
     if (!user?.depot_id) return;
@@ -233,8 +233,8 @@ export default function ReportsPage() {
       </div>
       <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm flex flex-col w-full">
         <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
-          <h2 className="text-sm font-bold text-gray-800 uppercase flex items-center gap-2">
-            <Calendar size={18} className="text-orange-500" /> Detail Riwayat Settlement
+          <h2 className="text-lg font-black text-gray-800 uppercase flex items-center gap-2">
+            <Calendar size={20} className="text-orange-500" /> Detail Riwayat Settlement
           </h2>
           <span className="text-xs font-bold text-gray-400 uppercase bg-white px-3 py-1 rounded-lg border border-gray-100 shadow-sm">
             Total: {settlements?.length || 0} Hari
@@ -266,7 +266,7 @@ export default function ReportsPage() {
                 settlements.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="font-bold text-gray-800">{formatDate(item.settlement_date)}</div>
+                      <div className="font-bold text-gray-800">{formatDateTime(item.settlement_date)}</div>
                       <div className="text-[10px] text-gray-400 mt-0.5">Oleh: {item.creator?.full_name || 'Kasir'}</div>
                     </td>
                     <td className="px-6 py-4">

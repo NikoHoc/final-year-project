@@ -2,14 +2,22 @@ const supabase = require("../config/supabase");
 
 exports.getExpenses = async (req, res) => {
   const { depot_id } = req.params;
+  const { startDate, endDate } = req.query;
 
   try {
-    // join table profiles, ambil full_name
-    const { data, error } = await supabase
+    let query = supabase
       .from("operational_expenses")
       .select("*, profiles(full_name)")
       .eq("depot_id", depot_id)
       .order("expense_date", { ascending: false });
+
+    if (startDate && endDate) {
+      query = query
+        .gte("expense_date", startDate)
+        .lte("expense_date", endDate);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return res.status(200).json({ status: true, data });

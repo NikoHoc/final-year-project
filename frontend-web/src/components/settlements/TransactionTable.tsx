@@ -1,6 +1,7 @@
 import { Eye } from "lucide-react";
-import { formatRupiah, formatDate } from "@/utils/format";
+import { formatRupiah, formatDateTime } from "@/utils/format";
 import { Transaction } from "@/types";
+import { Receipt } from "lucide-react";
 
 interface Props {
   transactions: Transaction[];
@@ -10,8 +11,10 @@ interface Props {
 export default function TransactionTable({ transactions, onViewReceipt }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
-      <div className="p-6 border-b border-gray-50 flex items-center justify-between">
-        <h3 className="font-bold text-gray-800">Log Transaksi</h3>
+      <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
+        <h2 className="text-lg font-black text-gray-800 uppercase flex items-center gap-2">
+          <Receipt size={20} className="text-blue-500" /> Log Transaksi
+        </h2>
         <span className="text-xs font-bold text-gray-400 uppercase">Total: {transactions.length}</span>
       </div>
       <div className="overflow-x-auto max-h-150 custom-scrollbar">
@@ -35,7 +38,7 @@ export default function TransactionTable({ transactions, onViewReceipt }: Props)
                   <td className="px-4 py-3 text-gray-400">{idx + 1}</td>
                   <td className="px-4 py-3">
                     <div className="font-bold text-gray-800">{tx.customer_name || "Pelanggan"}</div>
-                    <div className="text-[10px] text-gray-400">{formatDate(tx.created_at)}</div>
+                    <div className="text-[10px] text-gray-400">{formatDateTime(tx.created_at)}</div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">

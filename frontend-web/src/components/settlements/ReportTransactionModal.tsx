@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { X, Tag, CheckCircle2, Loader2, CircleUser, Calendar, MapPin } from "lucide-react";
-import { formatRupiah, formatDate } from "@/utils/format";
+import { formatRupiah, formatDateTime } from "@/utils/format";
 import { Depot, Transaction, TransactionItem, TransactionPayment, TransactionPaymentItem } from "@/types";
 import ReceiptPreview, { ReceiptData } from "@/components/orders/cashier/ReceiptPreview";
 import { useTransaction } from "@/hooks/useTransaction";
@@ -79,7 +79,7 @@ export default function ReportTransactionModal({ isOpen, onClose, transaction, d
       method: transactionDetail.payment_method || "Tunai",
       paid: totalPaid,
       change: totalChange,
-      time: formatDate(transactionDetail.created_at),
+      time: formatDateTime(transactionDetail.created_at),
       status: "REKAP"
     };
   }
@@ -121,7 +121,7 @@ export default function ReportTransactionModal({ isOpen, onClose, transaction, d
                 <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center"><Calendar size={20} /></div>
                 <div>
                   <div className="text-[10px] font-bold text-gray-400 uppercase">Waktu Pesan</div>
-                  <div className="text-sm font-black text-gray-800">{formatDate(transactionDetail?.created_at || transaction.created_at || "")}</div>
+                  <div className="text-sm font-black text-gray-800">{formatDateTime(transactionDetail?.created_at || transaction.created_at || "")}</div>
                 </div>
               </div>
               <div className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center gap-3 shadow-sm">

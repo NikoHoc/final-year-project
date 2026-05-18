@@ -6,7 +6,7 @@ export const formatRupiah = (angka: number) => {
   }).format(angka);
 };
 
-export const formatDate = (date: string | Date) => {
+export const formatDateTime = (date: string | Date) => {
   if (!date) return "-";
   
   const d = new Date(date);

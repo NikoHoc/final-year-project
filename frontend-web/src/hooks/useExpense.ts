@@ -9,10 +9,10 @@ export const useExpense = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const fetchExpenses = useCallback(async (depotId: number) => {
+  const fetchExpenses = useCallback(async (depotId: number, startDate?: string, endDate?: string) => {
     setIsLoading(true);
     try {
-      const res = await expenseService.getAllByDepot(depotId);
+      const res = await expenseService.getAllByDepot(depotId, startDate, endDate);
       setExpenses(res.data || []); 
       return res.data as Expense[];
     } catch (error) {

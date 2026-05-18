@@ -10,7 +10,7 @@ import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { TransactionPayment, CartItem, Depot } from "@/types";
 import { useRouter } from "next/navigation";
 import { useTransaction } from "@/hooks/useTransaction";
-import { formatDate } from "@/utils/format";
+import { formatDateTime } from "@/utils/format";
 import { printReceiptHTML } from "@/utils/printHandler";
 
 export interface CheckoutItem {
@@ -62,7 +62,7 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
       fetchMethods();
 
       const updateTime = () => {
-        setCurrentTime(formatDate(new Date()));
+        setCurrentTime(formatDateTime(new Date()));
       };
       
       updateTime();
@@ -111,7 +111,7 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
           tax: segmentTax, 
           grandTotal: segmentGrandTotal,
           method: payment.payment_methods?.name || "Unknown",
-          time: formatDate(payment.created_at),
+          time: formatDateTime(payment.created_at),
           paidAmount: payment.paid_amount,
           changeAmount: payment.change_amount,
         };

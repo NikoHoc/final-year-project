@@ -1,5 +1,6 @@
 import { formatRupiah } from "@/utils/format";
 import { SettlementSummary } from "@/types";
+import { Coins } from "lucide-react";
 
 interface Props {
   summary: SettlementSummary | null;
@@ -16,8 +17,10 @@ export default function PaymentBreakdownTable({ summary }: Props) {
 
   return (
     <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm h-full flex flex-col">
-      <div className="p-5 border-b border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <span className="font-bold text-gray-800">Rincian Pemasukan</span>
+      <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
+        <h2 className="text-lg font-black text-gray-800 uppercase flex items-center gap-2">
+          <Coins size={20} className="text-green-500" /> Rincian Pemasukan
+        </h2>
         <div className="flex flex-wrap items-center gap-2 text-[10px] sm:text-xs">
           <div className="flex items-center gap-1 bg-green-50 text-green-700 px-2.5 py-1.5 rounded-lg border border-green-100 font-semibold">
             <span>Tunai:</span>

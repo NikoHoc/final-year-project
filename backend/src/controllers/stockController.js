@@ -11,13 +11,36 @@ const selectQuery = `
 
 exports.getMutations = async (req, res) => {
   const { depot_id } = req.params;
+  const { startDate, endDate, status  } = req.query;
 
   try {
-    const { data, error } = await supabase
+    // const { data, error } = await supabase
+    //   .from("stock_mutations")
+    //   .select(selectQuery)
+    //   .or(`requester_id.eq.${depot_id},provider_id.eq.${depot_id}`)
+    //   .order("created_at", { ascending: false });
+
+    let query = supabase
       .from("stock_mutations")
       .select(selectQuery)
       .or(`requester_id.eq.${depot_id},provider_id.eq.${depot_id}`)
       .order("created_at", { ascending: false });
+
+    if (startDate && endDate) {
+      query = query
+        .gte("created_at", startDate)
+        .lte("created_at", endDate);
+    }
+
+    if (status) {
+      if (status === 'active') {
+        query = query.eq('status', 'pending');
+      } else if (status === 'history') {
+        query = query.neq('status', 'pending');
+      }
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return res.status(200).json({ status: true, data });

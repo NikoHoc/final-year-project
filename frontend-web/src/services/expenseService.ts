@@ -2,8 +2,13 @@ import api from "./api";
 import { ExpensePayload } from "@/types";
 
 export const expenseService = {
-  getAllByDepot: async (depotId: number) => {
-    const response = await api.get(`/expenses/${depotId}`);
+  getAllByDepot: async (depotId: number, startDate?: string, endDate?: string) => {
+    let url = `/expenses/${depotId}`;
+
+    if (startDate && endDate) {
+      url += `?startDate=${startDate}&endDate=${endDate}`;
+    }
+    const response = await api.get(url);
     return response.data;
   },
 

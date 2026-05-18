@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { X, Calendar, User, Printer  } from "lucide-react";
-import { formatRupiah, formatDate } from "@/utils/format";
+import { formatRupiah, formatDateTime } from "@/utils/format";
 import { DailySettlement, SettlementSummary, Expense, Depot } from "@/types";
 import { printSettlementHTML } from "@/utils/printHandler";
 
@@ -56,7 +56,7 @@ export default function ReportSettlementPrintModal({ isOpen, onClose, settlement
                 <Calendar className="text-blue-500" size={20} />
                 <div>
                   <div className="text-[10px] font-bold text-gray-400 uppercase">Tanggal Buku</div>
-                  <div className="text-sm font-black text-gray-800">{formatDate(settlement.settlement_date)}</div>
+                  <div className="text-sm font-black text-gray-800">{formatDateTime(settlement.settlement_date)}</div>
                 </div>
               </div>
               <div className="bg-gray-50 p-4 rounded-2xl flex items-center gap-3 border border-gray-100">
@@ -113,7 +113,7 @@ export default function ReportSettlementPrintModal({ isOpen, onClose, settlement
               <div className="space-y-1 text-[11px]">
                 <div className="flex justify-between"><span>LAPORAN:</span><span className="font-bold uppercase">CLOSING REPORT</span></div>
                 <div className="flex justify-between"><span>ID SETTLE:</span><span className="font-bold uppercase">SET-{settlement.id.slice(-6).toUpperCase()}</span></div>
-                <div className="flex justify-between"><span>TANGGAL:</span><span className="font-bold">{formatDate(settlement.settlement_date)}</span></div>
+                <div className="flex justify-between"><span>TANGGAL:</span><span className="font-bold">{formatDateTime(settlement.settlement_date)}</span></div>
                 <div className="flex justify-between"><span>KASIR:</span><span className="font-bold uppercase">{settlement.creator?.full_name || "SYSTEM"}</span></div>
               </div>
 

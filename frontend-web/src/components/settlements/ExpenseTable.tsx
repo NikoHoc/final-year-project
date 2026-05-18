@@ -1,5 +1,6 @@
-import { formatRupiah, formatDate } from "@/utils/format";
+import { formatRupiah, formatDateTime } from "@/utils/format";
 import { Expense } from "@/types";
+import { TrendingDown } from "lucide-react";
 
 interface Props {
   expenses: Expense[];
@@ -8,8 +9,10 @@ interface Props {
 export default function ExpenseTable({ expenses }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm flex flex-col h-full">
-      <div className="p-6 border-b border-gray-50 flex items-center justify-between">
-        <h3 className="font-bold text-gray-800">Daftar Pengeluaran</h3>
+      <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
+        <h2 className="text-lg font-black text-gray-800 uppercase flex items-center gap-2">
+          <TrendingDown size={20} className="text-red-500" /> Daftar Pengeluaran
+        </h2>
         <span className="text-xs font-bold text-gray-400 uppercase">Total: {expenses.length}</span>
       </div>
       <div className="overflow-y-auto max-h-75 custom-scrollbar flex-1">
@@ -26,7 +29,7 @@ export default function ExpenseTable({ expenses }: Props) {
                 <tr key={exp.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-4 py-4">
                     <div className="font-bold text-gray-800">{exp.item_name}</div>
-                    <div className="text-[10px] text-gray-400">{formatDate(exp.expense_date)}</div>
+                    <div className="text-[10px] text-gray-400">{formatDateTime(exp.expense_date)}</div>
                   </td>
                   <td className="px-4 py-4 text-right font-bold text-red-600">
                     {formatRupiah(exp.amount)}

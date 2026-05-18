@@ -2,8 +2,26 @@ import api from "./api";
 import { MutationPayload } from "@/types";
 
 export const stockService = {
-  getMutations: async (depotId: number) => {
-    const response = await api.get(`/stocks/${depotId}`);
+  getMutations: async (depotId: number, startDate?: string, endDate?: string) => {
+    let url = `/stocks/${depotId}`;
+
+    if (startDate && endDate) {
+      url += `?startDate=${startDate}&endDate=${endDate}`;
+    }
+    const response = await api.get(url);
+
+    return response.data;
+  },
+
+  getActiveMutations: async (depotId: number) => {
+    const response = await api.get(`/stocks/${depotId}?status=active`);
+    return response.data;
+  },
+
+  getHistoryMutations: async (depotId: number, startDate?: string, endDate?: string) => {
+    let url = `/stocks/${depotId}?status=history`;
+    if (startDate && endDate) url += `&startDate=${startDate}&endDate=${endDate}`;
+    const response = await api.get(url);
     return response.data;
   },
 

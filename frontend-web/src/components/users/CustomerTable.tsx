@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { User } from "@/types";
 import { Search, Pencil, Trash2, ArrowUpDown, User as UserIcon, Calendar, ReceiptText } from "lucide-react";
-import { formatDate } from "@/utils/format";
+import { formatDateTime } from "@/utils/format";
 import {
   createColumnHelper,
   flexRender,
@@ -87,7 +87,7 @@ export default function CustomerTable({ data, isLoading, onEditClick, onDeleteCl
         return (
           <div className="flex items-center gap-2 text-gray-600 font-medium whitespace-nowrap">
             <Calendar size={14} className="text-gray-400" />
-            <span>{dateStr ? formatDate(dateStr) : "-"}</span>
+            <span>{dateStr ? formatDateTime(dateStr) : "-"}</span>
           </div>
         );
       },

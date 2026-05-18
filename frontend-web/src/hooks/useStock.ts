@@ -6,13 +6,18 @@ import toast from "react-hot-toast";
 
 export const useStock = () => {
   const [mutations, setMutations] = useState<StockMutation[]>([]);
+  const [activeMutations, setActiveMutations] = useState<StockMutation[]>([]);
+  const [historyMutations, setHistoryMutations] = useState<StockMutation[]>([]);
+
   const [isLoading, setIsLoading] = useState(false);
+  const [isActiveLoading, setIsActiveLoading] = useState(false); 
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const fetchMutations = useCallback(async (depotId: number) => {
+  const fetchMutations = useCallback(async (depotId: number, startDate?: string, endDate?: string) => {
     setIsLoading(true);
     try {
-      const res = await stockService.getMutations(depotId);
+      const res = await stockService.getMutations(depotId, startDate, endDate);
       setMutations(res.data || []);
       return res.data as StockMutation[];
     } catch (error) {
@@ -20,6 +25,34 @@ export const useStock = () => {
       return [];
     } finally {
       setIsLoading(false);
+    }
+  }, []);
+
+  const fetchActiveMutations = useCallback(async (depotId: number) => {
+    setIsActiveLoading(true);
+    try {
+      const res = await stockService.getActiveMutations(depotId);
+      setActiveMutations(res.data || []);
+      return res.data as StockMutation[];
+    } catch (error) {
+      handleApiError(error, "Gagal memuat data aktif");
+      return [];
+    } finally {
+      setIsActiveLoading(false);
+    }
+  }, []);
+
+  const fetchHistoryMutations = useCallback(async (depotId: number, startDate?: string, endDate?: string) => {
+    setIsHistoryLoading(true);
+    try {
+      const res = await stockService.getHistoryMutations(depotId, startDate, endDate);
+      setHistoryMutations(res.data || []);
+      return res.data as StockMutation[];
+    } catch (error) {
+      handleApiError(error, "Gagal memuat riwayat");
+      return [];
+    } finally {
+      setIsHistoryLoading(false);
     }
   }, []);
 
@@ -84,9 +117,15 @@ export const useStock = () => {
 
   return {
     mutations,
+    activeMutations,
+    historyMutations,
     isLoading,
+    isActiveLoading, 
+    isHistoryLoading,
     isProcessing,
     fetchMutations,
+    fetchActiveMutations,
+    fetchHistoryMutations,
     createMutation,
     updateMutation,
     processMutation,
