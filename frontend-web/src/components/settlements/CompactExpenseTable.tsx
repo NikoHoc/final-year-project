@@ -6,7 +6,7 @@ interface Props {
   expenses: Expense[];
 }
 
-export default function ExpenseTable({ expenses }: Props) {
+export default function CompactExpenseTable({ expenses }: Props) {
   return (
     <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm flex flex-col h-full">
       <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">

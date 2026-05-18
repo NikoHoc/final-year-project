@@ -24,7 +24,7 @@ interface Props {
   endDate: string;
 }
 
-export default function PaymentMethodPieChart({ data, isLoading, startDate, endDate }: Props) {
+export default function PaymentMethodChart({ data, isLoading, startDate, endDate }: Props) {
   if (isLoading) {
     return (
       <div className="h-87.5 w-full flex flex-col items-center justify-center">

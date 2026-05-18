@@ -18,10 +18,10 @@ export default function DailyTransactionTable({ transactions, onViewReceipt }: P
         <span className="text-xs font-bold text-gray-400 uppercase">Total: {transactions.length}</span>
       </div>
       <div className="overflow-x-auto max-h-150 custom-scrollbar">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-white sticky top-0 shadow-sm z-10 uppercase text-gray-400 font-black">
+        <table className="w-full text-left">
+          <thead className="bg-gray-50 text-gray-500 font-bold uppercase text-xs border-b border-gray-100 sticky top-0 z-10">
             <tr>
-              <th className="px-4 py-3 w-10">No</th>
+              <th className="px-4 py-3 text-center">No</th>
               <th className="px-4 py-3">Waktu / Pelanggan</th>
               <th className="px-4 py-3">Tipe / Meja</th>
               <th className="px-4 py-3">Metode</th>
@@ -31,30 +31,30 @@ export default function DailyTransactionTable({ transactions, onViewReceipt }: P
               <th className="px-4 py-3 text-center">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-gray-100">
             {transactions.length > 0 ? (
               transactions.map((tx, idx) => (
-                <tr key={tx.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-4 py-3 text-gray-400">{idx + 1}</td>
+                <tr key={tx.id} className="hover:bg-gray-50/50 transition-colors text-sm">
+                  <td className="px-4 py-3 font-bold text-gray-700 text-center">{idx + 1}</td>
                   <td className="px-4 py-3">
-                    <div className="font-bold text-gray-800">{tx.customer_name || "Pelanggan"}</div>
-                    <div className="text-[10px] text-gray-400">{formatDateTime(tx.created_at)}</div>
+                    <div className="font-bold text-gray-600">{tx.customer_name || "Pelanggan"}</div>
+                    <div className="text-xs text-gray-400">{formatDateTime(tx.created_at)}</div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase ${
+                      <span className={`text-xs font-black px-2 py-0.5 rounded-md uppercase ${
                         tx.type === 'dining' ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'
                       }`}>
                         {tx.type}
                       </span>
-                      <span className="text-xs font-bold text-gray-400">/</span>
-                      <span className="text-xs font-bold text-gray-700">
+                      <span className=" font-bold text-gray-400">/</span>
+                      <span className="font-bold text-gray-700">
                         {tx.type === 'dining' ? (tx.tables?.table_number) : '-'}
                       </span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-[10px] text-blue-500 font-bold uppercase">{tx.payment_method || "Split"}</span>
+                    <span className="text-xs text-blue-500 font-bold uppercase">{tx.payment_method || "Split"}</span>
                   </td>
                   <td className="px-4 py-3 text-right font-medium text-gray-600">{formatRupiah(tx.subtotal)}</td>
                   <td className="px-4 py-3 text-right font-medium text-red-500">{formatRupiah(tx.tax_amount)}</td>

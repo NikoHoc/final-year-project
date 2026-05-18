@@ -246,6 +246,12 @@ export interface DailySettlement {
   creator?: {
     full_name: string;
   };
+  depot?: {
+    id: number;
+    name: string;
+    address: string;
+    phone_number: string;
+  } | null;
 }
 
 export interface PaymentMethodSummary {

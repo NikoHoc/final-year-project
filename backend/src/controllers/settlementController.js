@@ -231,7 +231,10 @@ exports.getSettlementDetail = async (req, res) => {
   try {
     const { data: settlement, error: errSet } = await supabase
       .from("daily_settlements")
-      .select(`*, creator:profiles!created_by(full_name)`)
+      .select(`*, 
+        depot:depots(id, name, address, phone_number),
+        creator:profiles!created_by(full_name)
+      `)
       .eq("id", id)
       .single();
 

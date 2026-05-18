@@ -5,7 +5,7 @@ import { CheckCircle2, Loader2 } from "lucide-react";
 import { useSettlement } from "@/hooks/useSettlement";
 import DailySummaryCards from "@/components/settlements/DailySummaryCards";
 import PaymentBreakdownTable from "@/components/settlements/PaymentBreakdownTable";
-import ExpenseTable from "@/components/settlements/ExpenseTable";
+import CompactExpenseTable from "@/components/settlements/CompactExpenseTable";
 import DailyTransactionTable from "@/components/settlements/DailyTransactionTable";
 import { formatDateFull } from "@/utils/format";
 import { Transaction } from "@/types";
@@ -90,7 +90,7 @@ export default function CashierSettlementPage() {
           <PaymentBreakdownTable summary={summary ?? null} />
         </div>
         <div className="lg:col-span-4">
-          <ExpenseTable expenses={expenses ?? []} />
+          <CompactExpenseTable expenses={expenses ?? []} />
         </div>
       </div>
 

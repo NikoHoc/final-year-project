@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Calendar, Filter, Activity, Coins, Eye } from "lucide-react";
+import { Filter, Activity, Coins } from "lucide-react";
 import { useSettlement } from "@/hooks/useSettlement";
-import { formatDateTime, formatRupiah, formatDateFull, getTodayStr, getFirstDayOfMonthStr, getSevenDaysAgoStr } from "@/utils/format";
+import { formatDateFull, getTodayStr, getFirstDayOfMonthStr, getSevenDaysAgoStr } from "@/utils/format";
 import { useSession } from "@/contexts/SessionContext";
 import AccumulatedSummaryCards from "@/components/settlements/AccumulatedSummaryCards";
 import RevenueTrendChart from "@/components/charts/RevenueTrendChart";
@@ -132,7 +131,7 @@ export default function ReportsPage() {
         </div>
         <div className="xl:col-span-1 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-center">
           <h2 className="text-lg font-black text-gray-800 flex items-center gap-2 mb-4">
-            <Coins size={20} className="text-blue-500" /> Rincian Metode Pembayaran
+            <Coins size={20} className="text-green-500" /> Rincian Metode Pembayaran
           </h2>
           <PaymentMethodChart 
             data={paymentSummary} 
