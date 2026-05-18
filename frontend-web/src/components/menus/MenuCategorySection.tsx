@@ -60,7 +60,7 @@ export default function MenuCategorySection({
       </div>
 
       {!searchQuery && categories.length > 0 && (
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+        <div className="flex flex-wrap gap-3">
         {categories.map((cat) => (
           <button
             key={cat.id}

@@ -77,7 +77,7 @@ export default function AdminMenusPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:items-start lg:max-h-[calc(100vh-190px)]">
-        <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 lg:min-h-[200px] lg:max-h-[calc(100vh-190px)] flex flex-col">
+        <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 lg:min-h-50 lg:max-h-[calc(100vh-190px)] flex flex-col">
           <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-4 shrink-0">
             <h2 className="text-xl font-bold text-gray-800">Kategori</h2>
             <button
@@ -123,7 +123,7 @@ export default function AdminMenusPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 lg:min-h-[200px] lg:max-h-[calc(100vh-190px)] flex flex-col">
+        <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 lg:min-h-50 lg:max-h-[calc(100vh-190px)] flex flex-col">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-4 mb-5 shrink-0">
             <h2 className="text-xl font-bold text-gray-800">Daftar Menu</h2>
             
