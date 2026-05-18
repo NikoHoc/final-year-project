@@ -130,7 +130,7 @@ export default function ReportTransactionModal({ isOpen, onClose, transaction, d
                   <div className="text-[10px] font-bold text-gray-400 uppercase">Meja</div>
                   <div className="text-sm font-black text-gray-800">
                     {(transactionDetail?.type === 'dining' || transaction?.type === 'dining') 
-                      ? (transactionDetail?.table_number || transactionDetail?.table_id || "-") 
+                      ? (transactionDetail?.tables?.table_number || transactionDetail?.table_id || "-") 
                       : "BUNGKUS"}
                   </div>
                 </div>
@@ -230,7 +230,7 @@ export default function ReportTransactionModal({ isOpen, onClose, transaction, d
             <ReceiptPreview 
               receiptRef={receiptRef}
               rcp={rcp}
-              tableId={transactionDetail?.table_number || transactionDetail?.table_id?.toString() || '-'}
+              tableId={transactionDetail?.tables?.table_number || transactionDetail?.table_id?.toString() || '-'}
               transactionId={transaction.id}
               customerName={transaction.customer_name || 'Pelanggan'}
               activeSegmentToView={null}

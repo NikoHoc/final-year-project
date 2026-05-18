@@ -65,6 +65,7 @@ exports.createTransaction = async (req, res) => {
           grand_total,
           order_status: initialStatus,
           payment_status: "unpaid",
+          is_settled: false
         },
       ])
       .select()
@@ -183,6 +184,27 @@ exports.addTransactionItems = async (req, res) => {
     });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
+  }
+};
+
+exports.updateCustomerInfo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { customer_name } = req.body;
+
+    const { data, error } = await supabase
+      .from("transactions")
+      .update({ customer_name: customer_name || null })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return res.status(200).json({ status: true, message: "Nama pelanggan berhasil diperbarui", data });
+  } catch (error) {
+    console.error("Error update customer info:", error);
+    return res.status(500).json({ status: false, message: error.message });
   }
 };
 
@@ -351,35 +373,32 @@ exports.midtransNotification = async (req, res) => {
 
 exports.getTransactions = async (req, res) => {
   const { depot_id } = req.params;
-  const { order_status, date } = req.query;
+  const { status } = req.query;
 
   try {
     let query = supabase
       .from("transactions")
       .select(`
         *,
-        tables(table_number),
-        transaction_items (*) 
+        tables (table_number),
+        transaction_items (*),
+        transaction_payments (*)
       `)
-      .eq("depot_id", depot_id)
-      .order("created_at", { ascending: false });
+      .eq("depot_id", depot_id);
 
-    if (order_status) query = query.eq("order_status", order_status);
-    if (date) {
+    if (status === 'active') {
       query = query
-        .gte("created_at", `${date}T00:00:00`)
-        .lte("created_at", `${date}T23:59:59`);
+        .neq('order_status', 'completed')
+        .neq('order_status', 'cancelled');
+    } 
+    else if (status === 'completed') {
+      query = query.eq('order_status', 'completed');
     }
 
-    const { data, error } = await query;
+    const { data, error } = await query.order("created_at", { ascending: false });
+
     if (error) throw error;
-
-    const mappedData = {
-      ...data,
-      table_number: data.tables?.table_number || null
-    };
-
-    return res.status(200).json({ status: true, data: mappedData });
+    return res.status(200).json({ status: true, data });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
   }
@@ -406,13 +425,8 @@ exports.getTransactionDetail = async (req, res) => {
       `)
       .eq("id", id)
       .single();
-
-    const mappedData = {
-      ...data,
-      table_number: data.tables?.table_number || null
-    };
     if (error) throw error;
-    return res.status(200).json({ status: true, data: mappedData });
+    return res.status(200).json({ status: true, data });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
   }
@@ -546,7 +560,7 @@ exports.processPayment = async (req, res) => {
   }
 };
 
-
+// order cart feature
 exports.updateServeStatus = async (req, res) => {
   try {
     const { id, itemId } = req.params;

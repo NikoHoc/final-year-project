@@ -11,6 +11,7 @@ router.use(authMiddleware);
 
 router.post("/", transactionController.createTransaction);
 router.post("/:id/items", roleMiddleware(["kasir", "pelayan"]), transactionController.addTransactionItems);
+router.put("/:id/customer", roleMiddleware(["admin", "kasir", "pelayan"]), transactionController.updateCustomerInfo);
 
 router.put("/:id/confirm", roleMiddleware(["admin", "kasir"]), transactionController.confirmTransaction);
 router.put("/:id/reject", roleMiddleware(["admin", "kasir"]), transactionController.rejectTransaction);

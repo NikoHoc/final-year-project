@@ -11,12 +11,11 @@ export const useTransaction = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const fetchAllTransactions = useCallback(async (depotId: number) => {
+  const fetchAllTransactions = useCallback(async (depotId: number, status?: 'active' | 'completed') => {
     setIsLoading(true);
     try {
-      const response = await transactionService.getAll(depotId) as Transaction[] | { data: Transaction[] };
-      const transactions = Array.isArray(response) ? response : (response.data || []);
-      return transactions;
+      const data = await transactionService.getAll(depotId, { status });
+      return data as Transaction[];
     } catch (error) {
       handleApiError(error, "Gagal memuat daftar transaksi");
       throw error;
@@ -58,6 +57,19 @@ export const useTransaction = () => {
       return res;
     } catch (error) {
       handleApiError(error, "Gagal menambahkan item transaksi");
+      throw error;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const updateCustomerName = async (transactionId: string, name: string) => {
+    setIsProcessing(true);
+    try {
+      const res = await transactionService.updateCustomerName(transactionId, name);
+      return res;
+    } catch (error) {
+      handleApiError(error, "Gagal memperbarui nama pelanggan");
       throw error;
     } finally {
       setIsProcessing(false);
@@ -141,6 +153,7 @@ export const useTransaction = () => {
     fetchTransactionById,
     createTransaction,
     addItems,
+    updateCustomerName,
     updateTransactionStatus,
     processPayment,
     updateTransactionItemStatus,

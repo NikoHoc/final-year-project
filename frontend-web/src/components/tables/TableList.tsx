@@ -24,7 +24,7 @@ export default function TableList({
     const hasActiveTx = activeTransactions.some((t) => t.table_id === table.id);
     return table.is_active || hasActiveTx;
   });
-
+  
   if (tables.length === 0) {
     return (
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 flex flex-col items-center justify-center text-center">
@@ -53,6 +53,7 @@ export default function TableList({
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
       {activeTables.map((table) => {
         const activeTx = activeTransactions.find((t) => t.table_id === table.id);
+        const totalItems = activeTx?.transaction_items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
         const isOccupied = !!activeTx;
 
         return (
@@ -84,7 +85,7 @@ export default function TableList({
                 isOccupied ? "text-yellow-700" : "text-gray-400"
               }`}
             >
-              {isOccupied ? "Terisi (Pesanan Aktif)" : "Kosong"}
+              {isOccupied ? `Terisi, ${totalItems} porsi` : "Kosong"}
             </span>
 
             <div

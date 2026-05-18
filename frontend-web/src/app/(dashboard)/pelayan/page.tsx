@@ -27,8 +27,8 @@ export default function PelayanDashboard() {
       try {
         await fetchTables(user.depot_id, true); 
         
-        const allTransactions = await fetchAllTransactions(user.depot_id);
-        setActiveTransactions(allTransactions.filter(t => t.order_status !== 'completed'));
+        const activeData = await fetchAllTransactions(user.depot_id, 'active');
+        setActiveTransactions(activeData);
       } catch (error) {
         console.error("Error Client Side - Gagal memuat data dashboard pelayan", error);
       } finally {

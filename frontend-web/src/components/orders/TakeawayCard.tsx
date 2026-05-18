@@ -65,7 +65,7 @@ export default function TakeawayCard({ transaction, role, isDepotOpen }: Takeawa
       <div className={`mt-4 pt-4 border-t ${isPaid ? "border-blue-100 text-blue-700" : "border-yellow-200 text-yellow-700"} flex items-center justify-between`}>
         <div className="flex items-center gap-1">
           <CheckCircle2 size={14} />
-          <span className="text-xs font-bold">{totalItems} Porsi Dipesan</span>
+          <span className="text-xs font-bold">{totalItems} Porsi</span>
         </div>
         <span className="text-[10px] font-bold uppercase tracking-wider hover:underline">Buka & Proses</span>
       </div>

@@ -97,7 +97,9 @@ export interface Transaction {
   depot_id: number;
   user_id?: string | null; 
   table_id?: number | null; 
-  table_number?: string;
+  tables?: {
+    table_number: string;
+  } | null;
   customer_id?: string | null; 
   customer_name?: string | null;
   type: TransactionType;

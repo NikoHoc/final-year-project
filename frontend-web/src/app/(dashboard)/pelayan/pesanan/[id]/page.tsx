@@ -21,7 +21,7 @@ export default function PelayanPesananPage() {
 
   const { user, isLoadingSession } = useSession();
   const { getDepotMenus } = useDepots();
-  const { fetchTransactionById, createTransaction, addItems } = useTransaction();
+  const { fetchTransactionById, createTransaction, addItems, updateCustomerName } = useTransaction();
   const { fetchTableById } = useTables();
 
   const transactionId = params.id as string;
@@ -30,6 +30,7 @@ export default function PelayanPesananPage() {
   const [tableId, setTableId] = useState<string | null>(searchParams.get("table_id"));
   const [tableNumber, setTableNumber] = useState<string | null>(null);
   const [customerName, setCustomerName] = useState<string>("");
+  const [initialCustomerName, setInitialCustomerName] = useState("");
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoadingMenus, setIsLoadingMenus] = useState(true)
@@ -49,7 +50,7 @@ export default function PelayanPesananPage() {
     toggleHalfPortion,
   } = useCart();
 
- useEffect(() => {
+  useEffect(() => {
     const loadData = async () => {
       if (!user?.depot_id) return;
       
@@ -97,9 +98,10 @@ export default function PelayanPesananPage() {
       const transaction = await fetchTransactionById(transactionId);
       if (transaction) {
         setOrderType(transaction.type || "dining");
-        setTableId(transaction.table_id ? transaction.table_id.toString() : null);
         setCustomerName(transaction.customer_name || "");
-        setTableNumber(transaction.table_number || transaction.table_id?.toString() || null);
+        setInitialCustomerName(transaction.customer_name || "");
+        setTableId(transaction.table_id ? transaction.table_id.toString() : null);
+        setTableNumber(transaction.tables?.table_number || transaction.table_id?.toString() || null);
 
         const loadedCart =
           transaction.transaction_items?.map((item: TransactionItem) => ({
@@ -202,6 +204,18 @@ export default function PelayanPesananPage() {
     }
   };
 
+  const handleCustomerNameBlur = async () => {
+    if (transactionId !== "new" && customerName !== initialCustomerName) {
+      try {
+        await updateCustomerName(transactionId, customerName);
+        setInitialCustomerName(customerName);
+        toast.success("Nama pelanggan berhasil diubah!");
+      } catch {
+        setCustomerName(initialCustomerName);
+      }
+    }
+  };
+
   if (isLoadingSession) {
     return <div className="p-8 text-center animate-pulse text-gray-400 font-bold">Mempersiapkan Mesin Pesanan...</div>;
   }
@@ -230,6 +244,7 @@ export default function PelayanPesananPage() {
               placeholder="Nama Pelanggan (Opsional)"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
+              onBlur={handleCustomerNameBlur}
               className="bg-transparent border-none outline-none text-sm font-medium text-gray-700 placeholder:text-gray-400 w-full md:w-48"
             />
           </div>

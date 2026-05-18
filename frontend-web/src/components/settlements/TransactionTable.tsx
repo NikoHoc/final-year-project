@@ -46,8 +46,7 @@ export default function TransactionTable({ transactions, onViewReceipt }: Props)
                       </span>
                       <span className="text-xs font-bold text-gray-400">/</span>
                       <span className="text-xs font-bold text-gray-700">
-                        {/* Fallback ke table_id jika table_number belum ada di DB */}
-                        {tx.type === 'dining' ? (tx.table_number) : '-'}
+                        {tx.type === 'dining' ? (tx.tables?.table_number) : '-'}
                       </span>
                     </div>
                   </td>

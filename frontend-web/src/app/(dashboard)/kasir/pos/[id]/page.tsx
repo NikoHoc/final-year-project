@@ -21,7 +21,7 @@ export default function PosPage() {
   const searchParams = useSearchParams();
 
   const { user, depot, isLoadingSession } = useSession();
-  const { fetchTransactionById, createTransaction, addItems } = useTransaction();
+  const { fetchTransactionById, createTransaction, addItems, updateCustomerName } = useTransaction();
   const { getDepotMenus } = useDepots();
   const { fetchTableById } = useTables();
 
@@ -31,6 +31,7 @@ export default function PosPage() {
   const [tableId, setTableId] = useState<string | null>(searchParams.get("table_id"));
   const [tableNumber, setTableNumber] = useState<string | null>(null);
   const [customerName, setCustomerName] = useState<string>("");
+  const [initialCustomerName, setInitialCustomerName] = useState("");
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoadingMenus, setIsLoadingMenus] = useState(true);
@@ -101,9 +102,10 @@ export default function PosPage() {
       const transaction = await fetchTransactionById(transactionId);
       if (transaction) {
         setOrderType(transaction.type || "dining");
-        setCustomerName(transaction.customer_name || ""); 
+        setCustomerName(transaction.customer_name || "");
+        setInitialCustomerName(transaction.customer_name || "");
         setTableId(transaction.table_id ? transaction.table_id.toString() : null);
-        setTableNumber(transaction.table_number || transaction.table_id?.toString() || null);
+        setTableNumber(transaction.tables?.table_number || transaction.table_id?.toString() || null);
 
         const loadedCart = 
           transaction.transaction_items?.map((item: TransactionItem) => ({
@@ -214,6 +216,18 @@ export default function PosPage() {
     }
   };
 
+  const handleCustomerNameBlur = async () => {
+    if (transactionId !== "new" && customerName !== initialCustomerName) {
+      try {
+        await updateCustomerName(transactionId, customerName);
+        setInitialCustomerName(customerName);
+        toast.success("Nama pelanggan berhasil diubah!");
+      } catch {
+        setCustomerName(initialCustomerName);
+      }
+    }
+  };
+
   if (isLoadingSession) {
     return <div className="p-8 text-center animate-pulse text-gray-400 font-bold">Mempersiapkan Mesin Kasir...</div>;
   }
@@ -240,9 +254,10 @@ export default function PosPage() {
             <UserRoundPlus size={18} className="text-gray-400 shrink-0" />
             <input
               type="text"
-              placeholder="Nama Pelanggan (Opsional)"
+              placeholder="Ketik nama pelanggan..."
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
+              onBlur={handleCustomerNameBlur}
               className="bg-transparent border-none outline-none text-sm font-medium text-gray-700 placeholder:text-gray-400 w-full md:w-48"
             />
           </div>
@@ -261,7 +276,6 @@ export default function PosPage() {
       <OrderCart
         variant="kasir"
         cartItems={cartItems}
-        orderType={orderType}
         isProcessing={isProcessing}
         totals={totals}
         onUpdateQuantity={updateQuantity}

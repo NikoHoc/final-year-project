@@ -27,8 +27,8 @@ export default function KasirDashboard() {
     setIsLoading(true);
     try {
       await fetchTables(user.depot_id);
-      const allTransactions = await fetchAllTransactions(user.depot_id);
-      setActiveTransactions(allTransactions.filter(transaction => transaction.order_status !== 'completed'));
+      const activeData = await fetchAllTransactions(user.depot_id, 'active');
+      setActiveTransactions(activeData);
     } catch (error) {
       console.error("Gagal memuat data dashboard", error);
     } finally {

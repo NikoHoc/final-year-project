@@ -2,8 +2,12 @@ import api from "./api";
 import { Transaction, CreateTransactionPayload, AddItemsPayload } from "@/types";
 
 export const transactionService = {
-  getAll: async (depotId: number) => {
-    const response = await api.get(`/transactions/depot/${depotId}`);
+  getAll: async (depotId: number, params?: { status?: 'active' | 'completed', date?: string }) => {
+    let url = `/transactions/depot/${depotId}`;
+    if (params?.status === 'active') {
+      url += '?status=active';
+    }
+    const response = await api.get(url);
     return response.data.data as Transaction[];
   },
 
@@ -19,6 +23,11 @@ export const transactionService = {
 
   addItems: async (id: string, payload: AddItemsPayload) => {
     const response = await api.post(`/transactions/${id}/items`, payload);
+    return response.data;
+  },
+  
+  updateCustomerName: async (id: string, customer_name: string) => {
+    const response = await api.put(`/transactions/${id}/customer`, { customer_name });
     return response.data;
   },
 
