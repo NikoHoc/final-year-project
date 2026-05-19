@@ -3,16 +3,18 @@
 import { useState, useEffect } from "react";
 import { useSettlement } from "@/hooks/useSettlement";
 import { useDepots } from "@/hooks/useDepot";
-import { Filter, Building2, Coins, Activity } from "lucide-react";
+import { Filter, Building2, Activity } from "lucide-react";
 import { getTodayStr, getFirstDayOfMonthStr, formatDateFull } from "@/utils/format";
 import AccumulatedSummaryCards from "@/components/settlements/AccumulatedSummaryCards";
 import RevenueTrendChart from "@/components/charts/RevenueTrendChart";
 import PaymentMethodChart from "@/components/charts/PaymentMethodChart";
 import SettlementHistoryTable from "@/components/settlements/SettlementHistoryTable";
+import TransactionTypeChart from "@/components/charts/TransactionTypeChart";
+import TopMenuLeaderboard from "@/components/charts/TopMenuLeaderboard";
 
 export default function AdminTransactionsPage() {
   const { depots, isLoading: isDepotsLoading, fetchDepots } = useDepots();
-  const { settlements, paymentSummary, isLoading: isSettlementLoading, fetchSettlements } = useSettlement();
+  const { settlements, paymentSummary, transactionTypeSummary, topMenuSummary, isLoading: isSettlementLoading, fetchSettlements } = useSettlement();
 
   const [selectedDepotId, setSelectedDepotId] = useState<number | "">("");
   const [startDate, setStartDate] = useState(getFirstDayOfMonthStr());
@@ -143,30 +145,30 @@ export default function AdminTransactionsPage() {
         <>
           <AccumulatedSummaryCards data={settlements} />
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div className="xl:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-              <h2 className="text-lg font-black text-gray-800 flex items-center gap-2 mb-4">
-                <Activity size={20} className="text-blue-500" /> Tren Pendapatan & Pengeluaran
-              </h2>
-              <RevenueTrendChart 
-                data={settlements} 
-                isLoading={currentLoading} 
-                startDate={startDate} 
-                endDate={endDate} 
-              />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+              <TransactionTypeChart data={transactionTypeSummary} isLoading={currentLoading} />
             </div>
-
-            <div className="xl:col-span-1 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-center">
-              <h2 className="text-lg font-black text-gray-800 flex items-center gap-2 mb-4">
-                <Coins size={20} className="text-green-500" /> Rincian Metode Pembayaran
-              </h2>
-              <PaymentMethodChart 
-                data={paymentSummary} 
-                isLoading={currentLoading} 
-                startDate={startDate} 
-                endDate={endDate} 
-              />
+                  
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+              <PaymentMethodChart data={paymentSummary} isLoading={currentLoading} startDate={startDate} endDate={endDate} />
             </div>
+          
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+              <TopMenuLeaderboard data={topMenuSummary} isLoading={currentLoading} />
+            </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+            <h2 className="text-lg font-black text-gray-800 flex items-center gap-2 mb-4">
+              <Activity size={20} className="text-blue-500" /> Tren Pendapatan & Pengeluaran
+            </h2>
+          <RevenueTrendChart 
+            data={settlements} 
+            isLoading={currentLoading} 
+            startDate={startDate} 
+            endDate={endDate} 
+          />
           </div>
 
           <SettlementHistoryTable

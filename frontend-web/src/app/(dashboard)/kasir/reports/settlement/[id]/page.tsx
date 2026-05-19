@@ -70,7 +70,7 @@ export default function SettlementDetailPage() {
         </button>
       </div>
 
-      <DailySummaryCards summary={summary ?? null} />
+      <DailySummaryCards summary={summary ?? null} transactions={transactions || []} />
 
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
         <div className="lg:col-span-6">

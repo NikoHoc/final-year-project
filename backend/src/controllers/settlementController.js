@@ -174,50 +174,81 @@ exports.getSettlements = async (req, res) => {
     if (!settlements || settlements.length === 0) {
       return res.status(200).json({ 
         status: true, 
-        data: { settlements: [], paymentSummary: [] } 
+        data: { 
+          settlements: [], 
+          paymentSummary: [],
+          transactionTypeSummary: [],
+          topMenuSummary: []
+        } 
       });
     }
 
     const settlementIds = settlements.map(settlement => settlement.id);
 
-    const { data: transactionsWithPayments, error: errPay } = await supabase
+    const { data: transactionsData, error: errTx } = await supabase
       .from("transactions")
       .select(`
         id,
+        type,
         transaction_payments (
           payment_methods ( name )
+        ),
+        transaction_items (
+          quantity,
+          menus ( name )
         )
       `)
       .in("settlement_id", settlementIds)
       .eq("payment_status", "paid");
 
-    if (errPay) throw errPay;
+    if (errTx) throw errTx;
 
     const methodsMap = {};
+    const typesMap = { dining: 0, takeaway: 0, online: 0 };
+    const menuMap = {};
 
-    transactionsWithPayments.forEach(transaction => {
-      if (transaction.transaction_payments && transaction.transaction_payments.length > 0) {
-        transaction.transaction_payments.forEach(payment => {
+    transactionsData.forEach(tx => {
+      if (tx.type) {
+        typesMap[tx.type] = (typesMap[tx.type] || 0) + 1;
+      }
+
+      if (tx.transaction_payments && tx.transaction_payments.length > 0) {
+        tx.transaction_payments.forEach(payment => {
           const methodName = payment.payment_methods?.name || "Tunai";
-          
-          if (!methodsMap[methodName]) {
-            methodsMap[methodName] = { name: methodName, value: 0 };
-          }
+          if (!methodsMap[methodName]) methodsMap[methodName] = { name: methodName, value: 0 };
           methodsMap[methodName].value += 1;
         });
       } else {
-        if (!methodsMap["Tunai"]) {
-          methodsMap["Tunai"] = { name: "Tunai", value: 0 };
-        }
+        if (!methodsMap["Tunai"]) methodsMap["Tunai"] = { name: "Tunai", value: 0 };
         methodsMap["Tunai"].value += 1;
       }
+
+      if (tx.transaction_items && tx.transaction_items.length > 0) {
+        tx.transaction_items.forEach(item => {
+          const menuName = item.menus?.name || "Menu Dihapus";
+          if (!menuMap[menuName]) menuMap[menuName] = { name: menuName, value: 0 };
+          menuMap[menuName].value += item.quantity;
+        });
+      }
     });
+
+    const transactionTypeSummary = [
+      { name: "Dining", value: typesMap.dining },
+      { name: "Takeaway", value: typesMap.takeaway },
+      { name: "Online", value: typesMap.online }
+    ].filter(t => t.value > 0);
+
+    const topMenuSummary = Object.values(menuMap)
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
 
     return res.status(200).json({
       status: true,
       data: {
         settlements: settlements,
-        paymentSummary: Object.values(methodsMap)
+        paymentSummary: Object.values(methodsMap),
+        transactionTypeSummary,
+        topMenuSummary
       }
     });
   } catch (error) {

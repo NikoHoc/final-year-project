@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { settlementService } from "@/services/settlementService";
-import { DailySettlement, PaymentPieChartData, SettlementResponse, SettlementSummary } from "@/types";
+import { DailySettlement, ChartData, SettlementResponse, SettlementSummary } from "@/types";
 import { handleApiError } from "@/utils/errorHandler";
 import toast from "react-hot-toast";
 
@@ -8,8 +8,11 @@ export const useSettlement = () => {
   const [settlements, setSettlements] = useState<DailySettlement[]>([]);
   const [settlementDetail, setSettlementDetail] = useState<SettlementResponse | null>(null);
   const [todayData, setTodayData] = useState<SettlementResponse | null>(null);
-  const [paymentSummary, setPaymentSummary] = useState<PaymentPieChartData[]>([]);
-  
+
+  const [paymentSummary, setPaymentSummary] = useState<ChartData[]>([]);
+  const [transactionTypeSummary, setTransactionTypeSummary] = useState<ChartData[]>([]); 
+  const [topMenuSummary, setTopMenuSummary] = useState<ChartData[]>([]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -49,10 +52,11 @@ export const useSettlement = () => {
         if (response.status) {
           setSettlements(response.data.settlements || []);
           setPaymentSummary(response.data?.paymentSummary || []);
+          setTransactionTypeSummary(response.data?.transactionTypeSummary || []);
+          setTopMenuSummary(response.data?.topMenuSummary || []);
         } else {
           throw new Error(response.message || "Failed to fetch settlements");
         }
-        console.log("Fetched settlements:", response.data);
       } catch (error) {
         handleApiError(error);
         throw error;
@@ -62,7 +66,6 @@ export const useSettlement = () => {
     },
     []
   );
-
   const fetchSettlementDetail = useCallback(async (id: string) => {
     setIsLoading(true);
     try {
@@ -82,8 +85,10 @@ export const useSettlement = () => {
 
   return {
     settlements,
-    paymentSummary,
     settlementDetail,
+    paymentSummary,
+    transactionTypeSummary, 
+    topMenuSummary,
     todayData,
     isLoading,
     isProcessing,

@@ -19,14 +19,16 @@ export default function CompactExpenseTable({ expenses }: Props) {
         <table className="w-full text-left text-xs">
           <thead className="bg-white border-b border-gray-100 text-gray-400 uppercase font-black">
             <tr>
+              <th className="px-4 py-4 text-center">No</th>
               <th className="px-4 py-4">Detail Pengeluaran</th>
               <th className="px-4 py-4 text-right">Nominal</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {expenses && expenses.length > 0 ? (
-              expenses.map((exp) => (
+              expenses.map((exp, index) => (
                 <tr key={exp.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-4 py-4 text-center">{index+1}</td>
                   <td className="px-4 py-4">
                     <div className="font-bold text-gray-800">{exp.item_name}</div>
                     <div className="text-[10px] text-gray-400">{formatDateTime(exp.expense_date)}</div>

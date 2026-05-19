@@ -1,22 +1,46 @@
-import { Receipt, Coins, TrendingDown, Wallet } from "lucide-react";
+import { Receipt, Coins, TrendingDown, Wallet, Utensils, ShoppingBag, Smartphone } from "lucide-react";
 import { formatRupiah } from "@/utils/format";
-import { SettlementSummary } from "@/types";
+import { SettlementSummary, Transaction } from "@/types";
+import { useMemo } from "react";
 
 interface Props {
   summary: SettlementSummary | null;
+  transactions?: Transaction[];
 }
 
-export default function DailySummaryCards({ summary }: Props) {
+export default function DailySummaryCards({ summary, transactions = [] }: Props) {
+  const { dining, takeaway, online } = useMemo(() => {
+    return transactions.reduce(
+      (acc, tx) => {
+        if (tx.type === "dining") acc.dining++;
+        if (tx.type === "takeaway") acc.takeaway++;
+        if (tx.type === "online") acc.online++;
+        return acc;
+      },
+      { dining: 0, takeaway: 0, online: 0 }
+    );
+  }, [transactions]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      
       <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
         <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
           <Receipt size={24} />
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
+          <span className="text-[11px] font-bold text-gray-400 uppercase block">Volume Penjualan</span>
+          <div className="text-xl font-black text-gray-800 mt-1">{summary?.total_transactions || 0} Transaksi</div>
+          <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-50 font-semibold uppercase text-sm">
+            <span className="text-blue-600 flex gap-2 items-center"><Utensils size={16} />: {dining}</span> |
+            <span className="text-orange-500 flex gap-2 items-center"><ShoppingBag size={16}/>: {takeaway}</span> |
+            <span className="text-green-600 flex gap-2 items-center"><Smartphone size={16}/>: {online}</span>
+          </div>
+        </div>
+        {/* <div>
           <span className="text-[11px] font-bold text-gray-400 uppercase">Volume Penjualan</span>
           <div className="text-xl font-black text-gray-800">{summary?.total_transactions || 0} Transaksi</div>
-        </div>
+        </div> */}
       </div>
       <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
         <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 shrink-0">

@@ -269,7 +269,7 @@ export interface SettlementSummary {
   net_income: number;
   payment_methods: PaymentMethodSummary[];
 }
-export interface PaymentPieChartData {
+export interface ChartData {
   name: string;
   value: number;
 }

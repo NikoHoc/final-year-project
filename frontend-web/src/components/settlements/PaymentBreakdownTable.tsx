@@ -40,6 +40,7 @@ export default function PaymentBreakdownTable({ summary }: Props) {
         <table className="w-full text-left text-xs">
           <thead className="bg-white border-b border-gray-100 text-gray-400 uppercase font-black">
             <tr>
+              <th className="px-6 py-4 text-center">No</th>
               <th className="px-6 py-4">Metode Pembayaran</th>
               <th className="px-6 py-4 text-center">Jml Transaksi</th>
               <th className="px-6 py-4 text-right">Total Bersih</th>
@@ -55,6 +56,7 @@ export default function PaymentBreakdownTable({ summary }: Props) {
             ) : (
               summary.payment_methods.map((pm, idx) => (
                 <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-4 py-4 text-center">{idx+1}</td>
                   <td className="px-6 py-4 font-bold text-gray-700">{pm.method_name}</td>
                   <td className="px-6 py-4 text-center font-medium text-gray-500">{pm.transaction_count}</td>
                   <td className="px-6 py-4 text-right font-black text-gray-800">{formatRupiah(pm.total_net_amount)}</td>
