@@ -1,5 +1,6 @@
 import api from "./api";
 import { SettlementSummary } from "@/types";
+import { getTodayStr } from "@/utils/format";
 
 export const settlementService = {
   getTodaySummary: async (depotId: number) => {
@@ -11,6 +12,7 @@ export const settlementService = {
     const response = await api.post("/settlements/process", {
       depot_id: depotId,
       summary_data: summaryData,
+      settlement_date: getTodayStr(),
     });
     return response.data;
   },

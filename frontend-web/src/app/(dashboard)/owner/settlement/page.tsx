@@ -12,10 +12,12 @@ import toast from "react-hot-toast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import ReportTransactionModal from "@/components/settlements/ReportTransactionModal";
 import { useSession } from "@/contexts/SessionContext";
+import CompactExpenseTable from "@/components/settlements/CompactExpenseTable";
 
-export default function CashierSettlementPage() {
-  const { todayData, isLoading, fetchTodaySummary, processSettlement } = useSettlement();
-  
+export default function OwnerSettlementPage() {
+  const { todayData, isLoading, fetchTodaySummary, processSettlement } =
+    useSettlement();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const { user: userData, depot, isLoadingSession } = useSession();
@@ -24,13 +26,13 @@ export default function CashierSettlementPage() {
 
   useEffect(() => {
     if (!isLoadingSession && userData?.depot_id) {
-      fetchTodaySummary(userData.depot_id); 
+      fetchTodaySummary(userData.depot_id);
     }
   }, [isLoadingSession, userData, fetchTodaySummary]);
 
   const handleProcessSettlement = async () => {
     if (!userData?.depot_id || !todayData) return;
-    
+
     if (todayData.transactions.length === 0) {
       toast.error("Tidak ada transaksi aktif yang bisa di-settle hari ini.");
       setIsConfirmModalOpen(false);
@@ -39,15 +41,20 @@ export default function CashierSettlementPage() {
 
     setIsSubmitting(true);
     try {
-      const success = await processSettlement(userData?.depot_id, todayData.summary);
+      const success = await processSettlement(
+        userData?.depot_id,
+        todayData.summary,
+      );
       if (success) {
-        toast.success("Settlement berhasil diproses! Kas hari ini telah ditutup.");
+        toast.success(
+          "Settlement berhasil diproses! Kas hari ini telah ditutup.",
+        );
         setIsConfirmModalOpen(false);
 
         window.location.reload();
       }
-    } catch {} 
-    finally {
+    } catch {
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -56,23 +63,27 @@ export default function CashierSettlementPage() {
     return (
       <div className="h-screen flex flex-col items-center justify-center gap-4">
         <Loader2 className="animate-spin text-blue-600" size={40} />
-        <p className="text-sm font-bold text-gray-500 animate-pulse">Memuat ringkasan kas hari ini...</p>
+        <p className="text-sm font-bold text-gray-500 animate-pulse">
+          Memuat ringkasan kas hari ini...
+        </p>
       </div>
     );
   }
 
-  const { summary, transactions } = todayData || {};
+  const { summary, transactions, expenses } = todayData || {};
 
   return (
     <div className="space-y-8 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
         <div>
-          <h1 className="text-2xl font-black text-gray-800">Rekap penjualan harian</h1>
+          <h1 className="text-2xl font-black text-gray-800">
+            Rekap penjualan harian
+          </h1>
           <p className="text-sm text-gray-500 font-medium mt-1">
             Rekap berjalan: {formatDateFull(new Date().toISOString())}
           </p>
         </div>
-        
+
         <button
           onClick={() => setIsConfirmModalOpen(true)}
           disabled={!todayData || transactions?.length === 0}
@@ -82,12 +93,23 @@ export default function CashierSettlementPage() {
           Proses Settlement
         </button>
       </div>
-      <DailySummaryCards summary={summary ?? null} transactions={transactions || []} role='kasir'/>
+      <DailySummaryCards
+        summary={summary ?? null}
+        transactions={transactions || []}
+        role="owner"
+      />
 
-      <PaymentBreakdownTable summary={summary ?? null} />
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+        <div className="lg:col-span-6">
+          <PaymentBreakdownTable summary={summary ?? null} />
+        </div>
+        <div className="lg:col-span-4">
+          <CompactExpenseTable expenses={expenses ?? []} />
+        </div>
+      </div>
 
-      <DailyTransactionTable 
-        transactions={transactions ?? []} 
+      <DailyTransactionTable
+        transactions={transactions ?? []}
         onViewReceipt={(tx) => setSelectedTx(tx)}
       />
 
@@ -95,14 +117,14 @@ export default function CashierSettlementPage() {
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
         onConfirm={handleProcessSettlement}
-        title="Konfirmasi Tutup Kasir"
-        message={`Apakah Anda yakin ingin melakukan proses Settlement? Aksi ini akan merekap ${transactions?.length} transaksi untuk hari ini.`}
+        title="Konfirmasi Tutup Penjualan"
+        message={`Apakah Anda yakin ingin melakukan proses Settlement? Aksi ini akan merekap ${transactions?.length} transaksi & ${expenses?.length} untuk hari ini.`}
         type="warning"
         confirmText="Ya, Tutup Kasir"
         isLoading={isSubmitting}
       />
 
-      <ReportTransactionModal 
+      <ReportTransactionModal
         isOpen={!!selectedTx}
         onClose={() => setSelectedTx(null)}
         transaction={selectedTx}

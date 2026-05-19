@@ -9,6 +9,7 @@ interface SettlementHistoryTableProps {
   startDate: string;
   endDate: string;
   detailPathPrefix: string;
+  role?: "kasir" | "owner" | "admin";
 }
 
 export default function SettlementHistoryTable({
@@ -17,7 +18,11 @@ export default function SettlementHistoryTable({
   startDate,
   endDate,
   detailPathPrefix,
+  role = "owner"
 }: SettlementHistoryTableProps) {
+
+  const isOwnerOrAdmin = role === "owner" || role === "admin";
+
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -44,8 +49,12 @@ export default function SettlementHistoryTable({
               <th className="px-6 py-4 text-right">Subtotal</th>
               <th className="px-6 py-4 text-right">Pajak (PPN)</th>
               <th className="px-6 py-4 text-right">Grand Total</th>
-              <th className="px-6 py-4 text-right">Pengeluaran</th>
-              <th className="px-6 py-4 text-right">Pendapatan Bersih</th>
+              {isOwnerOrAdmin && (
+                <>
+                  <th className="px-6 py-4 text-right">Pengeluaran</th>
+                  <th className="px-6 py-4 text-right">Subtotal - Pengeluaran</th>
+                </>
+              )}
               <th className="px-6 py-4 text-center">Aksi</th>
             </tr>
           </thead>
@@ -83,12 +92,16 @@ export default function SettlementHistoryTable({
                   <td className="px-6 py-4 text-right font-black text-green-600">
                     {formatRupiah(item.grand_total)}
                   </td>
-                  <td className="px-6 py-4 text-right font-medium text-red-500">
-                    {formatRupiah(item.total_expenses)}
-                  </td>
-                  <td className="px-6 py-4 text-right font-black text-blue-600">
-                    {formatRupiah(item.net_income)}
-                  </td>
+                  {isOwnerOrAdmin && (
+                    <>
+                      <td className="px-6 py-4 text-right font-medium text-red-500">
+                        {formatRupiah(item.total_expenses)}
+                      </td>
+                      <td className="px-6 py-4 text-right font-black text-blue-600">
+                        {formatRupiah(item.net_income)}
+                      </td>
+                    </>
+                  )}
                   <td className="px-6 py-4 text-center">
                     <Link href={`${detailPathPrefix}/${item.id}`}>
                       <button className="cursor-pointer inline-flex items-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl text-[10px] font-bold transition-colors shadow-sm">

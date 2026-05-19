@@ -90,64 +90,87 @@ exports.getTodaySummary = async (req, res) => {
 };
 
 exports.processSettlement = async (req, res) => {
-  const { depot_id, summary_data } = req.body;
+  const { depot_id, settlement_date, summary_data } = req.body;
   const created_by = req.user.id;
 
   try {
-    const cash_income = summary_data.payment_methods
-      .filter(m => m.method_name.toLowerCase().includes('cash') || m.method_name.toLowerCase().includes('tunai'))
-      .reduce((acc, curr) => acc + curr.total_net_amount, 0);
-    
-    const non_cash_income = summary_data.payment_methods
-      .filter(m => !m.method_name.toLowerCase().includes('cash') && !m.method_name.toLowerCase().includes('tunai'))
-      .reduce((acc, curr) => acc + curr.total_net_amount, 0);
-
-    const { data: newSettlement, error: errInsert } = await supabase
-      .from("daily_settlements")
-      .insert([
-        {
-          depot_id,
-          created_by,
-          total_transactions: summary_data.total_transactions,
-          subtotal_amount: summary_data.subtotal_amount,
-          tax_amount: summary_data.tax_amount,
-          grand_total: summary_data.grand_total,
-          cash_income: cash_income,
-          non_cash_income: non_cash_income,
-          total_expenses: summary_data.total_expenses,
-          net_income: summary_data.net_income,
-        },
-      ])
-      .select("id")
-      .single();
-
-    if (errInsert) throw errInsert;
-
-    const settlementId = newSettlement.id;
-
-    const { error: errUpdateTx } = await supabase
-      .from("transactions")
-      .update({ is_settled: true, settlement_id: settlementId })
+    const { data: expenses } = await supabase
+      .from("operational_expenses")
+      .select("id, amount")
       .eq("depot_id", depot_id)
       .eq("is_settled", false)
-      .eq("order_status", "completed")
+      .lte("expense_date", settlement_date);
+
+    console.log("summary data:", summary_data);
+    let total_expenses = 0;
+    let expenseIds = [];
+
+    if (expenses && expenses.length > 0) {
+      total_expenses = expenses.reduce((acc, curr) => acc + curr.amount, 0);
+      expenseIds = expenses.map(e => e.id);
+    }
+
+    const net_income = summary_data.subtotal_amount - total_expenses;
+
+    const { data: newSettlement, error: insertError } = await supabase
+      .from("daily_settlements")
+      .insert([{
+        depot_id,
+        created_by,
+        settlement_date,
+        total_transactions: summary_data.total_transactions,
+        subtotal_amount: summary_data.subtotal_amount,
+        tax_amount: summary_data.tax_amount,
+        grand_total: summary_data.grand_total,
+        total_expenses,
+        net_income
+      }])
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    await supabase
+      .from("transactions")
+      .update({ is_settled: true, settlement_id: newSettlement.id })
+      .eq("depot_id", depot_id)
+      .eq("is_settled", false)
       .eq("payment_status", "paid");
 
-    if (errUpdateTx) throw errUpdateTx;
+    if (expenseIds.length > 0) {
+      await supabase
+        .from("operational_expenses")
+        .update({ is_settled: true, settlement_id: newSettlement.id })
+        .in("id", expenseIds);
+    }
 
-    const { error: errUpdateExp } = await supabase
-      .from("operational_expenses")
-      .update({ is_settled: true, settlement_id: settlementId })
-      .eq("depot_id", depot_id)
-      .eq("is_settled", false);
+    return res.status(201).json({ status: true, message: "Tutup kasir berhasil", data: newSettlement });
 
-    if (errUpdateExp) throw errUpdateExp;
+    // const settlementId = newSettlement.id;
 
-    return res.status(200).json({
-      status: true,
-      message: "Proses Settlement berhasil diselesaikan!",
-      data: newSettlement,
-    });
+    // const { error: errUpdateTx } = await supabase
+    //   .from("transactions")
+    //   .update({ is_settled: true, settlement_id: settlementId })
+    //   .eq("depot_id", depot_id)
+    //   .eq("is_settled", false)
+    //   .eq("order_status", "completed")
+    //   .eq("payment_status", "paid");
+
+    // if (errUpdateTx) throw errUpdateTx;
+
+    // const { error: errUpdateExp } = await supabase
+    //   .from("operational_expenses")
+    //   .update({ is_settled: true, settlement_id: settlementId })
+    //   .eq("depot_id", depot_id)
+    //   .eq("is_settled", false);
+
+    // if (errUpdateExp) throw errUpdateExp;
+
+    // return res.status(200).json({
+    //   status: true,
+    //   message: "Proses Settlement berhasil diselesaikan!",
+    //   data: newSettlement,
+    // });
   } catch (error) {
     return res.status(500).json({ status: false, message: error.message });
   }

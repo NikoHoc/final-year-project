@@ -7,7 +7,7 @@ export interface UserFormData {
   full_name: string;
   username: string;
   phone_number: string;
-  role: "admin" | "kasir" | "pelayan" | "pelanggan";
+  role: "admin" | 'owner' | "kasir" | "pelayan" | "pelanggan";
   depot_id: number | null;
 }
 

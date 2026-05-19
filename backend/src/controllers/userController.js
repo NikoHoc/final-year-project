@@ -56,7 +56,7 @@ exports.getEmployees = async (req, res) => {
     if (role && role !== "all") {  
       query = query.eq("role", role);
     } else {
-      query = query.in("role", ["admin", "kasir", "pelayan"]);
+      query = query.in("role", ["admin", "owner", "kasir", "pelayan"]);
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -84,6 +84,19 @@ exports.createEmployee = async (req, res) => {
   }
 
   try {
+    if (role === "owner") {
+      const { count, error: countError } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("depot_id", depot_id)
+        .eq("role", "owner");
+
+      if (countError) throw countError;
+      if (count > 0) {
+        return res.status(400).json({ status: false, message: "Gagal! Cabang ini sudah memiliki Owner. Satu cabang hanya boleh memiliki maksimal 1 Owner." });
+      }
+    }
+
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -122,6 +135,20 @@ exports.updateEmployee = async (req, res) => {
   const { full_name, username, phone_number, role, depot_id } = req.body;
 
   try {
+    if (role === "owner") {
+      const { count, error: countError } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("depot_id", depot_id)
+        .eq("role", "owner")
+        .neq("id", id);
+
+      if (countError) throw countError;
+      if (count > 0) {
+        return res.status(400).json({ status: false, message: "Gagal! Cabang ini sudah memiliki Owner lain." });
+      }
+    }
+
     const { data, error } = await supabase
       .from("profiles")
       .update({ full_name, username, phone_number, role, depot_id })

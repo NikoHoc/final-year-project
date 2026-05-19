@@ -27,6 +27,8 @@ export const useAuth = () => {
 
         if (role === "admin") {
           router.push("/admin");
+        }  else if (role === "owner") {
+          router.push("/owner");
         } else if (role === "kasir") {
           router.push("/kasir");
         } else if (role === "pelayan") {

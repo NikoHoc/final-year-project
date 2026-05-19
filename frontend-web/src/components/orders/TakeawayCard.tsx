@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 interface TakeawayCardProps {
   transaction: Transaction;
-  role: "kasir" | "pelayan";
+  role: "owner" | "kasir" | "pelayan";
   isDepotOpen: boolean;
 }
 
@@ -17,7 +17,12 @@ export default function TakeawayCard({ transaction, role, isDepotOpen }: Takeawa
   
   const totalItems = transaction.transaction_items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
-  const baseUrl = role === "kasir" ? "/kasir/pos" : "/pelayan/pesanan";
+  const baseUrl =
+  role === "kasir"
+    ? "/kasir/pos"
+    : role === "owner"
+    ? "/owner/onsite-transactions/pos"
+    : "/pelayan/pesanan";
 
   return (
     <div 

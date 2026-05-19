@@ -215,6 +215,7 @@ export default function UserFormModal({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white text-black focus:ring-2 focus:ring-blue-500"
               >
                 <option value="" disabled>-- Pilih Peran --</option>
+                <option value="owner">Owner Cabang</option>
                 <option value="kasir">Kasir</option>
                 <option value="pelayan">Pelayan</option>
               </select>

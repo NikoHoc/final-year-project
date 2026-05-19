@@ -177,6 +177,7 @@ export default function AdminTransactionsPage() {
             startDate={startDate}
             endDate={endDate}
             detailPathPrefix="/admin/transactions/settlement"
+            role="admin"
           />
         </>
       )}

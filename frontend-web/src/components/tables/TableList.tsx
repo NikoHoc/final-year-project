@@ -7,7 +7,7 @@ interface TableListProps {
   tables: Table[];
   activeTransactions: Transaction[];
   isDepotOpen: boolean;
-  role: "kasir" | "pelayan";
+  role: "owner" | "kasir" | "pelayan";
   onTableClick: (tableId: number) => void;
   onManageTables?: () => void;
 }
@@ -25,6 +25,8 @@ export default function TableList({
     return table.is_active || hasActiveTx;
   });
   
+  const isOwnerOrCashier = role === "owner" || role === "kasir";
+
   if (tables.length === 0) {
     return (
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 flex flex-col items-center justify-center text-center">
@@ -33,11 +35,11 @@ export default function TableList({
         </div>
         <h3 className="text-lg font-bold text-gray-800">Belum Ada data meja</h3>
         <p className="text-gray-500 max-w-sm mt-2 mb-6">
-          {role === "kasir" 
+          {isOwnerOrCashier
             ? "Tambahkan data meja terlebih dahulu untuk mulai menerima pesanan pelanggan secara Dine-in." 
             : "Menunggu kasir atau admin menambahkan data meja cabang ini."}
         </p>
-        {role === "kasir" && onManageTables && (
+        {isOwnerOrCashier && onManageTables && (
           <button
             onClick={onManageTables}
             className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm"

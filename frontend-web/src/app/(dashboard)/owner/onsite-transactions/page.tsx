@@ -1,0 +1,159 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { ShoppingBag, Power, AlertCircle } from "lucide-react";
+import { useTables } from "@/hooks/useTables";
+import { Transaction } from "@/types";
+import TableList from "@/components/tables/TableList";
+import TakeawayCard from "@/components/orders/TakeawayCard";
+import { useDepots } from "@/hooks/useDepot";
+import { useTransaction } from "@/hooks/useTransaction";
+import { useSession } from "@/contexts/SessionContext";
+
+export default function OwnerOnsiteTransactions() {
+  const router = useRouter();
+  const { tables, fetchTables } = useTables();
+  const { toggleDepotStatus } = useDepots();
+  const { fetchAllTransactions } = useTransaction();
+  
+  const { user, depot, isLoadingSession } = useSession();
+  const [activeTransactions, setActiveTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadDashboardData = useCallback(async () => {
+    if (!user?.depot_id) return;
+    
+    setIsLoading(true);
+    try {
+      await fetchTables(user.depot_id);
+      const activeData = await fetchAllTransactions(user.depot_id, 'active');
+      setActiveTransactions(activeData);
+    } catch (error) {
+      console.error("Gagal memuat data dashboard", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.depot_id, fetchAllTransactions, fetchTables]);
+
+  useEffect(() => {
+    if (!isLoadingSession && user) {
+      loadDashboardData();
+    }
+  }, [isLoadingSession, user, loadDashboardData]);
+
+  const diningTransactions = activeTransactions.filter((t) => t.type === "dining");
+  const takeawayTransactions = activeTransactions.filter((t) => t.type === "takeaway");
+
+  const handleToggleDepotStatus = async () => {
+    if (!depot) return;
+
+    const newStatus = !depot.is_open;
+
+    try {
+      await toggleDepotStatus(depot.id, newStatus);
+
+      window.location.reload();
+    } catch (error) {
+      console.error("Error Client Side - Gagal mengubah status depot:", error);       
+    }
+  };
+
+  const handleTableClick = (tableId: number) => {
+    const activeTx = diningTransactions.find(t => t.table_id === tableId);
+    
+    if (activeTx) {
+      router.push(`/owner/onsite-transactions/pos/${activeTx.id}?type=dining`);
+    } else {
+      router.push(`/owner/onsite-transactions/pos/new?table_id=${tableId}&type=dining`);
+    }
+  };
+
+  if (isLoadingSession || isLoading) {
+    return <div className="flex justify-center items-center h-64 animate-pulse text-gray-400">Memuat Dashboard Owner...</div>;
+  }
+
+  if (!depot) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-gray-500">
+        <AlertCircle size={48} className="text-red-400 mb-4" />
+        <h2 className="text-xl font-bold">Akses Ditolak</h2>
+        <p>Akun ini tidak terikat pada cabang manapun.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-gray-800">Dashboard POS - Owner</h1>
+          <p className="text-sm text-gray-500 mt-1 font-medium">Pilih meja untuk Dine-in, atau klik Takeaway.</p>
+        </div>
+        
+        <div className="flex gap-3 w-full md:w-auto">
+          <button 
+            onClick={handleToggleDepotStatus}
+            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all ${
+              depot.is_open 
+                ? "bg-green-100 text-green-700 hover:bg-green-200 border border-green-200" 
+                : "bg-red-100 text-red-700 hover:bg-red-200 border border-red-200"
+            }`}
+          >
+            <Power size={18} /> {depot.is_open ? "DEPOT BUKA" : "DEPOT TUTUP"}
+          </button>
+
+          <button 
+            onClick={() => router.push(`/owner/onsite-transactions/pos/new?type=takeaway`)}
+            disabled={!depot.is_open}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-xl font-bold transition-all shadow-sm"
+          >
+            <ShoppingBag size={18} /> Takeaway
+          </button>
+        </div>
+      </div>
+
+      {!depot.is_open && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200 text-center font-medium flex items-center justify-center gap-2">
+          <AlertCircle size={20} /> Depot sedang ditutup. Buka depot untuk menerima pesanan baru.
+        </div>
+      )}
+
+      <div className="space-y-4">
+        <h3 className="font-black text-gray-800 flex items-center gap-2 text-sm uppercase tracking-widest">
+          <div className="w-1.5 h-5 bg-gray-800 rounded-full"></div>
+          dine in
+        </h3>
+        <TableList 
+          tables={tables} 
+          activeTransactions={diningTransactions} 
+          isDepotOpen={!!depot?.is_open}
+          role="owner"
+          onTableClick={handleTableClick}
+          onManageTables={() => router.push("/owner/tables")}
+        />
+      </div>
+
+      <div className="space-y-4 mt-10">
+        <h3 className="font-black text-gray-800 flex items-center gap-2 text-sm uppercase tracking-widest">
+          <div className="w-1.5 h-5 bg-blue-600 rounded-full"></div>
+          Antrean Takeaway
+        </h3>
+        
+        {takeawayTransactions.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {takeawayTransactions.map((transaction) => (
+              <TakeawayCard key={transaction.id} transaction={transaction} role="owner" isDepotOpen={!!depot?.is_open} />
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white border border-gray-100 rounded-2xl py-12 flex flex-col items-center justify-center text-gray-400 shadow-sm">
+            <ShoppingBag size={40} className="mb-3 text-gray-300" />
+            <p className="text-sm font-bold text-gray-500">Tidak ada antrean</p>
+            <p className="text-xs mt-1">Belum ada pesanan takeaway yang aktif saat ini.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

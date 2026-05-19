@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Depot } from "@/types";
-import { Search, Pencil, Trash2, CreditCard, AlertCircle, CheckCircle2, ArrowUpDown, Power, List } from "lucide-react";
+import { Search, Pencil, Trash2, CreditCard, AlertCircle, CheckCircle2, ArrowUpDown, Power, List, Crown } from "lucide-react";
 import {
   createColumnHelper,
   flexRender,
@@ -45,6 +45,23 @@ export default function DepotTable({ data, isLoading, onOperasionalClick, onDele
         </button>
       ),
       cell: (info) => <span className="font-medium text-gray-800">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor("owner_name", {
+      header: "Owner Cabang",
+      cell: (info) => {
+        const ownerName = info.getValue(); 
+
+        return ownerName ? (
+          <span className="flex items-center gap-1.5 text-xs font-bold text-gray-700 bg-yellow-50/50 border border-yellow-200/60 px-2.5 py-1.5 rounded-xl w-fit">
+            <Crown size={14} className="text-yellow-500 fill-yellow-500/20" />
+            {ownerName}
+          </span>
+        ) : (
+          <span className="inline-block text-[11px] font-semibold text-gray-400 italic bg-gray-50/80 px-2.5 py-1.5 rounded-xl border border-dashed border-gray-200">
+            Belum Ada Owner
+          </span>
+        );
+      },
     }),
     columnHelper.accessor("address", {
       header: () => <span className="font-semibold">Alamat</span>,

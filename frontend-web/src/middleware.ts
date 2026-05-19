@@ -35,6 +35,9 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith("/admin") && role !== "admin") {
     return NextResponse.redirect(new URL(`/${role}?error=unauthorized`, request.url));
   }
+  if (pathname.startsWith("/owner") && role !== "owner") {
+    return NextResponse.redirect(new URL(`/${role}?error=unauthorized`, request.url));
+  }
   if (pathname.startsWith("/kasir") && role !== "kasir") {
     return NextResponse.redirect(new URL(`/${role}?error=unauthorized`, request.url));
   }
@@ -49,6 +52,7 @@ export const config = {
   matcher: [
     "/",
     "/admin/:path*",
+    "/owner/:path*",
     "/kasir/:path*",
     "/pelayan/:path*",
   ],

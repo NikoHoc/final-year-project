@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { User } from "@/types";
-import { Search, Pencil, Trash2, ArrowUpDown, Shield, Store, MonitorSmartphone, Utensils } from "lucide-react";
+import { Search, Pencil, Trash2, ArrowUpDown, Shield, Store, MonitorSmartphone, Utensils, Crown } from "lucide-react";
 import {
   createColumnHelper,
   flexRender,
@@ -29,7 +29,9 @@ export default function EmployeeTable({ data, isLoading, onEditClick, onDeleteCl
     switch (role) {
       case "admin": 
         return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-purple-50 text-purple-700 text-[10px] font-bold border border-purple-200 uppercase"><Shield size={12}/> Admin</span>;
-      case "kasir": 
+      case "owner":
+        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-yellow-50 text-yellow-700 text-[10px] font-bold border border-yellow-200 uppercase"><Crown size={12}/> Owner</span>;
+      case "kasir":
         return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200 uppercase"><MonitorSmartphone size={12}/> Kasir</span>;
       case "pelayan": 
         return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-orange-50 text-orange-700 text-[10px] font-bold border border-orange-200 uppercase"><Utensils size={12}/> Pelayan</span>;

@@ -13,18 +13,20 @@ interface Props {
   summary: SettlementSummary | null;
   expenses: Expense[];
   depot: Depot | null;
+  role?: "kasir" | "owner" | "admin";
 }
 
-export default function ReportSettlementPrintModal({ isOpen, onClose, settlement, summary, expenses, depot }: Props) {
+export default function ReportSettlementPrintModal({ isOpen, onClose, settlement, summary, expenses, depot, role = "owner" }: Props) {
   const printRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = () => {
-  const printContent = printRef.current?.innerHTML;
-  if (printContent) {
-    printSettlementHTML(printContent, `CLOSING_REPORT_${settlement?.id || "SUMMARY"}`);
-  }
-};
+    const printContent = printRef.current?.innerHTML;
+      if (printContent) {
+        printSettlementHTML(printContent, `CLOSING_REPORT_${settlement?.id || "SUMMARY"}`);
+      }
+  };
 
+  const isOwnerOrAdmin = role === "owner" || role === "admin";
   if (!isOpen || !settlement || !summary) return null;
 
   return (
@@ -79,24 +81,28 @@ export default function ReportSettlementPrintModal({ isOpen, onClose, settlement
                 </div>
               ))}
             </div>
-            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest pt-4">Rincian Pengeluaran ({expenses.length})</h3>
-            <div className="space-y-2">
-              {expenses.length > 0 ? (
-                expenses.map((exp) => (
-                  <div key={exp.id} className="bg-gray-50 border border-gray-100 p-4 rounded-2xl flex justify-between items-center">
-                    <div>
-                      <div className="text-xs font-bold text-gray-800 uppercase">{exp.item_name}</div>
-                      {exp.note && <div className="text-[10px] text-gray-400 mt-0.5 normal-case"># {exp.note}</div>}
+            {isOwnerOrAdmin && (
+              <>
+                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest pt-4">Rincian Pengeluaran ({expenses.length})</h3>
+                <div className="space-y-2">
+                  {expenses.length > 0 ? (
+                    expenses.map((exp) => (
+                      <div key={exp.id} className="bg-gray-50 border border-gray-100 p-4 rounded-2xl flex justify-between items-center">
+                        <div>
+                          <div className="text-xs font-bold text-gray-800 uppercase">{exp.item_name}</div>
+                          {exp.note && <div className="text-[10px] text-gray-400 mt-0.5 normal-case"># {exp.note}</div>}
+                        </div>
+                        <span className="text-sm font-black text-red-500">{formatRupiah(exp.amount)}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-6 border border-dashed border-gray-200 rounded-2xl text-center text-xs font-bold text-gray-400 uppercase">
+                      Tidak ada pengeluaran operasional
                     </div>
-                    <span className="text-sm font-black text-red-500">{formatRupiah(exp.amount)}</span>
-                  </div>
-                ))
-              ) : (
-                <div className="p-6 border border-dashed border-gray-200 rounded-2xl text-center text-xs font-bold text-gray-400 uppercase">
-                  Tidak ada pengeluaran operasional
+                  )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
 
           <div className="w-full lg:w-[45%] bg-gray-100 p-6 flex flex-col items-center overflow-y-auto custom-scrollbar">
@@ -114,7 +120,7 @@ export default function ReportSettlementPrintModal({ isOpen, onClose, settlement
                 <div className="flex justify-between"><span>LAPORAN:</span><span className="font-bold uppercase">CLOSING REPORT</span></div>
                 <div className="flex justify-between"><span>ID SETTLE:</span><span className="font-bold uppercase">SET-{settlement.id.slice(-6).toUpperCase()}</span></div>
                 <div className="flex justify-between"><span>TANGGAL:</span><span className="font-bold">{formatDateTime(settlement.settlement_date)}</span></div>
-                <div className="flex justify-between"><span>KASIR:</span><span className="font-bold uppercase">{settlement.creator?.full_name || "SYSTEM"}</span></div>
+                <div className="flex justify-between"><span>DIBUAT OLEH:</span><span className="font-bold uppercase">{settlement.creator?.full_name || "SYSTEM"}</span></div>
               </div>
 
               <div className="border-b border-dashed border-gray-400 my-4"></div>
@@ -141,33 +147,35 @@ export default function ReportSettlementPrintModal({ isOpen, onClose, settlement
                 ))}
               </div>
 
-              <div className="border-b border-dashed border-gray-400 my-4"></div>
+              {isOwnerOrAdmin && (
+                <>
+                <div className="border-b border-dashed border-gray-400 my-4"></div>
 
-              <div className="space-y-1.5 text-[11px]">
-                <p className="font-black uppercase text-[10px] tracking-wider mb-1 text-gray-500">*** RINCIAN PENGELUARAN ***</p>
-                {expenses.length > 0 ? (
-                  expenses.map((exp, idx) => (
-                    <div key={idx} className="flex justify-between items-start">
-                      <span className="uppercase flex-1 pr-2 truncate">{exp.item_name}</span>
-                      <span className="font-bold text-red-600 shrink-0">({formatRupiah(exp.amount)})</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="italic text-gray-400 text-[10px] text-center">TIDAK ADA PENGELUARAN</p>
-                )}
-                <div className="flex justify-between border-t border-gray-200 pt-1 font-black text-red-600 mt-1">
-                  <span>TOTAL EXPENSES</span>
-                  <span>({formatRupiah(summary.total_expenses)})</span>
+                <div className="space-y-1.5 text-[11px]">
+                  <p className="font-black uppercase text-[10px] tracking-wider mb-1 text-gray-500">*** RINCIAN PENGELUARAN ***</p>
+                  {expenses.length > 0 ? (
+                    expenses.map((exp, idx) => (
+                      <div key={idx} className="flex justify-between items-start">
+                        <span className="uppercase flex-1 pr-2 truncate">{exp.item_name}</span>
+                        <span className="font-bold text-red-600 shrink-0">({formatRupiah(exp.amount)})</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="italic text-gray-400 text-[10px] text-center">TIDAK ADA PENGELUARAN</p>
+                  )}
+                  <div className="flex justify-between border-t border-gray-200 pt-1 font-black text-red-600 mt-1">
+                    <span>TOTAL EXPENSES</span>
+                    <span>({formatRupiah(summary.total_expenses)})</span>
+                  </div>
                 </div>
-              </div>
+                <div className="border-b border-dashed border-gray-400 my-4"></div>
 
-              <div className="border-b border-dashed border-gray-400 my-4"></div>
-
-              <div className="text-center py-2 bg-gray-50 border border-gray-200 rounded">
-                <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">ESTIMASI BERSIH (NET INCOME)</p>
-                <p className="text-sm font-black text-purple-600 mt-0.5">{formatRupiah(summary.net_income)}</p>
-              </div>
-
+                <div className="text-center py-2 bg-gray-50 border border-gray-200 rounded">
+                  <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">ESTIMASI BERSIH</p>
+                  <p className="text-sm font-black text-purple-600 mt-0.5">{formatRupiah(summary.net_income)}</p>
+                </div>
+                </>
+              )}
               <div className="text-center mt-8 pt-4 border-t border-dashed border-gray-300 text-[9px] text-gray-400 uppercase font-bold tracking-widest">
                 *** END OF CLOSING REPORT ***
               </div>

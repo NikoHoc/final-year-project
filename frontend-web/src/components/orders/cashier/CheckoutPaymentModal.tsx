@@ -33,9 +33,10 @@ interface CheckoutPaymentModalProps {
   customerName: string | null;
   onSuccess: () => void;
   depot?: Depot | null;
+   role?: "kasir" | "owner";
 }
 
-export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, transactionId, tableId, existingPayments, customerName, onSuccess, depot }: CheckoutPaymentModalProps) {
+export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, transactionId, tableId, existingPayments, customerName, onSuccess, depot, role }: CheckoutPaymentModalProps) {
   const router = useRouter()
   const receiptRef = useRef<HTMLDivElement>(null);
 
@@ -238,7 +239,11 @@ export default function CheckoutPaymentModal({ isOpen, onClose, cartItems, trans
       
       toast.success(`Transaksi Selesai!`);
       onClose();
-      router.push("/kasir");
+      if (role === "owner") {
+        router.push("/owner/onsite-transactions");
+      } else if (role === "kasir") {  
+        router.push("/kasir");
+      }
     } catch (error) {
       console.error("Error Client Side - Gagal menyelesaikan transaksi: ", error);
     } finally {

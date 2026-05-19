@@ -10,10 +10,10 @@ import { Transaction } from "@/types";
 
 import DailySummaryCards from "@/components/settlements/DailySummaryCards";
 import PaymentBreakdownTable from "@/components/settlements/PaymentBreakdownTable";
-import ExpenseTable from "@/components/settlements/CompactExpenseTable";
 import DailyTransactionTable from "@/components/settlements/DailyTransactionTable";
 import ReportTransactionModal from "@/components/settlements/ReportTransactionModal";
 import ReportSettlementPrintModal from "@/components/settlements/ReportSettlementPrintModal";
+import CompactExpenseTable from "@/components/settlements/CompactExpenseTable";
 
 export default function AdminSettlementDetailPage() {
   const { id } = useParams();
@@ -69,14 +69,14 @@ export default function AdminSettlementDetailPage() {
         </button>
       </div>
 
-      <DailySummaryCards summary={summary ?? null} transactions={transactions || []} />
+      <DailySummaryCards summary={summary ?? null} transactions={transactions || []} role="admin" />
 
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
         <div className="lg:col-span-6">
           <PaymentBreakdownTable summary={summary ?? null} />
         </div>
         <div className="lg:col-span-4">
-          <ExpenseTable expenses={expenses ?? []} />
+          <CompactExpenseTable expenses={expenses ?? []} />
         </div>
       </div>
 

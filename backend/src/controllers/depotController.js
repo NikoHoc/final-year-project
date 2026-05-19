@@ -35,6 +35,13 @@ exports.updateDepot = async (req, res) => {
   const { name, address, phone_number } = req.body;
 
   try {
+    if (req.user.role === 'owner' && String(req.user.depot_id) !== String(id)) {
+      return res.status(403).json({ 
+        status: false, 
+        message: "Akses ditolak! Anda tidak memiliki wewenang mengubah data cabang lain." 
+      });
+    }
+
     const { data, error } = await supabase
       .from("depots")
       .update({ name, address, phone_number })
@@ -53,17 +60,32 @@ exports.updateDepot = async (req, res) => {
 
 exports.getDepots = async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { data: depots, error } = await supabase
       .from("depots")
       .select("*, payment_configs(*)")
       .order("id", { ascending: true });
 
     if (error) throw error;
 
+    const { data: owners, error: ownerError } = await supabase
+      .from("profiles")
+      .select("depot_id, full_name")
+      .eq("role", "owner");
+      
+    if (ownerError) throw ownerError;
+
+    const formattedDepots = depots.map((depot) => {
+      const matchOwner = owners?.find((o) => o.depot_id === depot.id);
+      return {
+        ...depot,
+        owner_name: matchOwner ? matchOwner.full_name : null,
+      };
+    });
+
     return res.status(200).json({
       status: true,
       message: "Berhasil mengambil daftar depot",
-      data: data,
+      data: formattedDepots,
     });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
@@ -76,26 +98,15 @@ exports.getDepotDetail = async (req, res) => {
   try {
     const { data: depot, error } = await supabase
       .from("depots")
-      .select("*")
+      .select("*, payment_configs(*)")
       .eq("id", id)
       .single();
 
-    if (error)
-      return res.status(404).json({ message: "Depot tidak ditemukan" });
-
-    // cek depot suda ada payment credentials atau belum
-    const { data: payment } = await supabase
-      .from("payment_configs")
-      .select("id")
-      .eq("depot_id", id)
-      .single();
-
-    const responseData = {
-      ...depot,
-      has_payment_config: !!payment,
-    };
-
-    return res.status(200).json({ status: true, data: responseData });
+    if (error) {
+      return res.status(404).json({ status: false, message: "Depot tidak ditemukan" });
+    }
+    
+    return res.status(200).json({ status: true, data: depot });
   } catch (err) {
     return res.status(500).json({ status: false, message: err.message });
   }
@@ -152,7 +163,7 @@ exports.toggleStatus = async (req, res) => {
   const { is_open } = req.body;
 
   // jika kasir, pastikan kasir pada depot tersebut
-  if (req.user.role === "kasir") {
+  if (req.user.role === "kasir" || req.user.role === "owner") {
     if (req.user.depot_id != id) {
       return res
         .status(403)

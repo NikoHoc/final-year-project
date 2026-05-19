@@ -28,7 +28,6 @@ export default function PaymentConfigModal({
 
   useEffect(() => {
     if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMerchantId("");
       setClientKey("");
       setServerKey("");
@@ -39,14 +38,18 @@ export default function PaymentConfigModal({
     e.preventDefault();
     setIsSubmitting(true);
 
-    const success = await onSubmit({
-      merchant_id: merchantId,
-      midtrans_client_key: clientKey,
-      midtrans_server_key: serverKey,
-    });
-
-    if (success) onClose();
-    setIsSubmitting(false);
+    try {
+      const success = await onSubmit({
+        merchant_id: merchantId,
+        midtrans_client_key: clientKey,
+        midtrans_server_key: serverKey,
+      });
+      if (success) onClose();
+    } catch (error) {
+      console.error("Gagal menyimpan data user:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!depot) return null;

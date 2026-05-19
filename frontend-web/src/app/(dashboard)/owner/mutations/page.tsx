@@ -9,7 +9,7 @@ import MutationFormModal from "@/components/mutations/MutationFormModal";
 import { useSession } from "@/contexts/SessionContext";
 import { getTodayStr, getFirstDayOfMonthStr } from "@/utils/format";
 
-export default function MutationsPage() {
+export default function OwnerMutationsPage() {
   const { activeMutations, historyMutations, isActiveLoading, isHistoryLoading, fetchActiveMutations, fetchHistoryMutations } = useStock();
   const { user, isLoadingSession } = useSession();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -50,7 +50,7 @@ export default function MutationsPage() {
   };
 
   if (isLoadingSession) {
-    return <div className="p-8 text-center animate-pulse text-gray-400">Memuat Sesi Kasir...</div>;
+    return <div className="p-8 text-center animate-pulse text-gray-400">Memuat Sesi Owner...</div>;
   }
 
   return (

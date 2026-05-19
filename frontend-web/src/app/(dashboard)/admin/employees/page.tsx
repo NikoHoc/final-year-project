@@ -70,6 +70,7 @@ export default function EmployeesPage() {
               className="w-full sm:w-auto pl-9 pr-8 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer font-medium text-gray-700 shadow-sm"
             >
               <option value="all">Semua Peran</option>
+              <option value="owner">Owner</option>
               <option value="kasir">Kasir</option>
               <option value="pelayan">Pelayan</option>
             </select>

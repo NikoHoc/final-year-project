@@ -8,9 +8,9 @@ const roleMiddleware = require("../middlewares/roleMiddleware");
 router.use(authMiddleware);
 
 router.get("/:depot_id", stockController.getMutations);
-router.post("/", roleMiddleware(["admin", "kasir"]), stockController.createMutation);
-router.put("/:id/process", roleMiddleware(["admin", "kasir"]), stockController.processMutation);
-router.put("/:id", roleMiddleware(["admin", "kasir"]), stockController.updateMutation);
-router.delete("/:id", roleMiddleware(["admin", "kasir"]), stockController.deleteMutation);
+router.post("/", roleMiddleware(["admin", "owner"]), stockController.createMutation);
+router.put("/:id/process", roleMiddleware(["admin", "owner"]), stockController.processMutation);
+router.put("/:id", roleMiddleware(["admin", "owner"]), stockController.updateMutation);
+router.delete("/:id", roleMiddleware(["admin", "owner"]), stockController.deleteMutation);
 
 module.exports = router;

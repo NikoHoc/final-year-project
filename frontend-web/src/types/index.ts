@@ -1,4 +1,4 @@
-export type Role = 'admin' | 'kasir' | 'pelayan' | 'pelanggan';
+export type Role = 'admin' | 'owner' | 'kasir' | 'pelayan' | 'pelanggan';
 export type TransactionType = 'dining' | 'online' | 'takeaway';
 export type OrderStatus = 'pending' | 'confirmed' | 'cooking' | 'ready' | 'completed' | 'cancelled';
 export type PaymentStatus = 'unpaid' | 'paid' | 'failed';
@@ -25,6 +25,7 @@ export interface Depot {
   is_open?: boolean;
   payment_configs?: PaymentConfig | null;
   created_at?: string;
+  owner_name?: string | null;
 }
 
 export interface PaymentConfig {
@@ -59,6 +60,7 @@ export interface Menu {
   image_url?: string;
   description?: string;
   categories?: { 
+    id: number,
     name: string,
     type?: "food" | "drink" | "other"
   };
@@ -238,8 +240,6 @@ export interface DailySettlement {
   subtotal_amount: number;
   tax_amount: number;
   grand_total: number;
-  cash_income: number;
-  non_cash_income: number;
   total_expenses: number;
   net_income: number;
   created_at?: string;

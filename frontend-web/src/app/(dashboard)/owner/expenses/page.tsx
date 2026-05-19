@@ -10,7 +10,7 @@ import { useSession } from "@/contexts/SessionContext";
 import { formatDateFull, getTodayStr, getFirstDayOfMonthStr } from "@/utils/format";
 import ExpenseTable from "@/components/expenses/ExpenseTable";
 
-export default function ExpensesPage() {
+export default function OwnerExpensesPage() {
   const { expenses, isLoading, fetchExpenses, deleteExpense } = useExpense();
   const { user, isLoadingSession } = useSession();
   
@@ -64,7 +64,7 @@ export default function ExpensesPage() {
   };
 
   if (isLoadingSession) {
-    return <div className="p-8 text-center animate-pulse text-gray-400">Memuat Sesi Kasir...</div>;
+    return <div className="p-8 text-center animate-pulse text-gray-400">Memuat Sesi Owner...</div>;
   }
 
   return (

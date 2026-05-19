@@ -8,15 +8,17 @@ import { useSettlement } from "@/hooks/useSettlement";
 import DailySummaryCards from "@/components/settlements/DailySummaryCards";
 import PaymentBreakdownTable from "@/components/settlements/PaymentBreakdownTable";
 import DailyTransactionTable from "@/components/settlements/DailyTransactionTable";
-import { formatDateFull } from "@/utils/format";
+import { formatDateFull, formatDateTime } from "@/utils/format";
 import { Transaction } from "@/types";
 import ReportTransactionModal from "@/components/settlements/ReportTransactionModal";
 import ReportSettlementPrintModal from "@/components/settlements/ReportSettlementPrintModal";
-import { useSession } from "@/contexts/SessionContext"
+import { useSession } from "@/contexts/SessionContext";
+import CompactExpenseTable from "@/components/settlements/CompactExpenseTable";
 
-export default function SettlementDetailPage() {
+export default function OwnerSettlementDetailPage() {
   const { id } = useParams();
-  const { settlementDetail, isLoading, fetchSettlementDetail } = useSettlement();
+  const { settlementDetail, isLoading, fetchSettlementDetail } =
+    useSettlement();
   const { depot, isLoadingSession } = useSession();
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
@@ -30,7 +32,9 @@ export default function SettlementDetailPage() {
       <div className="h-screen flex flex-col items-center justify-center gap-4">
         <Loader2 className="animate-spin text-blue-600" size={40} />
         <p className="text-sm font-bold text-gray-500 animate-pulse">
-          {isLoadingSession ? "Memuat Sesi Kasir..." : "Mengambil data detail settlement..."}
+          {isLoadingSession
+            ? "Memuat Sesi owner..."
+            : "Mengambil data detail settlement..."}
         </p>
       </div>
     );
@@ -44,7 +48,7 @@ export default function SettlementDetailPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link
-            href="/kasir/reports"
+            href="/owner/reports"
             className="cursor-pointer p-3 bg-white border border-gray-100 rounded-2xl hover:bg-gray-50 transition-colors shadow-sm"
           >
             <ArrowLeft size={20} className="text-gray-600" />
@@ -55,7 +59,7 @@ export default function SettlementDetailPage() {
             </h1>
             <p className="text-sm text-gray-500 mt-1 font-medium">
               Laporan tanggal:{" "}
-              {formatDateFull(settlement?.settlement_date || "")}
+              {formatDateTime(settlement?.settlement_date || "")}
             </p>
           </div>
         </div>
@@ -69,9 +73,20 @@ export default function SettlementDetailPage() {
         </button>
       </div>
 
-      <DailySummaryCards summary={summary ?? null} transactions={transactions || []} role='kasir'/>
-      
-      <PaymentBreakdownTable summary={summary ?? null} />
+      <DailySummaryCards
+        summary={summary ?? null}
+        transactions={transactions || []}
+        role="owner"
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+        <div className="lg:col-span-6">
+          <PaymentBreakdownTable summary={summary ?? null} />
+        </div>
+        <div className="lg:col-span-4">
+          <CompactExpenseTable expenses={expenses ?? []} />
+        </div>
+      </div>
 
       <DailyTransactionTable
         transactions={transactions || []}
@@ -92,7 +107,7 @@ export default function SettlementDetailPage() {
         summary={summary ?? null}
         expenses={expenses ?? []}
         depot={depot}
-        role="kasir"
+        role="owner"
       />
     </div>
   );

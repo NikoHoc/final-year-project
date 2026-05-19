@@ -15,7 +15,7 @@ import { useTransaction } from "@/hooks/useTransaction";
 import { useSession } from "@/contexts/SessionContext";
 import { useTables } from "@/hooks/useTables";
 
-export default function PosPage() {
+export default function OwnerPosPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -182,9 +182,9 @@ export default function PosPage() {
         const newTxId = response?.data?.transaction?.id;
 
         if (newTxId) {
-          router.push(`/kasir/pos/${newTxId}`);
+          router.push(`/owner/onsite-transaction/pos/${newTxId}`);
         } else {
-          router.push("/kasir");
+          router.push("/owner/onsite-transactions");
         }
       } else {
         const newItemsOnly = cartItems.filter((item) => item.is_saved !== true);
@@ -238,7 +238,7 @@ export default function PosPage() {
         <div className="p-4 border-b border-gray-100 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.push("/kasir")}
+              onClick={() => router.push("/owner/onsite-transactions")}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <ArrowLeft size={20} className="text-gray-600" />
@@ -288,7 +288,7 @@ export default function PosPage() {
       />
 
       <CheckoutPaymentModal
-        role="kasir"
+        role="owner"
         isOpen={isPaymentModalOpen}
         customerName={customerName}
         onClose={() => setIsPaymentModalOpen(false)}
