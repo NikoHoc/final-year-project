@@ -8,7 +8,6 @@ import { useMenus } from "@/hooks/useMenus";
 import { useCategories } from "@/hooks/useCategories";
 import { Depot } from "@/types";
 
-// Re-use komponen form dari Admin
 import DepotFormModal from "@/components/depots/DepotFormModal";
 import PaymentConfigModal from "@/components/depots/PaymentConfigModal";
 

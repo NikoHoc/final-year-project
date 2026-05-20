@@ -78,7 +78,7 @@ export default function PelayanDashboard() {
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard Pelayan</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Dashboard Waiter</h1>
           <p className="text-gray-500 text-sm">
             Pilih meja untuk mencatat pesanan pelanggan. (Status Depot: <span className={depot.is_open ? "text-green-600 font-bold" : "text-red-600 font-bold"}>{depot.is_open ? "BUKA" : "TUTUP"}</span>)
           </p>

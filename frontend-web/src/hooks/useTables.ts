@@ -15,13 +15,14 @@ export const useTables = () => {
     try {
       const data = await tableService.getAll(depotId);
       const sortedTables = data.sort((a: Table, b: Table) => {
-      return a.table_number.localeCompare(b.table_number, undefined, {
-        numeric: true,
-        sensitivity: 'base'
+        return a.table_number.localeCompare(b.table_number, undefined, {
+          numeric: true,
+          sensitivity: 'base'
+        });
       });
-    });
 
-    setTables(sortedTables);
+      setTables(sortedTables);
+      return sortedTables;
     } catch (error) {
       handleApiError(error, "Gagal memuat daftar meja");
       throw error;
