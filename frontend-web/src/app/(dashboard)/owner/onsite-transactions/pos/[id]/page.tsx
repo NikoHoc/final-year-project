@@ -182,7 +182,7 @@ export default function OwnerPosPage() {
         const newTxId = response?.data?.transaction?.id;
 
         if (newTxId) {
-          router.push(`/owner/onsite-transaction/pos/${newTxId}`);
+          router.push(`/owner/onsite-transactions/pos/${newTxId}`);
         } else {
           router.push("/owner/onsite-transactions");
         }

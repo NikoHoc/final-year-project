@@ -138,9 +138,9 @@ export default function ExpenseFormModal({
             <input
               type="number"
               required
-              value={formData.amount}
+              value={formData.amount ?? ""}
               onChange={(e) =>
-                setFormData({ ...formData, amount: parseInt(e.target.value) })
+                setFormData({ ...formData, amount: e.target.value === "" ? 0 : parseInt(e.target.value)})
               }
               className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-all"
             />

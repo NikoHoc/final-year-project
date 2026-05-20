@@ -93,8 +93,8 @@ export default function MutationFormModal({ isOpen, onClose, depotId, initialDat
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-700">Jumlah Diminta</label>
             <input
-              type="number" step="0.01" required min="0.1" value={formData.requested_quantity}
-              onChange={(e) => setFormData({ ...formData, requested_quantity: parseFloat(e.target.value) })}
+              type="number" step="0.01" required min="0.1" value={formData.requested_quantity ?? ""}
+              onChange={(e) => setFormData({ ...formData, requested_quantity: e.target.value === "" ? 0 : parseFloat(e.target.value), })}
               className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500"
             />
           </div>

@@ -37,11 +37,11 @@ export const SIDEBAR_ITEMS: Record<Role, SidebarItem[]> = {
   ],
   owner: [
     { title: "Dashboard", path: "/owner", icon: LayoutDashboard },
-    { title: "Settlement Harian", path: "/owner/settlement", icon: BanknoteArrowDown },
-    { title: "Laporan & Analitik", path: "/owner/reports", icon: ScrollText },
     { title: "Transaksi Onsite", path: "/owner/onsite-transactions", icon: UtensilsCrossed },
     { title: "Transaksi Online", path: "/owner/online-transactions", icon: Smartphone },
     { title: "Manajemen Meja", path: "/owner/tables", icon: Dices },
+    { title: "Settlement Harian", path: "/owner/settlement", icon: BanknoteArrowDown },
+    { title: "Laporan & Analitik", path: "/owner/reports", icon: ScrollText },
     { title: "Pengeluaran Operasional", path: "/owner/expenses", icon: ShoppingCart },
     { title: "Mutasi Stok", path: "/owner/mutations", icon: Warehouse },
     { title: "Pengaturan Cabang", path: "/owner/depot", icon: Store }, 
