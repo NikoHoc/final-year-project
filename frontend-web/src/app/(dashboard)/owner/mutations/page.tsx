@@ -8,7 +8,7 @@ import HistoryMutationsTable from "@/components/mutations/HistoryMutationsTable"
 import MutationFormModal from "@/components/mutations/MutationFormModal";
 import { useSession } from "@/contexts/SessionContext";
 import { getTodayStr, getFirstDayOfMonthStr } from "@/utils/format";
-import { ArrowDownToLine, ArrowUpFromLine, History, Plus } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, Plus } from "lucide-react";
 
 export default function OwnerMutationsPage() {
   const { 

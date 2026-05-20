@@ -1,6 +1,6 @@
 "use client";
 
-export default function OwnerOnlineTransaction() {
+export default function CashierOnlineTransaction() {
   
   return (
     <div className="space-y-6">

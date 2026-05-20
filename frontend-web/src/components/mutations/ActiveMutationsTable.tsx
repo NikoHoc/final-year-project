@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Pencil, Trash2, CheckCircle, XCircle, Truck, Clock } from "lucide-react";
+import { Search, Pencil, Trash2, CheckCircle, XCircle, Clock } from "lucide-react";
 import { StockMutation } from "@/types";
 import { formatDateTime } from "@/utils/format";
 import { useStock } from "@/hooks/useStock";

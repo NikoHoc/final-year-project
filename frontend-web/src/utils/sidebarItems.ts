@@ -48,7 +48,7 @@ export const SIDEBAR_ITEMS: Record<Role, SidebarItem[]> = {
   ],
   kasir: [
     { title: "Transaksi Onsite", path: "/kasir", icon: UtensilsCrossed },
-    { title: "Transaksi Online", path: "/kasir/online", icon: Receipt },
+    { title: "Transaksi Online", path: "/kasir/online-transactions", icon: Receipt },
     { title: "Master Menu", path: "/kasir/menus", icon: Soup},
     { title: "Settlement Harian", path: "/kasir/settlement", icon: BanknoteArrowDown},
     { title: "Laporan Transaksi", path: "/kasir/reports", icon: ScrollText},
