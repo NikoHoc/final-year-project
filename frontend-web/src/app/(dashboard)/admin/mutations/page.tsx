@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useStock } from "@/hooks/useStock";
 import { getTodayStr, getFirstDayOfMonthStr } from "@/utils/format";
-
+import { Truck } from "lucide-react";
 import HistoryMutationsTable from "@/components/mutations/HistoryMutationsTable";
 import ActiveMutationsTable from "@/components/mutations/ActiveMutationsTable";
 
@@ -58,6 +58,9 @@ export default function AdminMutationsPage() {
         depotId={null}
         readOnly={true}
         onRefresh={() => fetchActiveMutations(null)}
+        title="Permintaan Aktif"
+        description="Daftar permintaan mutasi stok yang sedang berjalan"
+        icon={<Truck size={24}/>}
       />
 
       <HistoryMutationsTable 

@@ -15,9 +15,12 @@ interface Props {
   onRefresh: () => void;
   onEdit?: (m: StockMutation) => void;
   readOnly?: boolean;
+  title: string;
+  description?: string;
+  icon?: React.ReactNode;
 }
 
-export default function ActiveMutationsTable({ data, isLoading, depotId, onRefresh, onEdit, readOnly }: Props) {
+export default function ActiveMutationsTable({ data, isLoading, depotId, onRefresh, onEdit, readOnly, title, description, icon }: Props) {
   const { deleteMutation, processMutation } = useStock();
   const [search, setSearch] = useState("");
   const [targetDelete, setTargetDelete] = useState<StockMutation | null>(null);
@@ -59,13 +62,18 @@ export default function ActiveMutationsTable({ data, isLoading, depotId, onRefre
   return (
     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-black text-gray-800 uppercase flex items-center gap-2">
-            <Truck size={24} /> Permintaan Aktif
-          </h2>
-          <p className="text-xs text-gray-500 mt-1 font-semibold">
-            Daftar permintaan mutasi stok yang sedang berjalan
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-50 pb-2">
+          <div>
+            <h2 className="text-lg font-black text-gray-800 uppercase flex items-center gap-2">
+              {icon}
+              <span>{title}</span>
+            </h2>
+            {description && (
+              <p className="text-xs text-gray-500 mt-1 font-semibold">
+                {description}
+              </p>
+            )}
+          </div>
         </div>
         <div className="relative w-full sm:w-64">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
