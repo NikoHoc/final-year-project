@@ -48,13 +48,14 @@ export const SIDEBAR_ITEMS: Record<Role, SidebarItem[]> = {
   ],
   kasir: [
     { title: "Transaksi Onsite", path: "/kasir", icon: UtensilsCrossed },
-    { title: "Transaksi Online", path: "/kasir/online-transactions", icon: Receipt },
+    { title: "Transaksi Online", path: "/kasir/online-transactions", icon: Smartphone },
     { title: "Master Menu", path: "/kasir/menus", icon: Soup},
     { title: "Settlement Harian", path: "/kasir/settlement", icon: BanknoteArrowDown},
     { title: "Laporan Transaksi", path: "/kasir/reports", icon: ScrollText},
   ],
   pelayan: [
     { title: "Transaksi Onsite", path: "/pelayan", icon: UtensilsCrossed },
+    { title: "Transaksi Online", path: "/pelayan/online-transactions", icon: Smartphone },
   ],
   pelanggan: [],
 };

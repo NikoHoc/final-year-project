@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import toast from "react-hot-toast";
 import { useSession } from "@/contexts/SessionContext";
@@ -11,6 +11,17 @@ export default function GlobalRealtimeNotification() {
   const { user, isLoadingSession } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Fungsi untuk menghentikan audio secara aman
+  const stopAlarmSound = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0; // Reset ke detik ke-0
+      audioRef.current = null;
+    }
+  };
 
   useEffect(() => {
     if (isLoadingSession || !user?.depot_id) return;
@@ -32,8 +43,15 @@ export default function GlobalRealtimeNotification() {
           if (newData.type === "online" && newData.order_status === "pending") {
             
             try {
-              const audio = new Audio("/public/audio/new_order.mp3");
-              audio.play();
+              stopAlarmSound();
+
+              const audio = new Audio("/audio/new_order.mp3");
+              audio.loop = true;
+              audioRef.current = audio;
+
+              audio.play().catch((e) => {
+                console.log("🔊 Audio tertahan oleh kebijakan Autoplay browser. Silakan klik area web terlebih dahulu.");
+              });
             } catch (error) {
               console.error("Gagal memutar audio:", error);
             }
@@ -56,10 +74,11 @@ export default function GlobalRealtimeNotification() {
                           <p className="mt-1 text-xs text-gray-500">Ada pelanggan yang memesan via aplikasi. Segera cek dan konfirmasi.</p>
                           <button
                             onClick={() => {
+                              stopAlarmSound();
                               toast.dismiss(t.id);
                               router.push(`/${user.role}/online-transactions`);
                             }}
-                            className="mt-3 w-full bg-blue-600 text-white text-xs font-bold py-2 rounded-lg shadow-sm hover:bg-blue-700 transition-colors"
+                            className="mt-3 w-full bg-blue-600 text-white text-xs font-bold py-2 rounded-lg shadow-sm hover:bg-blue-700 transition-colors cursor-pointer"
                           >
                             Buka Halaman Persetujuan
                           </button>
@@ -67,14 +86,24 @@ export default function GlobalRealtimeNotification() {
                       </div>
                     </div>
                     <div className="flex border-l border-gray-100">
-                      <button onClick={() => toast.dismiss(t.id)} className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-400 hover:text-gray-600">
+                      <button 
+                        onClick={() => {
+                          stopAlarmSound();
+                          toast.dismiss(t.id);
+                        }} 
+                        className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-400 hover:text-gray-600 cursor-pointer"
+                      >
                         <X size={18} />
                       </button>
                     </div>
                   </div>
                 ),
-                { duration: 8000, position: "top-right" } 
+                { duration: Infinity, position: "top-right" } 
               );
+            } else {
+              setTimeout(() => {
+                stopAlarmSound();
+              }, 5000);
             }
           }
         }
@@ -83,6 +112,7 @@ export default function GlobalRealtimeNotification() {
 
     return () => {
       supabaseRealtime.removeChannel(notifyChannel);
+      stopAlarmSound();
     };
   }, [user, isLoadingSession, pathname, router]);
 
