@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ShoppingBag, AlertCircle } from "lucide-react";
 import { useTables } from "@/hooks/useTables";
@@ -9,6 +9,7 @@ import TableList from "@/components/tables/TableList";
 import TakeawayCard from "@/components/orders/TakeawayCard";
 import { useTransaction } from "@/hooks/useTransaction";
 import { useSession } from "@/contexts/SessionContext";
+import { supabaseRealtime } from "@/config/supabaseClient";
 
 export default function PelayanDashboard() {
   const router = useRouter();
@@ -19,29 +20,48 @@ export default function PelayanDashboard() {
   const [activeTransactions, setActiveTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      if (!user?.depot_id) return;
+  const loadDashboardData = useCallback(async (silent = false) => {
+    if (!user?.depot_id) return;
+    
+    if (!silent) setIsLoading(true); 
       
-      setIsLoading(true);
-      try {
-        await fetchTables(user.depot_id, true); 
-        
-        const activeData = await fetchAllTransactions(user.depot_id, 'active');
-        setActiveTransactions(activeData);
-      } catch (error) {
-        console.error("Error Client Side - Gagal memuat data dashboard pelayan", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (!isLoadingSession && user?.depot_id) {
-      loadDashboardData();
-    } else if (!isLoadingSession && !user?.depot_id) {
-      setIsLoading(false);
+    try {
+      await fetchTables(user.depot_id);
+      const activeData = await fetchAllTransactions(user.depot_id, 'active');
+      setActiveTransactions(activeData);
+    } catch (error) {
+      console.error("Gagal memuat data dashboard", error);
+    } finally {
+      if (!silent) setIsLoading(false);
     }
-  }, [isLoadingSession, user?.depot_id, fetchTables, fetchAllTransactions]);
+  }, [user?.depot_id, fetchAllTransactions, fetchTables]);
+
+  useEffect(() => {
+    if (isLoadingSession || !user?.depot_id) return;
+
+    loadDashboardData(false);
+
+    const transactionChannel = supabaseRealtime
+      .channel(`onsite-transactions-waiter-${user.depot_id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'transactions',
+          filter: `depot_id=eq.${user.depot_id}`
+        },
+        (payload) => {
+          console.log("WAITER onsite-transactions data updated: ", payload);
+          loadDashboardData(true);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabaseRealtime.removeChannel(transactionChannel);
+    };
+  }, [isLoadingSession, user?.depot_id, loadDashboardData]);
 
   const diningTransactions = activeTransactions.filter((t) => t.type === "dining");
   const takeawayTransactions = activeTransactions.filter((t) => t.type === "takeaway");

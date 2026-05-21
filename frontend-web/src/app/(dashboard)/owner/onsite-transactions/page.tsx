@@ -10,6 +10,7 @@ import TakeawayCard from "@/components/orders/TakeawayCard";
 import { useDepots } from "@/hooks/useDepot";
 import { useTransaction } from "@/hooks/useTransaction";
 import { useSession } from "@/contexts/SessionContext";
+import { supabaseRealtime } from "@/config/supabaseClient";
 
 export default function OwnerOnsiteTransactions() {
   const router = useRouter();
@@ -21,10 +22,11 @@ export default function OwnerOnsiteTransactions() {
   const [activeTransactions, setActiveTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadDashboardData = useCallback(async () => {
+  const loadDashboardData = useCallback(async (silent = false) => {
     if (!user?.depot_id) return;
     
-    setIsLoading(true);
+    if (!silent) setIsLoading(true); 
+    
     try {
       await fetchTables(user.depot_id);
       const activeData = await fetchAllTransactions(user.depot_id, 'active');
@@ -32,15 +34,36 @@ export default function OwnerOnsiteTransactions() {
     } catch (error) {
       console.error("Gagal memuat data dashboard", error);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   }, [user?.depot_id, fetchAllTransactions, fetchTables]);
 
   useEffect(() => {
-    if (!isLoadingSession && user) {
-      loadDashboardData();
-    }
-  }, [isLoadingSession, user, loadDashboardData]);
+    if (isLoadingSession || !user?.depot_id) return;
+
+    loadDashboardData(false);
+
+    const transactionChannel = supabaseRealtime
+      .channel(`onsite-transactions-owner-${user.depot_id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'transactions',
+          filter: `depot_id=eq.${user.depot_id}`
+        },
+        (payload) => {
+          console.log("owner - onsite-transactions data updated: ", payload);
+          loadDashboardData(true);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabaseRealtime.removeChannel(transactionChannel);
+    };
+  }, [isLoadingSession, user?.depot_id, loadDashboardData]);
 
   const diningTransactions = activeTransactions.filter((t) => t.type === "dining");
   const takeawayTransactions = activeTransactions.filter((t) => t.type === "takeaway");

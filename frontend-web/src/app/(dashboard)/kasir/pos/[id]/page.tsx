@@ -14,6 +14,7 @@ import { TransactionPayment } from "@/types";
 import { useTransaction } from "@/hooks/useTransaction";
 import { useSession } from "@/contexts/SessionContext";
 import { useTables } from "@/hooks/useTables";
+import { supabaseRealtime } from "@/config/supabaseClient";
 
 export default function PosPage() {
   const router = useRouter();
@@ -35,6 +36,7 @@ export default function PosPage() {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoadingMenus, setIsLoadingMenus] = useState(true);
+  const [isLoadingExisting, setIsLoadingExisting] = useState(false);
 
   const [localCategories, setLocalCategories] = useState<Category[]>([]);
   const [localMenus, setLocalMenus] = useState<DepotMenuResponse[]>([]);
@@ -95,8 +97,10 @@ export default function PosPage() {
   }, [isLoadingSession, user?.depot_id, transactionId, tableId, getDepotMenus, fetchTableById]);
 
   // load transaksi jika ada
-  const loadExistingTransaction = useCallback(async () => {
+  const loadExistingTransaction = useCallback(async (silent = false) => {
     if (transactionId === "new") return;
+
+    if (!silent) setIsLoadingExisting(true);
 
     try {
       const transaction = await fetchTransactionById(transactionId);
@@ -133,12 +137,48 @@ export default function PosPage() {
       }
     } catch (error) {
       console.error("Error Client Side - gagal memuat detail transaksi:", error);
+    } finally {
+      if (!silent) setIsLoadingExisting(false);
     }
   }, [transactionId, fetchTransactionById, setCartItems]);
 
   useEffect(() => {
-    loadExistingTransaction();
-  }, [loadExistingTransaction]);
+    if (transactionId === "new" || !transactionId) return;
+
+    loadExistingTransaction(false);
+    const posChannel = supabaseRealtime
+      .channel(`pos-detail-cashier-${transactionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'transaction_items',
+          filter: `transaction_id=eq.${transactionId}`
+        },
+        (payload) => {
+          console.log("CASHIER - Item Pesanan diupdate:", payload);
+          loadExistingTransaction(true);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE', 
+          schema: 'public',
+          table: 'transactions',
+          filter: `id=eq.${transactionId}` 
+        },
+        (payload) => {
+          console.log("CASHIER - Status Transaksi Berubah:", payload);
+          loadExistingTransaction(true);
+        }
+      )
+      .subscribe();
+    return () => {
+      supabaseRealtime.removeChannel(posChannel);
+    };
+  }, [transactionId, loadExistingTransaction]);
 
   const handlePaymentSuccess = () => {
     loadExistingTransaction();
