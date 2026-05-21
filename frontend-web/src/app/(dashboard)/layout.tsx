@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
 import { SessionProvider } from "@/contexts/SessionContext";
+import GlobalRealtimeNotification from "@/components/notifications/GlobalRealtimeNotification";
 
 export default function DashboardLayout({
   children,
@@ -36,6 +37,7 @@ export default function DashboardLayout({
           }`}
         >
           <Navbar />
+          <GlobalRealtimeNotification />
           <main className="p-6 flex-1 overflow-y-auto">
             {children}
           </main>
