@@ -161,6 +161,38 @@ export default function OwnerSettingsPage() {
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Alamat Lengkap</p>
                 <p className="text-sm font-medium text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">{depotData?.address}</p>
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Koordinat GPS (Latitude & Longitude)</p>
+                  <p className="text-sm font-mono font-medium text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    {depotData?.latitude && depotData?.longitude 
+                      ? `${depotData.latitude}, ${depotData.longitude}` 
+                      : "Belum dikonfigurasi"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Tautan Google Maps</p>
+                  {depotData?.map_url ? (
+                    <a
+                      href={depotData.map_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex items-center gap-2 transition-colors h-[46px]"
+                    >
+                      🗺️ Lihat Lokasi di Google Maps &rarr;
+                    </a>
+                  ) : (
+                    <p className="text-sm font-medium text-amber-600 bg-amber-50/50 p-3 rounded-xl border border-amber-100 h-[46px] flex items-center">
+                      Tautan belum disematkan
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">
+                * Data koordinat spasial dan tautan di atas digunakan oleh sistem aplikasi mobile pelanggan untuk mengukur radius jarak pengantaran/pickup secara presisi serta menampilkan navigasi rute ke lokasi depot.
+              </p>
             </div>
           </div>
         </div>

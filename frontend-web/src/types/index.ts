@@ -26,6 +26,9 @@ export interface Depot {
   payment_configs?: PaymentConfig | null;
   created_at?: string;
   owner_name?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  map_url?: string | null;
 }
 
 export interface PaymentConfig {

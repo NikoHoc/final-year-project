@@ -32,7 +32,7 @@ exports.createDepot = async (req, res) => {
 
 exports.updateDepot = async (req, res) => {
   const { id } = req.params;
-  const { name, address, phone_number } = req.body;
+  const { name, address, phone, is_open, latitude, longitude, map_url } = req.body;
 
   try {
     if (req.user.role === 'owner' && String(req.user.depot_id) !== String(id)) {
@@ -43,9 +43,17 @@ exports.updateDepot = async (req, res) => {
     }
 
     const { data, error } = await supabase
-      .from("depots")
-      .update({ name, address, phone_number })
-      .eq("id", id)
+      .from('depots')
+      .update({
+        name,
+        address,
+        phone,
+        is_open,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
+        map_url: map_url || null
+      })
+      .eq('id', id)
       .select()
       .single();
 

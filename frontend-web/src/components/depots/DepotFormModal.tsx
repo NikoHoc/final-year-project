@@ -12,6 +12,9 @@ interface DepotFormModalProps {
     name: string;
     address: string;
     phone_number: string;
+    latitude: number | null;
+    longitude: number | null;
+    map_url: string | null;
   }) => Promise<boolean>;
 }
 
@@ -19,6 +22,9 @@ export default function DepotFormModal({ isOpen, onClose, initialData, onSubmit 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [mapUrl, setMapUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -27,6 +33,9 @@ export default function DepotFormModal({ isOpen, onClose, initialData, onSubmit 
       setName(initialData?.name || "");
       setAddress(initialData?.address || "");
       setPhoneNumber(initialData?.phone_number || "");
+      setLatitude(initialData?.latitude ? String(initialData.latitude) : "");
+      setLongitude(initialData?.longitude ? String(initialData.longitude) : "");
+      setMapUrl(initialData?.map_url || "");
     }
   }, [isOpen, initialData]);
 
@@ -38,6 +47,9 @@ export default function DepotFormModal({ isOpen, onClose, initialData, onSubmit 
       name,
       address,
       phone_number: phoneNumber,
+      latitude: latitude ? parseFloat(latitude) : null,
+      longitude: longitude ? parseFloat(longitude) : null,
+      map_url: mapUrl || null,
     });
 
     if (success) {
@@ -47,59 +59,96 @@ export default function DepotFormModal({ isOpen, onClose, initialData, onSubmit 
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={initialData ? "Edit Data Cabang" : "Tambah Cabang Baru"}
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title={initialData ? "Edit Cabang Depot" : "Tambah Cabang Depot"}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Nama Cabang
-          </label>
+          <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Nama Depot</label>
           <input
             type="text"
-            required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
-            placeholder="Contoh: Depot Bakso ..."
+            placeholder="Masukkan nama depot"
+            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-colors"
+            disabled={isSubmitting}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Nomor Telepon (WhatsApp)
-          </label>
+          <label className="block text-xs font-bold text-gray-700 uppercase mb-1">No. Telepon</label>
           <input
             type="text"
-            required
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
             placeholder="Contoh: 08123456789"
+            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-colors"
+            disabled={isSubmitting}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Alamat Lengkap
-          </label>
+          <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Alamat Lengkap</label>
           <textarea
-            required
-            rows={3}
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none text-black"
-            placeholder="Masukkan alamat lengkap depot..."
+            placeholder="Masukkan alamat lengkap depot"
+            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-colors min-h-[80px]"
+            disabled={isSubmitting}
           />
+        </div>
+
+        <div className="space-y-4 pt-4 border-t border-gray-100 mt-2">
+          <h4 className="text-xs font-black text-gray-400 uppercase tracking-wider">Konfigurasi Lokasi *opsional</h4>
+          
+          <div>
+            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Tautan Google Maps (Share URL)</label>
+            <input
+              type="text"
+              value={mapUrl}
+              onChange={(e) => setMapUrl(e.target.value)}
+              placeholder="https://maps.app.goo.gl/..."
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-colors"
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Latitude</label>
+              <input
+                type="number"
+                step="any"
+                value={latitude}
+                onChange={(e) => setLatitude(e.target.value)}
+                placeholder="-7.2845"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-colors"
+                disabled={isSubmitting}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Longitude</label>
+              <input
+                type="number"
+                step="any"
+                value={longitude}
+                onChange={(e) => setLongitude(e.target.value)}
+                placeholder="112.7949"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-colors"
+                disabled={isSubmitting}
+              />
+            </div>
+            
+          </div>
+          <p className="text-[10px] text-gray-400 mt-1 ">
+              *Untuk koordinat, buka Google Maps, klik kanan pada lokasi depot, lalu pilih &quot;What&apos;s here? &quot; untuk melihat latitude dan longitude.
+          </p>
         </div>
 
         <div className="flex gap-3 pt-4">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-bold text-xs"
             disabled={isSubmitting}
           >
             Batal
@@ -107,13 +156,13 @@ export default function DepotFormModal({ isOpen, onClose, initialData, onSubmit 
           <button
             type="submit"
             disabled={isSubmitting || !name || !address || !phoneNumber}
-            className={`flex-1 px-4 py-2 text-white rounded-lg font-medium transition-colors ${
+            className={`flex-1 px-4 py-2.5 text-white rounded-xl font-bold text-xs transition-colors ${
               isSubmitting || !name || !address || !phoneNumber
                 ? "bg-blue-300 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
+                : "bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-100"
             }`}
           >
-            {isSubmitting ? "Menyimpan..." : "Simpan Data"}
+            {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
           </button>
         </div>
       </form>
