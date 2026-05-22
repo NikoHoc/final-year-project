@@ -35,16 +35,17 @@ export default function DepotTable({ data, isLoading, onOperasionalClick, onDele
       header: "No",
       cell: (info) => <span className="text-gray-500">{info.row.index + 1}</span>,
     }),
-    columnHelper.accessor("name", {
-      header: ({ column }) => (
-        <button 
-          className="flex items-center gap-2 hover:text-blue-600 transition-colors font-semibold outline-none"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Nama Cabang <ArrowUpDown size={14} />
-        </button>
+    columnHelper.display({
+      id: "info",
+      header: "Cabang & Status",
+      cell: (info) => (
+        <div>
+          <p className="font-bold text-gray-800">{info.row.original.name}</p>
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${info.row.original.is_open ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            {info.row.original.is_open ? 'BUKA' : 'TUTUP'}
+          </span>
+        </div>
       ),
-      cell: (info) => <span className="font-medium text-gray-800">{info.getValue()}</span>,
     }),
     columnHelper.accessor("owner_name", {
       header: "Owner Cabang",
@@ -71,24 +72,14 @@ export default function DepotTable({ data, isLoading, onOperasionalClick, onDele
       header: () => <span className="font-semibold">Nomor WA</span>,
       cell: (info) => <span className="line-clamp-1 text-gray-600">{info.getValue() || "-"}</span>,
     }),
-    columnHelper.accessor("is_open", {
-      header: () => <div className="text-center font-semibold">Operasional</div>,
-      cell: (info) => {
-        const isOpen = info.getValue(); 
-        return (
-          <div className="flex justify-center">
-            {isOpen ? (
-              <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-medium border border-blue-200">
-                Buka
-              </span>
-            ) : (
-              <span className="px-3 py-1 rounded-full bg-red-400 text-white text-xs font-medium border border-gray-200">
-                Tutup
-              </span>
-            )}
-          </div>
-        );
-      },
+    columnHelper.accessor((row) => `${row.shift1_start?.slice(0, 5)}-${row.shift1_end?.slice(0, 5)}`, {
+      header: "Jam Operasional",
+      cell: (info) => (
+        <div className="text-xs text-center">
+          <p>{info.row.original.shift1_start?.slice(0,5)} - {info.row.original.shift1_end?.slice(0,5)}</p>
+          <p>{info.row.original.shift2_start?.slice(0,5)} - {info.row.original.shift2_end?.slice(0,5)}</p>
+        </div>
+      ),
     }),
     columnHelper.accessor("payment_configs", {
       header: () => <div className="text-center font-semibold">Status Midtrans</div>,

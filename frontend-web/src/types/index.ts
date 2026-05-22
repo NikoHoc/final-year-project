@@ -29,6 +29,10 @@ export interface Depot {
   latitude?: number | null;
   longitude?: number | null;
   map_url?: string | null;
+  shift1_start? : string | null;
+  shift1_end? : string | null;
+  shift2_start? : string | null;
+  shift2_end? : string | null;
 }
 
 export interface PaymentConfig {

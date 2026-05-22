@@ -2,7 +2,10 @@ const supabase = require("../config/supabase");
 const { encrypt } = require("../utils/crypto");
 
 exports.createDepot = async (req, res) => {
-  const { name, address, phone_number } = req.body;
+  const { 
+    name, address, phone_number, latitude, longitude, map_url,
+    shift1_start, shift1_end, shift2_start, shift2_end 
+  } = req.body;
 
   if (!name || !address || !phone_number) {
     return res.status(400).json({
@@ -14,7 +17,17 @@ exports.createDepot = async (req, res) => {
   try {
     const { data: newDepot, error } = await supabase
       .from("depots")
-      .insert([{ name, address, phone_number, is_open: true }])
+      .insert([{ 
+        name, address, phone_number, 
+        is_open: true,
+        latitude: latitude || null,
+        longitude: longitude || null,
+        map_url: map_url || null,
+        shift1_start: shift1_start || '07:00',
+        shift1_end: shift1_end || '14:00',
+        shift2_start: shift2_start || null,
+        shift2_end: shift2_end || null,
+      }])
       .select()
       .single();
 
@@ -32,7 +45,7 @@ exports.createDepot = async (req, res) => {
 
 exports.updateDepot = async (req, res) => {
   const { id } = req.params;
-  const { name, address, phone, is_open, latitude, longitude, map_url } = req.body;
+  const { name, address, phone_number, is_open, latitude, longitude, map_url, shift1_start, shift1_end, shift2_start, shift2_end } = req.body;
 
   try {
     if (req.user.role === 'owner' && String(req.user.depot_id) !== String(id)) {
@@ -45,13 +58,14 @@ exports.updateDepot = async (req, res) => {
     const { data, error } = await supabase
       .from('depots')
       .update({
-        name,
-        address,
-        phone,
-        is_open,
+        name, address, phone_number, is_open,
         latitude: latitude ? parseFloat(latitude) : null,
         longitude: longitude ? parseFloat(longitude) : null,
-        map_url: map_url || null
+        map_url: map_url || null,
+        shift1_start: shift1_start || null,
+        shift1_end: shift1_end || null,
+        shift2_start: shift2_start || null,
+        shift2_end: shift2_end || null
       })
       .eq('id', id)
       .select()

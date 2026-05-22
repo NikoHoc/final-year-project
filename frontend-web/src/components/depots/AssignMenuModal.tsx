@@ -30,7 +30,6 @@ export default function AssignMenuModal({
 
   useEffect(() => {
     if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedIds(initialMenuIds);
       setSearchQuery("");
     }
@@ -68,9 +67,15 @@ export default function AssignMenuModal({
 
   const handleSave = async () => {
     setIsSubmitting(true);
-    const success = await onSave(selectedIds);
-    setIsSubmitting(false);
-    if (success) onClose();
+
+    try {
+      const success = await onSave(selectedIds);
+      if (success) onClose();
+    } catch (error) {
+      console.error("Gagal menyimpan data:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

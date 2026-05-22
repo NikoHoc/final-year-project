@@ -25,7 +25,6 @@ export default function CategoryFormModal({
 
   useEffect(() => {
     if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(initialData?.name || "");
       setType(initialData?.type || "food");
     }
@@ -35,10 +34,14 @@ export default function CategoryFormModal({
     e.preventDefault();
     setIsSubmitting(true);
 
-    const success = await onSubmit({ name, type });
-
-    setIsSubmitting(false);
-    if (success) onClose();
+    try {
+      const success = await onSubmit({ name, type });
+      if (success) onClose();
+    } catch (error) {
+      console.error("Gagal menyimpan data user:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

@@ -60,9 +60,14 @@ export default function MenuFormModal({
     if (formData.description) submitData.append("description", formData.description);
     if (imageFile) submitData.append("image", imageFile);
 
-    const success = await onSubmit(submitData);
-    setIsSubmitting(false);
-    if (success) onClose();
+    try {
+      const success = await onSubmit(submitData);
+      if (success) onClose();
+    } catch (error) {
+      console.error("Gagal menyimpan data user:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

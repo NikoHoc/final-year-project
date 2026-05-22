@@ -141,20 +141,35 @@ export default function OwnerSettingsPage() {
             </div>
             
             <div className="space-y-4">
-              <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Nama Cabang</p>
-                <p className="text-base font-black text-gray-800">{depotData?.name}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">No. HP / Telepon</p>
-                  <p className="text-sm font-bold text-gray-700">{depotData?.phone_number || "-"}</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Nama Cabang</p>
+                  <p className="text-base font-black text-gray-800">{depotData?.name}</p>
                 </div>
+
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Status Sistem</p>
                   <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${depotData?.is_open ? 'bg-green-50 text-green-600 border border-green-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
                     {depotData?.is_open ? "Buka" : "Tutup"}
                   </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">No. HP / Telepon</p>
+                  <p className="text-sm font-bold text-gray-700">{depotData?.phone_number || "-"}</p>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase">Jam Operasional</p>
+                  <p className="text-sm font-medium text-gray-600 mt-1">
+                    {depotData?.shift1_start?.slice(0,5)} - {depotData?.shift1_end?.slice(0,5)}
+                  </p>
+                  {(depotData?.shift2_start && depotData?.shift2_end) ? (
+                    <p className="text-sm font-medium text-gray-600">
+                    {depotData?.shift2_start?.slice(0,5)} - {depotData?.shift2_end?.slice(0,5)}
+                  </p>
+                  ) : '-'}
                 </div>
               </div>
               <div>
@@ -178,12 +193,12 @@ export default function OwnerSettingsPage() {
                       href={depotData.map_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex items-center gap-2 transition-colors h-[46px]"
+                      className="text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex items-center gap-2 transition-colors h-11.5"
                     >
                       🗺️ Lihat Lokasi di Google Maps &rarr;
                     </a>
                   ) : (
-                    <p className="text-sm font-medium text-amber-600 bg-amber-50/50 p-3 rounded-xl border border-amber-100 h-[46px] flex items-center">
+                    <p className="text-sm font-medium text-amber-600 bg-amber-50/50 p-3 rounded-xl border border-amber-100 h-11.5 flex items-center">
                       Tautan belum disematkan
                     </p>
                   )}

@@ -25,6 +25,10 @@ export default function DepotFormModal({ isOpen, onClose, initialData, onSubmit 
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [mapUrl, setMapUrl] = useState("");
+  const [shift1Start, setShift1Start] = useState("");
+  const [shift1End, setShift1End] = useState("");
+  const [shift2Start, setShift2Start] = useState("");
+  const [shift2End, setShift2End] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -36,6 +40,10 @@ export default function DepotFormModal({ isOpen, onClose, initialData, onSubmit 
       setLatitude(initialData?.latitude ? String(initialData.latitude) : "");
       setLongitude(initialData?.longitude ? String(initialData.longitude) : "");
       setMapUrl(initialData?.map_url || "");
+      setShift1Start(initialData?.shift1_start ? initialData.shift1_start.slice(0, 5) : "");
+      setShift1End(initialData?.shift1_end ? initialData.shift1_end.slice(0, 5) : "");
+      setShift2Start(initialData?.shift2_start ? initialData.shift2_start.slice(0, 5) : "");
+      setShift2End(initialData?.shift2_end ? initialData.shift2_end.slice(0, 5) : "");
     }
   }, [isOpen, initialData]);
 
@@ -43,19 +51,27 @@ export default function DepotFormModal({ isOpen, onClose, initialData, onSubmit 
     e.preventDefault();
     setIsSubmitting(true);
 
-    const success = await onSubmit({
+    const payload = {
       name,
       address,
       phone_number: phoneNumber,
       latitude: latitude ? parseFloat(latitude) : null,
       longitude: longitude ? parseFloat(longitude) : null,
       map_url: mapUrl || null,
-    });
+      shift1_start: shift1Start || null,
+      shift1_end: shift1End || null,
+      shift2_start: shift2Start || null,
+      shift2_end: shift2End || null,
+    };
 
-    if (success) {
-      onClose();
+    try {
+      const success = await onSubmit(payload);
+      if (success) onClose();
+    } catch (error) {
+      console.error("Gagal menyimpan data:", error);
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   return (
@@ -91,9 +107,31 @@ export default function DepotFormModal({ isOpen, onClose, initialData, onSubmit 
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="Masukkan alamat lengkap depot"
-            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-colors min-h-[80px]"
+            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:border-blue-500 outline-none transition-colors min-h-20"
             disabled={isSubmitting}
           />
+        </div>
+
+        <div className="space-y-4 pt-4 border-t border-gray-100 mt-2">
+          <h4 className="text-xs font-black text-gray-400 uppercase tracking-wider">Jam Operasional</h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Shift 1 Mulai</label>
+              <input type="time" value={shift1Start} onChange={(e) => setShift1Start(e.target.value)} className="w-full px-4 py-2 border rounded-xl" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Shift 1 Selesai</label>
+              <input type="time" value={shift1End} onChange={(e) => setShift1End(e.target.value)} className="w-full px-4 py-2 border rounded-xl" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Shift 2 Mulai</label>
+              <input type="time" value={shift2Start} onChange={(e) => setShift2Start(e.target.value)} className="w-full px-4 py-2 border rounded-xl" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Shift 2 Selesai</label>
+              <input type="time" value={shift2End} onChange={(e) => setShift2End(e.target.value)} className="w-full px-4 py-2 border rounded-xl" />
+            </div>
+          </div>
         </div>
 
         <div className="space-y-4 pt-4 border-t border-gray-100 mt-2">
