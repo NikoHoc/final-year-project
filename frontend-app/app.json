@@ -18,7 +18,7 @@
     "splash": {
       "image": "./assets/images/logo_sapi.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FEF9C3"
+      "backgroundColor": "#FFFFFF"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -28,15 +28,18 @@
       "splash": {
         "image": "./assets/images/logo_sapi.png",
         "resizeMode": "contain",
-        "backgroundColor": "#FEF9C3"
+        "backgroundColor": "#FFFFFF"
       }
     },
     "android": {
-
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logo_sapi.png",
+        "backgroundColor": "#FFFFFF"
+      },
       "splash": {
         "image": "./assets/images/logo_sapi.png",
         "resizeMode": "contain",
-        "backgroundColor": "#FEF9C3"
+        "backgroundColor": "#FFFFFF"
       }
     }
   }
