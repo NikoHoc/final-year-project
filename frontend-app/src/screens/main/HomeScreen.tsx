@@ -1,12 +1,14 @@
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
-import { MapPin, Clock } from 'lucide-react-native';
+import { useDepots } from '@/hooks/useDepots';
+import DepotCard from '@/components/depots/DepotCard';
 
 export default function HomeScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const { user } = useContext(AuthContext);
+  const { depots, isLoading, refetch } = useDepots();
 
   return (
     <View className="flex-1 bg-white">
@@ -14,14 +16,14 @@ export default function HomeScreen({ navigation }: any) {
         className="rounded-b-[32px] bg-bakso-primary px-6 pb-6 shadow-sm" 
         style={{ paddingTop: insets.top + 20 }}
       >
-        <Text className="text-sm font-bold text-bakso-secondary uppercase tracking-widest">
+        <Text className="text-md font-bold text-bakso-secondary uppercase tracking-widest">
           DEPOT BAKSO ASLI BALIKPAPAN
         </Text>
-        <Text className="text-xs font-bold text-bakso-secondary tracking-widest italic">
+        <Text className="text-sm font-bold text-bakso-secondary tracking-widest italic">
           Sejak 1983
         </Text>
         <Text className="text-3xl font-black text-white mt-4" numberOfLines={1}>
-          {user ? `Hello, ${user.full_name || user.username}` : 'Welcome !'}
+          {user ? `Halo, ${user.username || user.full_name}` : 'Selamat Datang !'}
         </Text>
       </View>
 
@@ -29,36 +31,29 @@ export default function HomeScreen({ navigation }: any) {
         className="flex-1 px-4 pt-6" 
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={refetch} colors={['#DC2626']} />
+        }
       >
         <Text className="text-lg font-black text-bakso-text mb-4 px-2">Pilih Cabang Terdekat</Text>
-        <TouchableOpacity 
-          onPress={() => navigation.navigate('DepotMenu', { depotId: 1, depotName: 'Cabang Jemursari' })}
-          className="bg-white rounded-2xl p-5 mb-4 border border-gray-100 shadow-sm"
-        >
-          <View className="flex-row justify-between items-start mb-3">
-            <View className="flex-1 pr-4">
-              <Text className="text-lg font-bold text-bakso-text mb-1">Cabang Jemursari</Text>
-              <View className="flex-row items-start">
-                <MapPin size={12} color="#9CA3AF" style={{ marginTop: 2, marginRight: 4 }} />
-                <Text className="text-xs text-bakso-muted flex-1 leading-relaxed">
-                  Jl. Raya Jemursari No. 123, Surabaya
-                </Text>
-              </View>
-            </View>
-            
-            {/* Status Buka/Tutup */}
-            <View className="bg-green-50 px-2 py-1 rounded-md border border-green-100">
-              <Text className="text-[10px] font-bold text-green-600 uppercase">BUKA</Text>
-            </View>
+        {isLoading && depots.length === 0 ? (
+          <View className="py-10 items-center justify-center">
+            <ActivityIndicator size="large" color="#DC2626" />
+            <Text className="text-sm text-bakso-muted mt-4">Mencari cabang terdekat...</Text>
           </View>
-
-          <View className="flex-row items-center border-t border-gray-50 pt-3 mt-1">
-            <Clock size={12} color="#F59E0B" />
-            <Text className="text-xs font-bold text-bakso-secondary ml-1.5">
-              Jarak: Menghitung lokasi...
-            </Text>
+        ) : depots.length === 0 ? (
+          <View className="py-10 items-center justify-center">
+            <Text className="text-sm text-bakso-muted">Belum ada cabang yang terdaftar.</Text>
           </View>
-        </TouchableOpacity>
+        ) : (
+          depots.map((depot, index) => (
+            <DepotCard 
+              key={depot.id} 
+              depot={depot} 
+              isClosest={index === 0}
+            />
+          ))
+        )}
 
       </ScrollView>
     </View>

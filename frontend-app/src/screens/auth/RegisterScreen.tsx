@@ -9,12 +9,14 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  Alert,
 } from 'react-native';
 import { ArrowLeft, Mail, User, AtSign, Phone, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/types/navigation';
+import { registerCustomer } from '@/services/auth';
 
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
@@ -39,6 +41,39 @@ export default function RegisterScreen() {
     confirmPassword.trim() &&
     !loading;
 
+  const handleRegister = async () => {
+    if (!isFormValid) return;
+
+    if (password !== confirmPassword) {
+      Alert.alert('Gagal', 'Konfirmasi kata sandi tidak cocok.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        email: email.trim(),
+        password: password,
+        full_name: name.trim(),
+        username: name.trim().toLowerCase().replace(/\s+/g, ''), // Otomatis generate username tanpa spasi
+        phone_number: phone.trim()
+      };
+
+      const response = await registerCustomer(payload);
+
+      if (response.status) {
+        Alert.alert('Berhasil', 'Registrasi berhasil! Silakan masuk ke akun baru Anda.');
+        navigation.navigate('Login');
+      } else {
+        Alert.alert('Gagal Registrasi', response.message || 'Silakan cek kembali data Anda.');
+      }
+    } catch (error: any) {
+      const errMsg = error.response?.data?.message || 'Terjadi gangguan jaringan.';
+      Alert.alert('Gagal Daftar', errMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -177,6 +212,7 @@ export default function RegisterScreen() {
                 isFormValid ? 'bg-bakso-primary' : 'bg-red-300'
               }`}
               disabled={!isFormValid}
+              onPress={handleRegister}
             >
               {loading ? (
                 <ActivityIndicator color="white" />

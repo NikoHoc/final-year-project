@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   Text,
@@ -9,16 +9,20 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  Alert,
 } from 'react-native';
 import { ArrowLeft, AtSign, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '@/types/navigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { AuthContext } from '@/context/AuthContext';
+import { loginCustomer } from '@/services/auth';
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { login } = useContext(AuthContext);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,6 +30,28 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const isFormValid = email.trim() && password.trim() && !loading;
+
+  const handleLogin = async () => {
+    if (!isFormValid) return;
+
+    setLoading(true);
+    try {
+      const response = await loginCustomer({ email, password });
+      
+      if (response.status && response.data) {
+        await login(response.data.token, response.data.user);
+        Alert.alert('Sukses', 'Berhasil masuk ke akun Anda!');
+        navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+      } else {
+        Alert.alert('Gagal', response.message || 'Email atau password salah.');
+      }
+    } catch (error: any) {
+      const errMsg = error.response?.data?.message || 'Koneksi ke server gagal.';
+      Alert.alert('Gagal Masuk', errMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -113,6 +139,7 @@ export default function LoginScreen() {
                 isFormValid ? 'bg-bakso-primary' : 'bg-red-300'
               }`}
               disabled={!isFormValid}
+              onPress={handleLogin}
             >
               {loading ? (
                 <ActivityIndicator color="white" />

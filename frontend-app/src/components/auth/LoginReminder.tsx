@@ -23,7 +23,7 @@ export default function LoginReminder({ message = "Silakan login untuk mengakses
         onPress={() => navigation.navigate('Login')}
         className="w-full bg-bakso-primary py-4 rounded-2xl items-center shadow-sm"
       >
-        <Text className="text-white font-bold text-base">Masuk / Daftar Sekarang</Text>
+        <Text className="text-white font-bold text-base">Login / Daftar Sekarang</Text>
       </TouchableOpacity>
     </View>
   );

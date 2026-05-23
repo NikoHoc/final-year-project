@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import * as Location from 'expo-location';
 import { getDepots } from '../services/depot';
 import { Depot } from '../types';
+import { supabaseRealtime } from '../config/supabaseClient';
 
 export interface DepotWithDistance extends Depot {
   distance_km?: number | null;
@@ -60,6 +61,29 @@ export const useDepots = () => {
 
   useEffect(() => {
     fetchDepots();
+    
+    const channel = supabaseRealtime
+      .channel('realtime-depot-status')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'depots' },
+        (payload: any) => {
+          const updatedDepot = payload.new;
+          
+          setDepots((prevDepots) => 
+            prevDepots.map((d) => 
+              d.id === updatedDepot.id 
+                ? { ...d, is_open: updatedDepot.is_open, shift1_start: updatedDepot.shift1_start, shift1_end: updatedDepot.shift1_end, shift2_start: updatedDepot.shift2_start, shift2_end: updatedDepot.shift2_end } 
+                : d
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabaseRealtime.removeChannel(channel);
+    };
   }, [fetchDepots]);
 
   return { depots, isLoading, refetch: fetchDepots };
